@@ -1,0 +1,567 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Arisan Raya - Solusi Keuangan Modern</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #f5f7fa 0%, #e4edf5 100%);
+            color: #2d3748;
+            overflow-x: hidden;
+        }
+        
+        .hero {
+            background: linear-gradient(135deg, #1a5f7a 0%, #2d8c6e 100%);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000" opacity="0.1"><polygon fill="white" points="0,1000 1000,0 1000,1000"/></svg>');
+            background-size: cover;
+        }
+        
+        .floating {
+            animation: floating 3s ease-in-out infinite;
+        }
+        
+        @keyframes floating {
+            0% { transform: translate(0, 0px); }
+            50% { transform: translate(0, -15px); }
+            100% { transform: translate(0, 0px); }
+        }
+        
+        .card-3d {
+            transform-style: preserve-3d;
+            transition: transform 0.5s ease;
+        }
+        
+        .card-3d:hover {
+            transform: rotateY(10deg) rotateX(5deg) translateY(-10px);
+        }
+        
+        .carousel-container {
+            perspective: 1200px;
+            height: 500px;
+            position: relative;
+        }
+        
+        .carousel {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            transform-style: preserve-3d;
+            transition: transform 1s;
+        }
+        
+        .carousel-item {
+            position: absolute;
+            width: 300px;
+            height: 400px;
+            left: 50%;
+            top: 50%;
+            margin-left: -150px;
+            margin-top: -200px;
+            border-radius: 20px;
+            transition: transform 1s, opacity 1s, left 1s;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        
+        .carousel-item:nth-child(1) {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            transform: rotateY(0deg) translateZ(400px);
+        }
+        
+        .carousel-item:nth-child(2) {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            transform: rotateY(60deg) translateZ(400px);
+        }
+        
+        .carousel-item:nth-child(3) {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            transform: rotateY(120deg) translateZ(400px);
+        }
+        
+        .carousel-item:nth-child(4) {
+            background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+            transform: rotateY(180deg) translateZ(400px);
+        }
+        
+        .carousel-item:nth-child(5) {
+            background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+            transform: rotateY(240deg) translateZ(400px);
+        }
+        
+        .carousel-item:nth-child(6) {
+            background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+            transform: rotateY(300deg) translateZ(400px);
+        }
+        
+        .carousel-nav {
+            position: absolute;
+            bottom: -60px;
+            left: 0;
+            right: 0;
+            text-align: center;
+        }
+        
+        .carousel-dot {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            background: #cbd5e0;
+            border-radius: 50%;
+            margin: 0 5px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        
+        .carousel-dot.active {
+            background: #1a5f7a;
+        }
+        
+        .feature-card {
+            transition: all 0.3s ease;
+            border-left: 4px solid transparent;
+        }
+        
+        .feature-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            border-left: 4px solid #1a5f7a;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #1a5f7a 0%, #2d8c6e 100%);
+            transition: all 0.3s ease;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 20px rgba(26, 95, 122, 0.3);
+        }
+        
+        .pulse {
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(26, 95, 122, 0.4); }
+            70% { box-shadow: 0 0 0 15px rgba(26, 95, 122, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(26, 95, 122, 0); }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="sticky top-0 z-50 bg-white shadow-md">
+        <div class="container mx-auto px-4 py-4 flex justify-between items-center">
+            <div class="flex items-center space-x-3">
+                <div class="w-12 h-12 rounded-full bg-gradient-to-r from-blue-600 to-green-500 flex items-center justify-center">
+                    <i class="fas fa-hand-holding-usd text-white text-xl"></i>
+                </div>
+                <span class="text-2xl font-bold text-gray-800">Arisan Raya</span>
+            </div>
+            
+            <nav class="hidden md:flex space-x-8">
+                <a href="#home" class="font-medium text-gray-700 hover:text-blue-600 transition-colors">Beranda</a>
+                <a href="#about" class="font-medium text-gray-700 hover:text-blue-600 transition-colors">Tentang</a>
+                <a href="#products" class="font-medium text-gray-700 hover:text-blue-600 transition-colors">Produk</a>
+                <a href="#features" class="font-medium text-gray-700 hover:text-blue-600 transition-colors">Fitur</a>
+                <a href="#contact" class="font-medium text-gray-700 hover:text-blue-600 transition-colors">Kontak</a>
+            </nav>
+            
+            <div class="flex items-center space-x-4">
+                <button class="px-6 py-2 bg-gradient-to-r from-blue-600 to-green-500 text-white font-medium rounded-full hover:shadow-lg transition-all duration-300">
+                    Daftar Sekarang
+                </button>
+                <button class="md:hidden text-gray-700">
+                    <i class="fas fa-bars text-xl"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section id="home" class="hero text-white py-20 md:py-32 relative">
+        <div class="container mx-auto px-4 relative z-10">
+            <div class="flex flex-col md:flex-row items-center">
+                <div class="md:w-1/2 mb-12 md:mb-0">
+                    <h1 class="text-4xl md:text-6xl font-bold mb-6">Arisan Modern <span class="text-yellow-300">Masa Kini</span></h1>
+                    <p class="text-xl mb-8 opacity-90">Wujudkan impian finansial Anda dengan sistem arisan digital yang aman, transparan, dan menguntungkan.</p>
+                    <div class="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4">
+                        <button class="px-8 py-3 bg-yellow-400 text-gray-900 font-bold rounded-full hover:bg-yellow-300 transition-colors shadow-lg">
+                            Mulai Sekarang
+                        </button>
+                        <button class="px-8 py-3 bg-white bg-opacity-20 text-white font-bold rounded-full hover:bg-opacity-30 transition-colors backdrop-blur-sm">
+                            Pelajari Lebih Lanjut
+                        </button>
+                    </div>
+                </div>
+                <div class="md:w-1/2 flex justify-center">
+                    <div class="relative floating">
+                        <div class="w-64 h-64 md:w-80 md:h-80 rounded-full bg-white bg-opacity-10 backdrop-blur-sm flex items-center justify-center">
+                            <i class="fas fa-piggy-bank text-6xl md:text-8xl text-yellow-300"></i>
+                        </div>
+                        <div class="absolute -top-4 -right-4 w-20 h-20 rounded-full bg-green-500 flex items-center justify-center shadow-lg">
+                            <i class="fas fa-lock text-white text-2xl"></i>
+                        </div>
+                        <div class="absolute -bottom-4 -left-4 w-16 h-16 rounded-full bg-yellow-400 flex items-center justify-center shadow-lg">
+                            <i class="fas fa-rocket text-gray-900 text-xl"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section id="features" class="py-16 bg-white">
+        <div class="container mx-auto px-4">
+            <div class="text-center mb-16">
+                <h2 class="text-4xl font-bold text-gray-800 mb-4">Mengapa Memilih Arisan Raya?</h2>
+                <p class="text-xl text-gray-600 max-w-3xl mx-auto">Kami menghadirkan konsep arisan modern dengan teknologi terkini untuk kenyamanan dan keamanan Anda.</p>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div class="feature-card bg-gray-50 p-8 rounded-2xl shadow-md border-l-4 border-blue-500">
+                    <div class="w-16 h-16 rounded-full bg-blue-100 flex items-center justify-center mb-6">
+                        <i class="fas fa-shield-alt text-blue-600 text-2xl"></i>
+                    </div>
+                    <h3 class="text-2xl font-bold text-gray-800 mb-4">Aman & Terpercaya</h3>
+                    <p class="text-gray-600">Sistem keamanan berlapis dengan teknologi enkripsi untuk melindungi data dan dana Anda.</p>
+                </div>
+                
+                <div class="feature-card bg-gray-50 p-8 rounded-2xl shadow-md border-l-4 border-green-500">
+                    <div class="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center mb-6">
+                        <i class="fas fa-bolt text-green-600 text-2xl"></i>
+                    </div>
+                    <h3 class="text-2xl font-bold text-gray-800 mb-4">Proses Cepat</h3>
+                    <p class="text-gray-600">Semua proses dilakukan secara digital dengan waktu penyelesaian yang lebih cepat.</p>
+                </div>
+                
+                <div class="feature-card bg-gray-50 p-8 rounded-2xl shadow-md border-l-4 border-yellow-500">
+                    <div class="w-16 h-16 rounded-full bg-yellow-100 flex items-center justify-center mb-6">
+                        <i class="fas fa-chart-line text-yellow-600 text-2xl"></i>
+                    </div>
+                    <h3 class="text-2xl font-bold text-gray-800 mb-4">Menguntungkan</h3>
+                    <p class="text-gray-600">Dapatkan keuntungan lebih dengan sistem bagi hasil dan bonus loyalitas.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Products Section -->
+    <section id="products" class="py-20 bg-gradient-to-br from-gray-50 to-blue-50">
+        <div class="container mx-auto px-4">
+            <div class="text-center mb-16">
+                <h2 class="text-4xl font-bold text-gray-800 mb-4">Produk Arisan Kami</h2>
+                <p class="text-xl text-gray-600 max-w-3xl mx-auto">Pilih program arisan yang sesuai dengan kebutuhan dan gaya hidup Anda.</p>
+            </div>
+            
+            <!-- 3D Carousel Container -->
+            <div class="carousel-container">
+                <div class="carousel" id="carousel">
+                    <!-- Item 1 -->
+                    <div class="carousel-item">
+                        <div class="h-2/5 bg-gradient-to-r from-purple-500 to-indigo-600 flex items-center justify-center">
+                            <i class="fas fa-money-bill-wave text-white text-5xl"></i>
+                        </div>
+                        <div class="h-3/5 bg-white p-6 flex flex-col justify-between">
+                            <div>
+                                <h3 class="text-2xl font-bold text-gray-800 mb-2">Arisan Tunai</h3>
+                                <p class="text-gray-600 mb-4">Arisan tunai dengan sistem undian yang transparan dan pembayaran yang mudah.</p>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <span class="text-lg font-bold text-green-600">Mulai Rp 50.000/bulan</span>
+                                <button class="px-4 py-2 bg-blue-600 text-white rounded-full text-sm hover:bg-blue-700 transition-colors">Detail</button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Item 2 -->
+                    <div class="carousel-item">
+                        <div class="h-2/5 bg-gradient-to-r from-pink-500 to-rose-500 flex items-center justify-center">
+                            <i class="fas fa-gem text-white text-5xl"></i>
+                        </div>
+                        <div class="h-3/5 bg-white p-6 flex flex-col justify-between">
+                            <div>
+                                <h3 class="text-2xl font-bold text-gray-800 mb-2">Arisan Emas</h3>
+                                <p class="text-gray-600 mb-4">Investasi emas dengan sistem arisan modern. Dapatkan emas fisik dengan cara mudah.</p>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <span class="text-lg font-bold text-green-600">Mulai Rp 100.000/bulan</span>
+                                <button class="px-4 py-2 bg-blue-600 text-white rounded-full text-sm hover:bg-blue-700 transition-colors">Detail</button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Item 3 -->
+                    <div class="carousel-item">
+                        <div class="h-2/5 bg-gradient-to-r from-cyan-500 to-blue-500 flex items-center justify-center">
+                            <i class="fas fa-car text-white text-5xl"></i>
+                        </div>
+                        <div class="h-3/5 bg-white p-6 flex flex-col justify-between">
+                            <div>
+                                <h3 class="text-2xl font-bold text-gray-800 mb-2">Arisan Kendaraan</h3>
+                                <p class="text-gray-600 mb-4">Wujudkan impian memiliki kendaraan dengan sistem arisan yang fleksibel.</p>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <span class="text-lg font-bold text-green-600">Mulai Rp 500.000/bulan</span>
+                                <button class="px-4 py-2 bg-blue-600 text-white rounded-full text-sm hover:bg-blue-700 transition-colors">Detail</button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Item 4 -->
+                    <div class="carousel-item">
+                        <div class="h-2/5 bg-gradient-to-r from-green-400 to-teal-500 flex items-center justify-center">
+                            <i class="fas fa-ring text-white text-5xl"></i>
+                        </div>
+                        <div class="h-3/5 bg-white p-6 flex flex-col justify-between">
+                            <div>
+                                <h3 class="text-2xl font-bold text-gray-800 mb-2">Arisan Perhiasan</h3>
+                                <p class="text-gray-600 mb-4">Dapatkan perhiasan emas berkualitas dengan desain eksklusif.</p>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <span class="text-lg font-bold text-green-600">Mulai Rp 200.000/bulan</span>
+                                <button class="px-4 py-2 bg-blue-600 text-white rounded-full text-sm hover:bg-blue-700 transition-colors">Detail</button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Item 5 -->
+                    <div class="carousel-item">
+                        <div class="h-2/5 bg-gradient-to-r from-yellow-400 to-orange-500 flex items-center justify-center">
+                            <i class="fas fa-home text-white text-5xl"></i>
+                        </div>
+                        <div class="h-3/5 bg-white p-6 flex flex-col justify-between">
+                            <div>
+                                <h3 class="text-2xl font-bold text-gray-800 mb-2">Arisan Properti</h3>
+                                <p class="text-gray-600 mb-4">Program arisan untuk investasi properti dengan sistem yang terpercaya.</p>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <span class="text-lg font-bold text-green-600">Mulai Rp 1.000.000/bulan</span>
+                                <button class="px-4 py-2 bg-blue-600 text-white rounded-full text-sm hover:bg-blue-700 transition-colors">Detail</button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Item 6 -->
+                    <div class="carousel-item">
+                        <div class="h-2/5 bg-gradient-to-r from-purple-400 to-pink-400 flex items-center justify-center">
+                            <i class="fas fa-graduation-cap text-white text-5xl"></i>
+                        </div>
+                        <div class="h-3/5 bg-white p-6 flex flex-col justify-between">
+                            <div>
+                                <h3 class="text-2xl font-bold text-gray-800 mb-2">Arisan Pendidikan</h3>
+                                <p class="text-gray-600 mb-4">Persiapkan biaya pendidikan dengan program arisan yang terjangkau.</p>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <span class="text-lg font-bold text-green-600">Mulai Rp 150.000/bulan</span>
+                                <button class="px-4 py-2 bg-blue-600 text-white rounded-full text-sm hover:bg-blue-700 transition-colors">Detail</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Carousel Navigation -->
+                <div class="carousel-nav">
+                    <div class="flex justify-center space-x-3">
+                        <span class="carousel-dot active" data-index="0"></span>
+                        <span class="carousel-dot" data-index="1"></span>
+                        <span class="carousel-dot" data-index="2"></span>
+                        <span class="carousel-dot" data-index="3"></span>
+                        <span class="carousel-dot" data-index="4"></span>
+                        <span class="carousel-dot" data-index="5"></span>
+                    </div>
+                    
+                    <div class="flex justify-center mt-6 space-x-4">
+                        <button id="prev-btn" class="px-4 py-2 bg-blue-600 text-white rounded-full hover:bg-blue-700 transition-colors">
+                            <i class="fas fa-chevron-left"></i> Sebelumnya
+                        </button>
+                        <button id="next-btn" class="px-4 py-2 bg-blue-600 text-white rounded-full hover:bg-blue-700 transition-colors">
+                            Selanjutnya <i class="fas fa-chevron-right"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="py-20 bg-gradient-to-r from-blue-600 to-green-500 text-white">
+        <div class="container mx-auto px-4 text-center">
+            <h2 class="text-4xl font-bold mb-6">Siap Memulai Perjalanan Finansial Anda?</h2>
+            <p class="text-xl mb-8 max-w-2xl mx-auto">Bergabunglah dengan ribuan anggota lainnya yang telah merasakan manfaat arisan modern.</p>
+            <button class="px-10 py-4 bg-yellow-400 text-gray-900 font-bold rounded-full hover:bg-yellow-300 transition-colors text-lg shadow-lg pulse">
+                Daftar Sekarang - Gratis!
+            </button>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-gray-900 text-white py-12">
+        <div class="container mx-auto px-4">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+                <div>
+                    <div class="flex items-center space-x-3 mb-4">
+                        <div class="w-10 h-10 rounded-full bg-gradient-to-r from-blue-600 to-green-500 flex items-center justify-center">
+                            <i class="fas fa-hand-holding-usd text-white"></i>
+                        </div>
+                        <span class="text-xl font-bold">Arisan Raya</span>
+                    </div>
+                    <p class="text-gray-400 mb-4">Solusi keuangan modern untuk generasi muda Indonesia.</p>
+                    <div class="flex space-x-4">
+                        <a href="#" class="w-10 h-10 rounded-full bg-gray-800 flex items-center justify-center hover:bg-blue-600 transition-colors">
+                            <i class="fab fa-instagram"></i>
+                        </a>
+                        <a href="#" class="w-10 h-10 rounded-full bg-gray-800 flex items-center justify-center hover:bg-blue-600 transition-colors">
+                            <i class="fab fa-facebook-f"></i>
+                        </a>
+                        <a href="#" class="w-10 h-10 rounded-full bg-gray-800 flex items-center justify-center hover:bg-blue-600 transition-colors">
+                            <i class="fab fa-twitter"></i>
+                        </a>
+                        <a href="#" class="w-10 h-10 rounded-full bg-gray-800 flex items-center justify-center hover:bg-blue-600 transition-colors">
+                            <i class="fab fa-youtube"></i>
+                        </a>
+                    </div>
+                </div>
+                
+                <div>
+                    <h3 class="text-lg font-bold mb-4">Produk</h3>
+                    <ul class="space-y-2">
+                        <li><a href="#" class="text-gray-400 hover:text-white transition-colors">Arisan Tunai</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white transition-colors">Arisan Emas</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white transition-colors">Arisan Kendaraan</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white transition-colors">Arisan Perhiasan</a></li>
+                    </ul>
+                </div>
+                
+                <div>
+                    <h3 class="text-lg font-bold mb-4">Layanan</h3>
+                    <ul class="space-y-2">
+                        <li><a href="#" class="text-gray-400 hover:text-white transition-colors">Tabungan Haji</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white transition-colors">Tabungan Umroh</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white transition-colors">Tabungan Pendidikan</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white transition-colors">Kalkulator Keuangan</a></li>
+                    </ul>
+                </div>
+                
+                <div>
+                    <h3 class="text-lg font-bold mb-4">Kontak</h3>
+                    <ul class="space-y-2">
+                        <li class="flex items-center text-gray-400">
+                            <i class="fas fa-map-marker-alt mr-2 text-blue-500"></i>
+                            <span>Jl. Merdeka No. 123, Jakarta</span>
+                        </li>
+                        <li class="flex items-center text-gray-400">
+                            <i class="fas fa-phone mr-2 text-blue-500"></i>
+                            <span>(021) 1234-5678</span>
+                        </li>
+                        <li class="flex items-center text-gray-400">
+                            <i class="fas fa-envelope mr-2 text-blue-500"></i>
+                            <span>info@arisanraya.com</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="border-t border-gray-800 mt-8 pt-8 text-center text-gray-400">
+                <p>&copy; 2023 Arisan Raya. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const carousel = document.getElementById('carousel');
+            const dots = document.querySelectorAll('.carousel-dot');
+            const prevBtn = document.getElementById('prev-btn');
+            const nextBtn = document.getElementById('next-btn');
+            let currentIndex = 0;
+            const totalItems = 6;
+            const angle = 360 / totalItems;
+            
+            function updateCarousel() {
+                carousel.style.transform = `rotateY(${currentIndex * -angle}deg)`;
+                
+                // Update active dot
+                dots.forEach((dot, index) => {
+                    if (index === currentIndex) {
+                        dot.classList.add('active');
+                    } else {
+                        dot.classList.remove('active');
+                    }
+                });
+            }
+            
+            // Next button
+            nextBtn.addEventListener('click', function() {
+                currentIndex = (currentIndex + 1) % totalItems;
+                updateCarousel();
+            });
+            
+            // Previous button
+            prevBtn.addEventListener('click', function() {
+                currentIndex = (currentIndex - 1 + totalItems) % totalItems;
+                updateCarousel();
+            });
+            
+            // Dot navigation
+            dots.forEach((dot, index) => {
+                dot.addEventListener('click', function() {
+                    currentIndex = index;
+                    updateCarousel();
+                });
+            });
+            
+            // Auto rotate every 5 seconds
+            setInterval(function() {
+                currentIndex = (currentIndex + 1) % totalItems;
+                updateCarousel();
+            }, 5000);
+            
+            // Smooth scrolling for anchor links
+            document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+                anchor.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    
+                    const targetId = this.getAttribute('href');
+                    if (targetId === '#') return;
+                    
+                    const targetElement = document.querySelector(targetId);
+                    if (targetElement) {
+                        window.scrollTo({
+                            top: targetElement.offsetTop - 80,
+                            behavior: 'smooth'
+                        });
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>

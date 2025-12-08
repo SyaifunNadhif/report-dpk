@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Roadmap Sistem Kepegawaian</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .phase-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease-out;
+        }
+        .phase-content.active {
+            max-height: 5000px;
+        }
+        .progress-bar {
+            transition: width 0.3s ease;
+        }
+    </style>
+</head>
+<body class="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-4 md:p-8">
+    <div class="max-w-6xl mx-auto">
+        <div class="bg-white rounded-lg shadow-lg p-6 md:p-8 mb-8">
+            <h1 class="text-3xl md:text-4xl font-bold text-gray-800 mb-2">
+                Roadmap Sistem Kepegawaian
+            </h1>
+            <p class="text-gray-600 mb-4">PHP Native REST API + Frontend Responsive</p>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
+                <div class="bg-blue-50 p-4 rounded-lg">
+                    <div class="text-2xl font-bold text-blue-600">13 Weeks</div>
+                    <div class="text-sm text-gray-600">Total Duration</div>
+                </div>
+                <div class="bg-green-50 p-4 rounded-lg">
+                    <div class="text-2xl font-bold text-green-600">8 Phases</div>
+                    <div class="text-sm text-gray-600">Development Stages</div>
+                </div>
+                <div class="bg-purple-50 p-4 rounded-lg">
+                    <div class="text-2xl font-bold text-purple-600">10+ Features</div>
+                    <div class="text-sm text-gray-600">Core Functionalities</div>
+                </div>
+            </div>
+        </div>
+
+        <div id="roadmap-container" class="space-y-4"></div>
+
+        <div class="bg-white rounded-lg shadow-lg p-6 mt-8">
+            <h3 class="font-bold text-xl text-gray-800 mb-4">📚 Tech Stack</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <h4 class="font-semibold text-gray-700 mb-2">Backend</h4>
+                    <ul class="space-y-1 text-gray-600 text-sm">
+                        <li>• PHP 8.x (Native, no framework)</li>
+                        <li>• MySQL Database</li>
+                        <li>• JWT Authentication</li>
+                        <li>• PHPMailer untuk email</li>
+                        <li>• TCPDF/mPDF untuk PDF</li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="font-semibold text-gray-700 mb-2">Frontend</h4>
+                    <ul class="space-y-1 text-gray-600 text-sm">
+                        <li>• HTML5 + CSS3 + JavaScript</li>
+                        <li>• Tailwind CSS (Responsive)</li>
+                        <li>• Axios/Fetch API</li>
+                        <li>• Chart.js (optional untuk dashboard)</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4 mt-6 rounded">
+            <p class="text-sm text-gray-700">
+                <strong>💡 Tips:</strong> Klik setiap fase untuk expand detail tasks. Klik checkbox untuk mark as complete dan track progress!
+            </p>
+        </div>
+    </div>
+
+    <script>
+        var roadmap = [
+            {
+                phase: "Phase 1: Setup & Foundation",
+                duration: "Week 1-2",
+                color: "bg-blue-500",
+                tasks: [
+                    {
+                        title: "Setup Environment",
+                        subtasks: [
+                            "Install XAMPP/LAMP (PHP 8.x, MySQL)",
+                            "Setup text editor (VS Code + extensions)",
+                            "Install Postman untuk testing API",
+                            "Setup Git repository"
+                        ]
+                    },
+                    {
+                        title: "Database Design",
+                        subtasks: [
+                            "Buat ERD (Entity Relationship Diagram)",
+                            "Design tabel: users, roles, permissions, role_permissions",
+                            "Design tabel: employees, leave_quota, leave_requests",
+                            "Design tabel: mutations, trainings, salary_slips",
+                            "Buat database dan jalankan migration"
+                        ]
+                    },
+                    {
+                        title: "Backend Structure",
+                        subtasks: [
+                            "Setup folder structure (MVC pattern)",
+                            "Buat config database connection",
+                            "Buat base controller & model class",
+                            "Setup routing system sederhana",
+                            "Buat .htaccess untuk clean URL"
+                        ]
+                    }
+                ]
+            },
+            {
+                phase: "Phase 2: Authentication & RBAC",
+                duration: "Week 3-4",
+                color: "bg-green-500",
+                tasks: [
+                    {
+                        title: "Authentication System",
+                        subtasks: [
+                            "Buat API register user (optional)",
+                            "Buat API login (return JWT token)",
+                            "Implementasi JWT authentication",
+                            "Buat middleware untuk validasi token",
+                            "Buat API logout (blacklist token)"
+                        ]
+                    },
+                    {
+                        title: "RBAC Implementation",
+                        subtasks: [
+                            "Buat tabel roles & permissions",
+                            "Buat API CRUD roles",
+                            "Buat API CRUD permissions",
+                            "Buat API assign permissions ke role",
+                            "Buat middleware check permission",
+                            "Setup default roles: Admin, HR, Manager, Employee"
+                        ]
+                    },
+                    {
+                        title: "Testing Auth",
+                        subtasks: [
+                            "Test login user & admin",
+                            "Test akses dengan role berbeda",
+                            "Test JWT expiration",
+                            "Dokumentasi API di Postman"
+                        ]
+                    }
+                ]
+            },
+            {
+                phase: "Phase 3: Employee Management",
+                duration: "Week 5-6",
+                color: "bg-purple-500",
+                tasks: [
+                    {
+                        title: "Employee CRUD",
+                        subtasks: [
+                            "API GET all employees (with pagination)",
+                            "API GET employee by ID",
+                            "API POST create employee",
+                            "API PUT update employee",
+                            "API DELETE employee (soft delete)",
+                            "Upload foto profile karyawan"
+                        ]
+                    },
+                    {
+                        title: "Leave Management",
+                        subtasks: [
+                            "Buat sistem jatah cuti per tahun",
+                            "API GET leave quota per employee",
+                            "API POST request cuti",
+                            "API GET leave history",
+                            "API PUT approve/reject cuti (HR/Manager only)",
+                            "Auto kurangi jatah cuti saat approved"
+                        ]
+                    }
+                ]
+            },
+            {
+                phase: "Phase 4: History & Records",
+                duration: "Week 7",
+                color: "bg-orange-500",
+                tasks: [
+                    {
+                        title: "Mutation History",
+                        subtasks: [
+                            "API POST create mutation record",
+                            "API GET mutation history by employee",
+                            "API GET all mutations (filter by dept/date)",
+                            "Include: tanggal, posisi lama, posisi baru, alasan"
+                        ]
+                    },
+                    {
+                        title: "Training History",
+                        subtasks: [
+                            "API POST create training record",
+                            "API GET training history by employee",
+                            "API GET all trainings (filter by type/date)",
+                            "Include: nama training, tanggal, durasi, sertifikat"
+                        ]
+                    }
+                ]
+            },
+            {
+                phase: "Phase 5: Salary & Email",
+                duration: "Week 8",
+                color: "bg-red-500",
+                tasks: [
+                    {
+                        title: "Salary Slip Generation",
+                        subtasks: [
+                            "Install library PDF (TCPDF/FPDF/mPDF)",
+                            "Buat template slip gaji PDF",
+                            "API POST generate salary slip",
+                            "Include: gaji pokok, tunjangan, potongan, total"
+                        ]
+                    },
+                    {
+                        title: "Email System",
+                        subtasks: [
+                            "Setup PHPMailer atau library email",
+                            "Konfigurasi SMTP (Gmail/Mailtrap untuk testing)",
+                            "Buat function send email with attachment",
+                            "API POST send salary slip via email",
+                            "Buat email template yang rapi"
+                        ]
+                    }
+                ]
+            },
+            {
+                phase: "Phase 6: Frontend Development",
+                duration: "Week 9-11",
+                color: "bg-indigo-500",
+                tasks: [
+                    {
+                        title: "Setup Frontend",
+                        subtasks: [
+                            "Setup HTML/CSS/JS dengan Tailwind CDN",
+                            "Atau setup dengan Vite + Vanilla JS + Tailwind",
+                            "Buat struktur folder yang rapi",
+                            "Setup axios/fetch untuk API calls",
+                            "Buat service/API helper functions"
+                        ]
+                    },
+                    {
+                        title: "Auth Pages",
+                        subtasks: [
+                            "Buat halaman login (responsive)",
+                            "Buat form validation",
+                            "Simpan JWT token di localStorage",
+                            "Buat logout functionality",
+                            "Redirect based on role setelah login"
+                        ]
+                    },
+                    {
+                        title: "Dashboard",
+                        subtasks: [
+                            "Dashboard Admin (overview semua data)",
+                            "Dashboard HR (employee management focus)",
+                            "Dashboard Manager (approval focus)",
+                            "Dashboard Employee (data pribadi & cuti)",
+                            "Responsive design untuk semua device"
+                        ]
+                    },
+                    {
+                        title: "Employee Pages",
+                        subtasks: [
+                            "List employees dengan search & filter",
+                            "Detail employee (show all info)",
+                            "Form create/edit employee",
+                            "Upload & preview foto",
+                            "Responsive tables (mobile-friendly)"
+                        ]
+                    },
+                    {
+                        title: "Leave Management UI",
+                        subtasks: [
+                            "Form request cuti",
+                            "List cuti requests (pending/approved/rejected)",
+                            "Approval interface untuk HR/Manager",
+                            "Show jatah cuti remaining",
+                            "Calendar view (optional tapi keren)"
+                        ]
+                    },
+                    {
+                        title: "History Pages",
+                        subtasks: [
+                            "Mutation history table dengan filter",
+                            "Training history table dengan filter",
+                            "Timeline view untuk history (optional)",
+                            "Export to Excel (optional)"
+                        ]
+                    },
+                    {
+                        title: "Salary & Email UI",
+                        subtasks: [
+                            "Form generate slip gaji",
+                            "Preview PDF sebelum send",
+                            "Interface send email gaji",
+                            "Success/error notification"
+                        ]
+                    },
+                    {
+                        title: "RBAC UI",
+                        subtasks: [
+                            "Halaman manage roles & permissions (Admin only)",
+                            "Show/hide menu based on permission",
+                            "Show/hide button based on permission",
+                            "Access denied page untuk unauthorized"
+                        ]
+                    }
+                ]
+            },
+            {
+                phase: "Phase 7: Testing & Refinement",
+                duration: "Week 12",
+                color: "bg-pink-500",
+                tasks: [
+                    {
+                        title: "Testing",
+                        subtasks: [
+                            "Test semua API endpoint di Postman",
+                            "Test RBAC - coba akses dengan role berbeda",
+                            "Test responsive design di berbagai device",
+                            "Test email sending (real email)",
+                            "Test PDF generation",
+                            "Fix bugs yang ditemukan"
+                        ]
+                    },
+                    {
+                        title: "Security Check",
+                        subtasks: [
+                            "Cek SQL injection prevention (prepared statements)",
+                            "Cek XSS prevention (input sanitization)",
+                            "Cek CSRF protection",
+                            "Secure password hashing (bcrypt/argon2)",
+                            "Validate & sanitize semua input",
+                            "Rate limiting untuk API (optional)"
+                        ]
+                    },
+                    {
+                        title: "Documentation",
+                        subtasks: [
+                            "Dokumentasi API lengkap",
+                            "Buat README.md dengan setup instruction",
+                            "Dokumentasi database schema",
+                            "User manual (optional)",
+                            "Video demo (optional)"
+                        ]
+                    }
+                ]
+            },
+            {
+                phase: "Phase 8: Deployment",
+                duration: "Week 13",
+                color: "bg-teal-500",
+                tasks: [
+                    {
+                        title: "Preparation",
+                        subtasks: [
+                            "Setup production environment config",
+                            "Setup production database",
+                            "Prepare .env file",
+                            "Minify CSS/JS (optional)"
+                        ]
+                    },
+                    {
+                        title: "Deploy",
+                        subtasks: [
+                            "Deploy backend ke hosting/VPS",
+                            "Deploy frontend ke hosting/VPS",
+                            "Setup domain & SSL certificate",
+                            "Test production environment",
+                            "Monitor errors & performance"
+                        ]
+                    }
+                ]
+            }
+        ];
+
+        var completedTasks = JSON.parse(localStorage.getItem('roadmapProgress') || '{}');
+
+        function saveProgress() {
+            localStorage.setItem('roadmapProgress', JSON.stringify(completedTasks));
+        }
+
+        function calculateProgress(phaseIndex) {
+            var total = 0;
+            var completed = 0;
+            
+            roadmap[phaseIndex].tasks.forEach(function(task, taskIndex) {
+                task.subtasks.forEach(function(_, subIndex) {
+                    total++;
+                    var key = phaseIndex + '-' + taskIndex + '-' + subIndex;
+                    if (completedTasks[key]) {
+                        completed++;
+                    }
+                });
+            });
+            
+            return total > 0 ? Math.round((completed / total) * 100) : 0;
+        }
+
+        function togglePhase(phaseIndex) {
+            var content = document.getElementById('phase-content-' + phaseIndex);
+            var chevron = document.getElementById('chevron-' + phaseIndex);
+            
+            content.classList.toggle('active');
+            
+            if (content.classList.contains('active')) {
+                chevron.innerHTML = '▼';
+            } else {
+                chevron.innerHTML = '▶';
+            }
+        }
+
+        function toggleTask(phaseIndex, taskIndex, subIndex) {
+            var key = phaseIndex + '-' + taskIndex + '-' + subIndex;
+            completedTasks[key] = !completedTasks[key];
+            saveProgress();
+            
+            var checkbox = document.getElementById('task-' + key);
+            var text = document.getElementById('text-' + key);
+            
+            if (completedTasks[key]) {
+                checkbox.innerHTML = '<svg class="w-5 h-5 text-green-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>';
+                text.classList.add('line-through', 'text-gray-400');
+                text.classList.remove('text-gray-700');
+            } else {
+                checkbox.innerHTML = '<svg class="w-5 h-5 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke-width="2"/></svg>';
+                text.classList.remove('line-through', 'text-gray-400');
+                text.classList.add('text-gray-700');
+            }
+            
+            var progress = calculateProgress(phaseIndex);
+            document.getElementById('progress-' + phaseIndex).textContent = progress + '%';
+            document.getElementById('progress-bar-' + phaseIndex).style.width = progress + '%';
+        }
+
+        function renderRoadmap() {
+            var container = document.getElementById('roadmap-container');
+            
+            roadmap.forEach(function(phase, phaseIndex) {
+                var progress = calculateProgress(phaseIndex);
+                
+                var phaseDiv = document.createElement('div');
+                phaseDiv.className = 'bg-white rounded-lg shadow-md overflow-hidden';
+                
+                var headerHtml = '<div class="cursor-pointer" onclick="togglePhase(' + phaseIndex + ')"><div class="' + phase.color + ' p-4 flex items-center justify-between text-white"><div class="flex items-center space-x-3 flex-1"><span id="chevron-' + phaseIndex + '" class="text-2xl font-bold">▶</span><div class="flex-1"><h2 class="text-lg md:text-xl font-bold">' + phase.phase + '</h2><p class="text-sm opacity-90">' + phase.duration + '</p></div></div><div class="text-right"><div id="progress-' + phaseIndex + '" class="text-2xl font-bold">' + progress + '%</div><div class="text-xs opacity-90">Complete</div></div></div><div class="bg-gray-200 h-2"><div id="progress-bar-' + phaseIndex + '" class="' + phase.color + ' h-full progress-bar" style="width: ' + progress + '%"></div></div></div>';
+                
+                var tasksHtml = '<div id="phase-content-' + phaseIndex + '" class="phase-content"><div class="p-6">';
+                
+                phase.tasks.forEach(function(task, taskIndex) {
+                    tasksHtml += '<div class="mb-6 last:mb-0"><h3 class="font-bold text-lg text-gray-800 mb-3 flex items-center"><span class="w-2 h-2 ' + phase.color + ' rounded-full mr-2"></span>' + task.title + '</h3><div class="ml-4 space-y-2">';
+                    
+                    task.subtasks.forEach(function(subtask, subIndex) {
+                        var key = phaseIndex + '-' + taskIndex + '-' + subIndex;
+                        var isCompleted = completedTasks[key];
+                        var checkboxSvg = isCompleted ? 
+                            '<svg class="w-5 h-5 text-green-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>' :
+                            '<svg class="w-5 h-5 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke-width="2"/></svg>';
+                        var textClass = isCompleted ? 'text-gray-400 line-through' : 'text-gray-700';
+                        
+                        tasksHtml += '<div class="flex items-start space-x-3 p-2 rounded hover:bg-gray-50 cursor-pointer transition-colors" onclick="toggleTask(' + phaseIndex + ', ' + taskIndex + ', ' + subIndex + ')"><div id="task-' + key + '" class="flex-shrink-0 mt-0.5">' + checkboxSvg + '</div><span id="text-' + key + '" class="text-sm md:text-base ' + textClass + '">' + subtask + '</span></div>';
+                    });
+                    
+                    tasksHtml += '</div></div>';
+                });
+                
+                tasksHtml += '</div></div>';
+                
+                phaseDiv.innerHTML = headerHtml + tasksHtml;
+                container.appendChild(phaseDiv);
+            });
+        }
+
+        renderRoadmap();
+    </script>
+</body>
+</html>
