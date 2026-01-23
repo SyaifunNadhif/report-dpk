@@ -39,6 +39,8 @@ switch ($method) {
       $controller->searchDetailHandle($input);
     } elseif ($type === 'search_detail') {
       $controller->searchDetailHandleGlobal($input);
+        } elseif ($type === 'rekap_kunjungan') {
+      $controller->getRekapKunjungan($input);
 
     /* =====================================================
      * KUNJUNGAN CRUD
@@ -47,6 +49,8 @@ switch ($method) {
       $user = requireAuth();
       $controller->createDataKunjungan(null, $user);
       exit;
+  
+    
 
     /* =====================================================
      * HISTORY KUNJUNGAN
@@ -68,9 +72,9 @@ switch ($method) {
       $user = requireAuth();
       $controller->getReminderJanjiBayar($input, $user);
 
-    } elseif ($type === 'rekap_kunjungan') {
-      $user = requireAuth();
-      $controller->getRekapKunjunganByKode($input, $user);
+    // } elseif ($type === 'rekap_kunjungan') {
+    //   $user = requireAuth();
+    //   $controller->getRekapKunjunganByKode($input, $user);
 
     } elseif ($type === 'frekuensi_kunjungan') {
       $user = requireAuth();

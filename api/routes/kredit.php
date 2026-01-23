@@ -20,7 +20,10 @@ switch ($method) {
 
         if ($input['type'] === 'Realisasi Kredit') {
             $controller->getRealisasiKredit($input);
-
+        } elseif ($input['type'] === '50 besar realisasi') {
+            $controller->getTop50RealisasiKonsolidasi($input);
+        } elseif ($input['type'] === 'mob_vintage') {
+            $controller->getRekapMob6Bulan($input);
         } elseif ($input['type'] === 'Migrasi Kolek') {
             $controller->getMigrasiKolek($input);
         } elseif ($input['type'] === 'kolektibilitas') {

@@ -55,6 +55,9 @@ switch ($endpoint) {
     case 'kunjungan':
         require __DIR__ . '/routes/kunjungan.php';
         break;
+    case 'jt':
+        require __DIR__ . '/routes/jatuh_tempo.php';
+        break;
 
     default:
         sendResponse(404, "Endpoint tidak ditemukan");

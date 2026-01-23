@@ -1,6 +1,7 @@
 <?php
 
 require_once __DIR__ . '/../helpers/response.php';
+require_once __DIR__ . '/../helpers/MobHelper.php';
 
 class KreditController {
     private $pdo;
@@ -682,6 +683,127 @@ public function getMigrasiKolek($input) {
         $data = $stmt->fetchAll(PDO::FETCH_ASSOC);
         sendResponse(200, "Berhasil ambil data Kolektibilitas Harian", $data);
     }
+
+    public function getTop50RealisasiKonsolidasi($input = []) {
+        // 1. Setup Variable Flexible
+        // Ambil tgl_akhir dari input, kalau kosong pakai tanggal hari ini
+        $tgl_akhir = $input['tgl_akhir'] ?? date('Y-m-d');
+        
+        // Ambil tgl_awal dari input, kalau kosong defaultnya mundur ke tgl 1 bulan berjalan (sebagai fallback aja)
+        $tgl_awal  = $input['tgl_awal'] ?? date('Y-m-01', strtotime($tgl_akhir));
+
+        // Untuk field 'created', kita asumsikan mengambil data posisi pada tanggal akhir yang dipilih
+        // (Supaya datanya sinkron dengan request terakhir)
+        $harian_date = $input['harian_date'] ?? $tgl_akhir;
+
+        // 2. Query SQL
+        $sql = "
+            SELECT 
+                kode_cabang,
+                no_rekening,
+                nama_nasabah,
+                jml_pinjaman as plafond,
+                alamat,
+                tgl_realisasi,
+                tgl_jatuh_tempo
+            FROM nominatif
+            WHERE created = :harian_date 
+            AND tgl_realisasi BETWEEN :tgl_awal AND :tgl_akhir
+            ORDER BY jml_pinjaman DESC 
+            LIMIT 50
+        ";
+
+        try {
+            $stmt = $this->pdo->prepare($sql);
+            
+            // 3. Binding Value
+            $stmt->bindValue(':harian_date', $harian_date); // Data posisi per tanggal ini
+            $stmt->bindValue(':tgl_awal', $tgl_awal);       // Range awal realisasi
+            $stmt->bindValue(':tgl_akhir', $tgl_akhir);     // Range akhir realisasi
+            
+            $stmt->execute();
+            $data = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            
+            sendResponse(200, "Top 50 Realisasi (Periode $tgl_awal s/d $tgl_akhir)", $data);
+            
+        } catch (PDOException $e) {
+            sendResponse(500, "PDO Error: " . $e->getMessage());
+        }
+    }
+
+    public function getRekapMob6Bulan($input = null) {
+    // 1. Params Setup
+    $b = is_array($input) ? $input : (json_decode(file_get_contents('php://input'), true) ?: []);
+    
+    // Tanggal Posisi Data (Misal: 2026-01-20)
+    $harian_date = $b['harian_date'] ?? date('Y-m-d'); 
+    
+    // Kode Kantor (Opsional)
+    $kc_raw = $b['kode_kantor'] ?? null;
+    $kc     = ($kc_raw === null || $kc_raw === '') ? null : str_pad((string)$kc_raw, 3, '0', STR_PAD_LEFT);
+
+    // 2. Tentukan Range Realisasi (Jun 2025 - Des 2025)
+    // Logika: Mundur 7 bulan dari harian_date, sampai bulan lalu
+    $end_date_realisasi   = date('Y-m-t', strtotime($harian_date . ' -1 month')); // Des 2025 (akhir bulan)
+    $start_date_realisasi = date('Y-m-01', strtotime($end_date_realisasi . ' -6 months')); // Jun 2025 (awal bulan)
+
+    // Jika user mau custom range via input
+    if(isset($b['start_realisasi']) && isset($b['end_realisasi'])){
+        $start_date_realisasi = $b['start_realisasi'];
+        $end_date_realisasi   = $b['end_realisasi'];
+    }
+
+    // 3. Query Data (Ambil Plafond Awal & OS Saat Ini)
+    // Pastikan table 'nominatif' memiliki field: tgl_realisasi, plafond, os (baki_debet), hari_menunggak
+    $sql = "
+        SELECT 
+            no_rekening,
+            tgl_realisasi,
+            jml_pinjaman as plafond, 
+            baki_debet as os,             -- Ini Baki Debet per harian_date
+            hari_menunggak  -- DPD per harian_date
+        FROM nominatif
+        WHERE created = :harian_date
+        AND tgl_realisasi BETWEEN :start_date AND :end_date
+    ";
+
+    if ($kc) {
+        $sql .= " AND kode_kantor = :kc";
+    }
+
+    try {
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->bindValue(':harian_date', $harian_date);
+        $stmt->bindValue(':start_date', $start_date_realisasi);
+        $stmt->bindValue(':end_date', $end_date_realisasi);
+        
+        if ($kc) {
+            $stmt->bindValue(':kc', $kc);
+        }
+
+        $stmt->execute();
+        $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+
+        
+        $matrix = MobHelper::processMobMatrix($rows, $harian_date);
+        
+        // 5. Response
+        return sendResponse(200, "Rekap MOB Periode Realisasi $start_date_realisasi s/d $end_date_realisasi", [
+            'posisi_data' => $harian_date,
+            'range_realisasi' => [
+                'start' => $start_date_realisasi,
+                'end'   => $end_date_realisasi
+            ],
+            'kode_kantor' => $kc ?? 'ALL',
+            'buckets_order' => MobHelper::getBucketOrder(),
+            'data' => $matrix
+        ]);
+
+    } catch (PDOException $e) {
+        return sendResponse(500, "Database Error: " . $e->getMessage());
+    }
+}
 
 
 

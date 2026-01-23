@@ -9,7 +9,7 @@
     window.NavAuth = window.NavAuth || {};
     const NA = window.NavAuth;
 
-    // Base PATH saja: '' (root) atau '/e-pipelane'
+    // Base PATH saja: '' (root) atau '/report-dpk'
     function getBasePath() {
       // 1) Hormati <base href="...">
       const baseTag = document.querySelector('base')?.getAttribute('href');
@@ -26,9 +26,9 @@
       }
 
       // 3) Deteksi prefix yang kita kenal (ubah/daftarkan jika perlu)
-      //    Kalau URL sekarang berada di bawah /e-pipelane → pakai itu, selain itu anggap root.
-      if (location.pathname === '/e-pipelane' || location.pathname.startsWith('/e-pipelane/')) {
-        return '/e-pipelane';
+      //    Kalau URL sekarang berada di bawah /report-dpk → pakai itu, selain itu anggap root.
+      if (location.pathname === '/report-dpk' || location.pathname.startsWith('/report-dpk/')) {
+        return '/report-dpk';
       }
 
       // Default: root

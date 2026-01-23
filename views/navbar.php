@@ -117,6 +117,23 @@
           </div>
         </li>
 
+        <li class="nb-li">
+          <button data-dropdown="dropdownPemasaran" class="nb-parent nb-tap">
+            <span>Front-end</span>
+            <svg class="nb-caret" viewBox="0 0 20 20" fill="currentColor" width="16" height="16">
+              <path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.586l3.71-4.354a.75.75 0 111.14.976l-4.25 5a.75.75 0 01-1.14 0l-4.25-5a.75.75 0 01.02-1.06z" clip-rule="evenodd"/>
+            </svg>
+          </button>
+          <div id="dropdownPemasaran" class="dropdown-panel">
+            <ul class="nb-list">
+              <li><a href="mob" class="nb-item nb-tap">MOB</a></li>
+              <li><a href="realisasi_kredit_terbesar" class="nb-item nb-tap">Realisasi 50 Besar</a></li>
+              <li><a href="jatuh_tempo" class="nb-item nb-tap">Jatuh Tempo</a></li>
+              <!-- <li><a href="actual_kredit" class="nb-item nb-tap">Actual Kredit</a></li> -->
+            </ul>
+          </div>
+        </li>
+
         <!-- ===== MOBILE-ONLY: Profile dimasukkan ke menu (di bawah Kredit) ===== -->
         <li class="nb-li md:hidden">
           <button data-dropdown="dropdownProfileMobile" class="nb-parent nb-tap">

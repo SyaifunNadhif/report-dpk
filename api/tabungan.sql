@@ -34,10 +34,145 @@ LEFT JOIN css_kode_propvinsi prov ON prov.kode_provinsi = n.PROPINSI
 LEFT JOIN css_kode_dati dati ON dati.kode_provinsi = n.PROPINSI AND dati.kode_dati = n.KOTA_KAB
 LEFT JOIN css_kode_kecamatan kec ON kec.kode_provinsi = n.PROPINSI AND kec.kode_dati = n.KOTA_KAB AND kec.kode_kecamatan = n.KECAMATAN
 LEFT JOIN css_kode_kelurahan kel ON kel.kode_provinsi = n.PROPINSI AND kel.kode_dati = n.KOTA_KAB AND kel.kode_kecamatan = n.KECAMATAN AND kel.kode_kelurahan = n.DESA
-WHERE th.tanggal = 20251125
+WHERE th.tanggal = 20251130
   AND th.saldo_akhir > 0
-  AND t.kode_kantor = '001'   -- kalau mau batasi ke kantor 001, aktifkan baris ini
+  AND t.kode_kantor = '001'  
 ORDER BY t.kode_kantor;
+
+
+deposito
+
+SELECT
+
+  d.kode_kantor              AS "KODE KANTOR",
+
+  ak.nama_kantor             AS "NAMA KANTOR",
+
+  g1.deskripsi_group1        AS "NAMA KANKAS",
+
+  g2.deskripsi_group2        AS "NAMA AO",
+
+
+
+  jd.deskripsi_jenis_debitur AS "DESKRIPSI JENIS DEBITUR",
+
+
+
+  d.nasabah_id               AS "CIF",
+
+  d.no_rekening              AS "NO REKENING",
+
+  n.nama_nasabah             AS "NAMA NASABAH",
+
+  n.alamat                   AS "ALAMAT",
+
+
+
+  d.kode_produk              AS "KODE PRODUK",
+
+  d.kode_jenis               AS "JENIS DEPOSITO",
+
+
+
+  dh.suku_bunga              AS "SK BUNGA",
+
+  dh.saldo_akhir             AS "SALDO",
+
+  dh.tgl_mulai               AS "TGL MULAI",
+
+  dh.tgl_jt                  AS "TGL JT",
+
+  dh.jkw                     AS "JKW",
+
+
+
+  prov.nama_provinsi         AS "PROVINSI",
+
+  dati.deskripsi_kode_dati   AS "DESK KAB",
+
+  kec.deskripsi_kode_kecamatan AS "DESK KEC",
+
+  kel.deskripsi_kode_kelurahan AS "DESK DESA",
+
+  n.kodepos                  AS "KODE POS"
+
+
+
+FROM deposito_history dh
+
+JOIN deposito d
+
+  ON d.no_rekening = dh.no_rekening
+
+JOIN nasabah n
+
+  ON n.nasabah_id = d.nasabah_id
+
+
+
+LEFT JOIN app_kode_kantor ak
+
+  ON ak.kode_kantor = d.kode_kantor
+
+
+
+LEFT JOIN tab_kode_group1 g1
+
+  ON g1.kode_group1 = d.kode_group1
+
+
+
+LEFT JOIN tab_kode_group2 g2
+
+  ON g2.kode_group2 = d.kode_group2
+
+
+
+LEFT JOIN css_jenis_debitur jd
+
+  ON jd.kode_jenis_debitur = n.jenis_debitur
+
+
+
+LEFT JOIN css_kode_propvinsi prov
+
+  ON prov.kode_provinsi = n.PROPINSI
+
+LEFT JOIN css_kode_dati dati
+
+  ON dati.kode_provinsi = n.PROPINSI
+
+ AND dati.kode_dati     = n.KOTA_KAB
+
+LEFT JOIN css_kode_kecamatan kec
+
+  ON kec.kode_provinsi   = n.PROPINSI
+
+ AND kec.kode_dati       = n.KOTA_KAB
+
+ AND kec.kode_kecamatan  = n.KECAMATAN
+
+LEFT JOIN css_kode_kelurahan kel
+
+  ON kel.kode_provinsi   = n.PROPINSI
+
+ AND kel.kode_dati       = n.KOTA_KAB
+
+ AND kel.kode_kecamatan  = n.KECAMATAN
+
+ AND kel.kode_kelurahan  = n.DESA
+
+
+
+WHERE dh.tanggal = 20251130
+
+  AND dh.saldo_akhir > 0
+
+  AND d.kode_kantor = '001'
+
+
+
+ORDER BY d.kode_kantor, d.no_rekening;
 
 
 
@@ -177,4 +312,34 @@ LEFT JOIN css_kode_kelurahan kk
  AND kk.kode_kelurahan= n.desa
 WHERE kh.baki_debet > 0
 ORDER BY k.no_rekening;
+
+
+
+ekodok
+
+SELECT
+  t.kode_kantor AS "KODE KANTOR",
+  t.nasabah_id AS "CIF",
+  t.no_rekening AS "NO REKENING",
+  n.nama_nasabah AS "NAMA NASABAH",
+  n.alamat AS "ALAMAT",
+  th.saldo_akhir AS "SALDO"
+FROM tabung_history th
+JOIN tabung t ON t.no_rekening = th.no_rekening
+JOIN nasabah n ON t.nasabah_id = n.nasabah_id
+LEFT JOIN app_kode_kantor ak ON ak.kode_kantor = th.kode_kantor
+LEFT JOIN tab_kode_group1 g1 ON g1.kode_group1 = t.kode_group1
+LEFT JOIN tab_kode_group2 g2 ON g2.kode_group2 = t.kode_group2
+LEFT JOIN css_jenis_debitur jd ON jd.kode_jenis_debitur = n.jenis_debitur
+LEFT JOIN tab_produk p ON p.kode_produk = t.kode_produk
+LEFT JOIN tab_kode_pemilik pk ON pk.kode_pemilik = t.kode_bi_pemilik
+LEFT JOIN slik_ref21_gol_deb sg ON sg.kode_gol_deb = n.slik_kode_gol_debitur
+LEFT JOIN css_kode_propvinsi prov ON prov.kode_provinsi = n.PROPINSI
+LEFT JOIN css_kode_dati dati ON dati.kode_provinsi = n.PROPINSI AND dati.kode_dati = n.KOTA_KAB
+LEFT JOIN css_kode_kecamatan kec ON kec.kode_provinsi = n.PROPINSI AND kec.kode_dati = n.KOTA_KAB AND kec.kode_kecamatan = n.KECAMATAN
+LEFT JOIN css_kode_kelurahan kel ON kel.kode_provinsi = n.PROPINSI AND kel.kode_dati = n.KOTA_KAB AND kel.kode_kecamatan = n.KECAMATAN AND kel.kode_kelurahan = n.DESA
+WHERE th.tanggal = 20251130
+  AND th.saldo_akhir > 0
+  AND t.kode_kantor = '001'  
+ORDER BY t.kode_kantor;
 

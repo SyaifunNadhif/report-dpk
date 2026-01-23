@@ -1475,6 +1475,120 @@ public function getMonitoringKunjunganAO($input = null)
         return sendResponse(200, "Berhasil", ['periode'=>"$start_date s/d $end_date", 'summary'=>$summary, 'rows'=>$rows]);
     } catch (PDOException $e) { return sendResponse(500, "DB Error: ".$e->getMessage()); }
 }
+
+public function getRekapKunjungan($input = null)
+    {
+        // --- 1) Parsing Input (Priority: JSON > POST > GET) ---
+        $jsonBody = [];
+        if (is_array($input)) {
+            $jsonBody = $input;
+        } else {
+            $jsonBody = json_decode(file_get_contents('php://input'), true) ?: [];
+        }
+        
+        // Gabungkan semua input. JSON Body akan menimpa key yang sama dari GET/POST
+        $body = array_merge($_GET, $_POST, $jsonBody);
+
+        $g = static function($k, $def=null) use ($body){ 
+            return (isset($body[$k]) && $body[$k] !== '') ? $body[$k] : $def; 
+        };
+
+        // --- 2) Tentukan Periode (Bulan & Tahun) ---
+        $bulan = (int)$g('bulan', date('m')); 
+        $tahun = (int)$g('tahun', date('Y'));
+        $kode_kantor = $g('kode_kantor', null); 
+
+        // Validasi input bulan
+        if ($bulan < 1 || $bulan > 12) return sendResponse(400, 'Bulan tidak valid (1-12).');
+
+        // Range Tanggal: YYYY-MM-01 s/d YYYY-MM-Akhir
+        $startDate = sprintf('%04d-%02d-01', $tahun, $bulan);
+        $endDate   = date('Y-m-t', strtotime($startDate)); 
+        
+        // --- 3) Siapkan Query Parameter ---
+        $params = [
+            ':start' => $startDate . ' 00:00:00',
+            ':end'   => $endDate . ' 23:59:59'
+        ];
+
+        $whereSql = " WHERE tgl_kunjungan BETWEEN :start AND :end ";
+
+        if ($kode_kantor) {
+            $whereSql .= " AND kode_kantor = :kode_kantor ";
+            $params[':kode_kantor'] = $kode_kantor;
+        }
+
+        // --- 4) Query 1: Ambil Statistik (Summary) ---
+        $sqlSummary = "
+            SELECT 
+                COUNT(*) as total_kunjungan,
+                COUNT(DISTINCT no_rekening) as total_nasabah_unik,
+                SUM(CASE WHEN nominal_janji_bayar IS NOT NULL THEN nominal_janji_bayar ELSE 0 END) as total_janji_bayar
+            FROM kunjungan
+            $whereSql
+        ";
+
+        $stmtSum = $this->pdo->prepare($sqlSummary);
+        $stmtSum->execute($params);
+        $summary = $stmtSum->fetch(\PDO::FETCH_ASSOC);
+
+        // Jika data kosong
+        if (!$summary || $summary['total_kunjungan'] == 0) {
+            return sendResponse(200, "Belum ada data kunjungan untuk periode $startDate", [
+                'periode' => "$bulan-$tahun",
+                'summary' => [
+                    'total_kunjungan'    => 0,
+                    'total_nasabah_unik' => 0,
+                    'total_janji_bayar'  => 0
+                ],
+                'list' => []
+            ]);
+        }
+
+        // --- 5) Query 2: Ambil Detail Data (List) ---
+        // Note: Pastikan nama kolom di SELECT sesuai dengan tabel database
+        $sqlList = "
+            SELECT 
+                id, tgl_kunjungan, petugas, kode_kantor, 
+                no_rekening, nama_nasabah, 
+                nominal_janji_bayar, tanggal_janji_bayar, 
+                nama_foto, keterangan, status_kunjungan
+            FROM kunjungan
+            $whereSql
+            ORDER BY tgl_kunjungan DESC
+        ";
+
+        $stmtList = $this->pdo->prepare($sqlList);
+        $stmtList->execute($params);
+        $listData = $stmtList->fetchAll(\PDO::FETCH_ASSOC);
+
+        // (Opsional) Generate Full URL Foto jika diperlukan FrontEnd
+        /*
+        foreach ($listData as &$row) {
+            $row['foto_url'] = !empty($row['nama_foto']) 
+                ? "img/kunjungan/" . $row['nama_foto'] 
+                : null;
+        }
+        */
+
+        // --- 6) Return Response Lengkap ---
+        return sendResponse(200, 'Data rekap kunjungan ditemukan.', [
+            'filter' => [
+                'bulan' => $bulan,
+                'tahun' => $tahun,
+                'kode_kantor' => $kode_kantor ?? 'SEMUA',
+                'range' => "$startDate s/d $endDate"
+            ],
+            'summary' => [
+                'total_kunjungan'    => (int)$summary['total_kunjungan'],
+                'total_nasabah_unik' => (int)$summary['total_nasabah_unik'],
+                'total_janji_bayar'  => (float)$summary['total_janji_bayar']
+            ],
+            'list' => $listData
+        ]);
+    }
+
+
    
 
 
