@@ -1,247 +1,229 @@
 <?php /* pages/login.php */ ?>
-<div class="min-h-screen flex items-center justify-center bg-gray-100 py-10">
-  <div class="w-full max-w-md bg-white rounded-lg shadow p-6">
-    <div class="mb-6 text-center">
-      <h1 class="text-2xl font-bold">Masuk ke Sistem</h1>
-      <p class="text-gray-500 text-sm">Gunakan Employee ID dan password</p>
-    </div>
+<div class="min-h-screen flex bg-white text-gray-900 font-sans overflow-hidden">
+  
+  <style>
+    /* Keyframes untuk pergerakan meteor */
+    @keyframes meteor {
+      0% {
+        transform: rotate(215deg) translateX(0);
+        opacity: 1;
+      }
+      70% {
+        opacity: 1;
+      }
+      100% {
+        transform: rotate(215deg) translateX(-500px);
+        opacity: 0;
+      }
+    }
 
-    <!-- Info bila sudah login -->
-    <div id="alreadyBox" class="hidden border rounded p-4 mb-5 bg-green-50">
-      <p class="text-sm text-gray-700">
-        Kamu sudah login sebagai <b id="alName"></b> (<span id="alBranch"></span>).
-      </p>
-      <div class="mt-3 flex gap-2">
-        <a id="btnGoHome" class="px-3 py-2 rounded bg-blue-600 text-white text-sm cursor-pointer hover:bg-blue-700">Ke Home</a>
-        <a id="btnSwitch" class="px-3 py-2 rounded bg-gray-200 text-sm cursor-pointer hover:bg-gray-300">Ganti Akun</a>
+    /* Style dasar meteor */
+    .meteor-effect {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      height: 2px;
+      background: linear-gradient(-45deg, #5f91ff, rgba(0, 0, 255, 0));
+      border-radius: 999px;
+      filter: drop-shadow(0 0 6px #69a0ff);
+      animation: meteor 3s linear infinite;
+      opacity: 0;
+      z-index: 10; /* Di atas background, di bawah teks */
+    }
+    
+    /* Ekor meteor agar terlihat cepat */
+    .meteor-effect::before {
+      content: '';
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 300px;
+      height: 1px;
+      background: linear-gradient(90deg, #fff, transparent);
+    }
+  </style>
+
+  <div class="hidden lg:flex lg:w-1/2 relative bg-blue-900 text-white flex-col justify-center items-center overflow-hidden">
+    
+    <div class="absolute inset-0 z-0" style="background-image: url('https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&q=80'); background-size: cover; background-position: center;"></div>
+    
+    <div class="absolute inset-0 bg-gradient-to-br from-gray-900/80 via-blue-900/80 to-black/80 z-0"></div>
+
+    <span class="meteor-effect w-[100px]" style="top: -10%; left: 20%; animation-duration: 4s; animation-delay: 0s;"></span>
+    <span class="meteor-effect w-[150px]" style="top: 10%; left: 80%; animation-duration: 3s; animation-delay: 1.5s;"></span>
+    <span class="meteor-effect w-[120px]" style="top: -20%; left: 50%; animation-duration: 5s; animation-delay: 2s;"></span>
+    <span class="meteor-effect w-[180px]" style="top: 30%; left: 110%; animation-duration: 3.5s; animation-delay: 0.5s;"></span>
+    <span class="meteor-effect w-[140px]" style="top: 5%; left: 60%; animation-duration: 6s; animation-delay: 3s;"></span>
+    <span class="meteor-effect w-[200px]" style="top: -15%; left: 10%; animation-duration: 4.5s; animation-delay: 4s;"></span>
+    <span class="meteor-effect w-[160px]" style="top: 15%; left: 90%; animation-duration: 5.5s; animation-delay: 1s;"></span>
+    
+    <div class="relative z-20 text-center px-10">
+      <div class="mb-6 inline-flex p-4 bg-white/10 rounded-full backdrop-blur-sm border border-white/20 shadow-[0_0_15px_rgba(255,255,255,0.3)]">
+         <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+         </svg>
       </div>
+      <h2 class="text-4xl font-bold mb-4 tracking-tight text-white drop-shadow-lg">Secure Portal</h2>
+      <p class="text-blue-100 text-lg drop-shadow-md">AKSES TERBATAS KHUSUS TIM DPK</p>
+      <p class="text-blue-200 text-sm mt-2 opacity-80">Permintaan Akses Ke TIM DPK</p>
     </div>
+  </div>
 
-    <!-- Form login -->
-    <form id="formLogin" class="space-y-4">
-      <div>
-        <label for="employee_id" class="text-sm block mb-1">Employee ID</label>
-        <input type="text" id="employee_id" class="w-full border rounded px-3 py-2"
-               placeholder="mis. 102-119" required autocomplete="username">
+  <div class="w-full lg:w-1/2 flex items-center justify-center p-8 bg-gray-50 text-gray-900 relative">
+    
+    <div class="w-full max-w-md bg-white p-8 rounded-2xl shadow-lg border border-gray-100">
+      
+      <div class="mb-8">
+        <h1 class="text-3xl font-extrabold text-gray-900 mb-2">Login Pegawai</h1>
+        <p class="text-gray-500 text-sm">Masukkan kredensial dan PIN keamanan.</p>
       </div>
 
-      <div>
-        <label for="password" class="text-sm block mb-1">Password</label>
-        <div class="relative">
-          <input type="password" id="password"
-                 class="w-full border rounded px-3 py-2 pr-10"
-                 placeholder="••••••••" required autocomplete="current-password">
-          <button type="button" id="togglePwd"
-                  class="absolute inset-y-0 right-0 px-3 text-gray-600"
-                  title="Tampilkan/Sembunyikan" aria-pressed="false">
-            <!-- default: tertutup -->
-            <svg id="iconEyeClosed" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none">
-              <path d="M3 3l18 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-              <path d="M10.585 10.585a3 3 0 104.243 4.243" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-              <path d="M2 12s3.5-7 10-7c2.035 0 3.855.555 5.4 1.5M22 12s-3.5 7-10 7c-2.035 0-3.855-.555-5.4-1.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-            </svg>
-            <svg id="iconEyeOpen" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 hidden" viewBox="0 0 24 24" fill="none">
-              <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z" stroke="currentColor" stroke-width="2"/>
-              <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2"/>
-            </svg>
-          </button>
+      <div id="alreadyBox" class="hidden border-l-4 border-green-500 rounded-r bg-green-50 p-4 mb-6">
+        <div class="text-sm text-gray-800 mb-3">
+          Login sebagai <b id="alName" class="text-black"></b>.
         </div>
+        <button id="btnGoHome" class="text-sm font-bold text-green-700 hover:underline mr-4">Ke Dashboard</button>
+        <button id="btnSwitch" class="text-sm text-gray-600 hover:text-gray-900">Ganti Akun</button>
       </div>
 
-      <button type="submit" id="btnLogin"
-              class="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700
-                     flex items-center justify-center gap-2">
-        <svg id="spin" class="hidden animate-spin h-5 w-5" viewBox="0 0 24 24">
-          <circle class="opacity-25" cx="12" cy="12" r="10"
-                  stroke="currentColor" stroke-width="4"></circle>
-          <path class="opacity-75" fill="currentColor"
-                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
-        </svg>
-        <span>Masuk</span>
-      </button>
+      <form id="formLogin" class="space-y-5">
+        
+        <div>
+          <label class="block text-sm font-bold text-gray-700 mb-1">Employee ID</label>
+          <input type="text" id="employee_id" 
+                 class="w-full rounded-lg border-gray-300 bg-white text-gray-900 placeholder-gray-400 shadow-sm focus:border-blue-600 focus:ring-blue-600 py-3 px-4"
+                 placeholder="ID Pegawai" required>
+        </div>
 
-      <p id="err" class="text-red-600 text-sm hidden"></p>
-    </form>
+        <div>
+          <label class="block text-sm font-bold text-gray-700 mb-1">Password</label>
+          <div class="relative">
+            <input type="password" id="password" 
+                   class="w-full rounded-lg border-gray-300 bg-white text-gray-900 placeholder-gray-400 shadow-sm focus:border-blue-600 focus:ring-blue-600 py-3 px-4 pr-10"
+                   placeholder="Kata sandi" required>
+            <button type="button" id="togglePwd" class="absolute inset-y-0 right-0 px-3 flex items-center text-gray-400 hover:text-gray-600">
+               <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                 <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
+                 <path fill-rule="evenodd" d="M.458 10C1.732 5.943 5.523 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clip-rule="evenodd" />
+               </svg>
+            </button>
+          </div>
+        </div>
 
-    <p class="mt-6 text-center text-xs text-gray-500">© <?= date('Y') ?> BPR BKK Jateng</p>
+        <div class="bg-blue-50 p-5 rounded-xl border border-blue-200">
+            <label for="pin_access" class="block text-sm font-extrabold text-blue-900 mb-2 text-center">
+                PIN Keamanan (Wajib)
+            </label>
+            <input type="password" id="pin_access" maxlength="6" inputmode="numeric" required
+                   class="w-full text-center tracking-[0.5em] font-mono text-xl rounded border-gray-300 bg-white text-gray-900 placeholder-gray-300 focus:border-blue-600 focus:ring-blue-600 py-2"
+                   placeholder="000000">
+            <p class="text-xs text-blue-600 mt-2 text-center font-medium">Masukkan 6 digit PIN otoritas</p>
+        </div>
+
+        <button type="submit" id="btnLogin" 
+            class="w-full flex justify-center py-3.5 px-4 border border-transparent rounded-lg shadow-md text-sm font-bold text-white bg-blue-700 hover:bg-blue-800 transition-all transform hover:-translate-y-0.5">
+            <svg id="spin" class="hidden animate-spin -ml-1 mr-3 h-5 w-5 text-white" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>
+            <span id="btnText">Verifikasi & Masuk</span>
+        </button>
+        
+        <div id="err" class="hidden flex items-center p-4 text-sm text-red-800 border border-red-200 rounded-lg bg-red-50" role="alert">
+          <svg class="flex-shrink-0 inline w-5 h-5 mr-3" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path></svg>
+          <span id="errMsg">Info error disini</span>
+        </div>
+
+      </form>
+    </div>
   </div>
 </div>
 
 <script>
-  // Base PATH saja: '' (root) atau '/e-pipelane'
+  // ... Config Base Path & Utils ...
   function getBasePath() {
-    // 1) Hormati <base href="...">
     const baseTag = document.querySelector('base')?.getAttribute('href');
-    if (baseTag) {
-      const u = new URL(baseTag, location.origin);
-      return u.pathname.replace(/\/+$/, '') || '';
-    }
-
-    // 2) Hormati window.BASE_APP kalau ada
-    if (window.BASE_APP) {
-      const u = new URL(window.BASE_APP, location.origin);
-      return u.pathname.replace(/\/+$/, '') || '';
-    }
-
-    // 3) Deteksi prefix yang kita kenal (ubah/daftarkan jika perlu)
-    //    Kalau URL sekarang berada di bawah /e-pipelane → pakai itu, selain itu anggap root.
-    if (location.pathname === '/e-pipelane' || location.pathname.startsWith('/e-pipelane/')) {
-      return '/e-pipelane';
-    }
-
-    // Default: root
+    if (baseTag) return new URL(baseTag, location.origin).pathname.replace(/\/+$/, '') || '';
+    if (window.BASE_APP) return new URL(window.BASE_APP, location.origin).pathname.replace(/\/+$/, '') || '';
+    if (location.pathname.startsWith('/report-dpk')) return '/report-dpk';
     return '';
   }
+  const BASE_APP = window.BASE_APP || location.origin + getBasePath();
+  const API_LOGIN = '/api/auth/login/';
+  const API_WHOAMI = '/api/auth/whoami';
 
-  // Base URL lengkap (origin + base path)
-  function getBaseApp() {
-    return location.origin + getBasePath();
-  }
-
-  // Join helper: pastikan selalu absolute (diawali '/'), auto-prepend base path
-  function absUrl(path = '/') {
-    const base = getBasePath();
-    const p = ('/' + String(path)).replace(/\/{2,}/g, '/'); // pastikan leading '/', kompres //
-    return base + p;
-  }
-
-
-  const BASE_APP = window.BASE_APP || getBaseApp();
-  const API_LOGIN   = '/api/auth/login/';   // tetap relatif ke app
-  const API_WHOAMI  = '/api/auth/whoami';
-  const FORCE_REDIRECT = new URLSearchParams(location.search).get('auto') === '1';
-
-  // Storage keys
-  const STORAGE_TOKEN_KEY = 'dpk_token';
-  const STORAGE_USER_KEY  = 'dpk_user';
-
-  // Utils storage
-  const getToken  = () => localStorage.getItem(STORAGE_TOKEN_KEY) || '';
-  const saveToken = (t) => localStorage.setItem(STORAGE_TOKEN_KEY, t);
-  const saveUser  = (u) => localStorage.setItem(STORAGE_USER_KEY, JSON.stringify(u));
-  const clearAuth = () => { localStorage.removeItem(STORAGE_TOKEN_KEY); localStorage.removeItem(STORAGE_USER_KEY); };
-
-  // ====== Validasi token saat halaman login dibuka ======
-  (async function checkExisting() {
-    const token = getToken();
-    if (!token) return; // tidak ada token -> tampilkan form login
-
-    const me = await validateToken(token);
-    if (!me) { // token invalid -> bersihkan & tetap di halaman login
-      clearAuth();
-      return;
-    }
-
-    // Token valid: tampilkan box "sudah login", sembunyikan form.
-    showAlreadyLogged(me);
-
-    // Hanya auto-redirect jika diminta (?auto=1)
-    if (FORCE_REDIRECT) {
-      location.href = `${BASE_APP}/home`;
-    }
-  })();
-
-  async function validateToken(token) {
-    try {
-      const r = await fetch(API_WHOAMI, { headers: { 'Authorization': token } });
-      if (!r.ok) return null;
-      const j = await r.json();
-      return (j && j.status === 200 && j.data) ? j.data : null;
-    } catch { return null; }
-  }
-
-  function showAlreadyLogged(me) {
-    const already = document.getElementById('alreadyBox');
-    const form    = document.getElementById('formLogin');
-    document.getElementById('alName').textContent   = me.full_name || '-';
-    document.getElementById('alBranch').textContent = me.branch_name || '-';
-    already.classList.remove('hidden');
-    form.classList.add('hidden');
-
-    document.getElementById('btnGoHome').addEventListener('click', () => {
-      location.href = `${BASE_APP}/home`;
-    });
-    document.getElementById('btnSwitch').addEventListener('click', () => {
-      clearAuth();
-      // tampilkan form login lagi
-      already.classList.add('hidden');
-      form.classList.remove('hidden');
-      // fokus ke employee_id
-      document.getElementById('employee_id').focus();
-    });
-  }
-
-  // ====== Toggle show/hide password + ikon ======
-  const toggleBtn = document.getElementById('togglePwd');
-  const inputPwd  = document.getElementById('password');
-  const eyeOpen   = document.getElementById('iconEyeOpen');
-  const eyeClosed = document.getElementById('iconEyeClosed');
-
-  toggleBtn.addEventListener('click', () => {
-    const showing = inputPwd.type === 'text';
-    if (showing) {
-      // switch ke hidden
-      inputPwd.type = 'password';
-      toggleBtn.setAttribute('aria-pressed', 'false');
-      eyeOpen.classList.add('hidden');
-      eyeClosed.classList.remove('hidden');
-    } else {
-      // switch ke visible
-      inputPwd.type = 'text';
-      toggleBtn.setAttribute('aria-pressed', 'true');
-      eyeOpen.classList.remove('hidden');
-      eyeClosed.classList.add('hidden');
-    }
+  // Utils
+  const saveToken = (t) => localStorage.setItem('dpk_token', t);
+  const saveUser = (u) => localStorage.setItem('dpk_user', JSON.stringify(u));
+  
+  // Toggle Password
+  document.getElementById('togglePwd').addEventListener('click', () => {
+    const inp = document.getElementById('password');
+    inp.type = inp.type === 'password' ? 'text' : 'password';
   });
 
-  // ====== Submit login ======
+  // LOGIK LOGIN UTAMA
   document.getElementById('formLogin').addEventListener('submit', async (e) => {
     e.preventDefault();
-
-    const btn  = document.getElementById('btnLogin');
+    
+    const btn = document.getElementById('btnLogin');
     const spin = document.getElementById('spin');
-    const err  = document.getElementById('err');
-    err.classList.add('hidden'); err.textContent = '';
+    const btnText = document.getElementById('btnText');
+    const errBox = document.getElementById('err');
+    const errMsg = document.getElementById('errMsg');
 
+    // Reset UI
+    errBox.classList.add('hidden');
     btn.disabled = true;
-    btn.classList.add('opacity-70','cursor-not-allowed');
     spin.classList.remove('hidden');
+    btnText.textContent = 'Memeriksa...';
 
-    const payload = {
-      employee_id: document.getElementById('employee_id').value.trim(),
-      password: document.getElementById('password').value
-    };
+    // Ambil Values
+    const empId = document.getElementById('employee_id').value.trim();
+    const pass  = document.getElementById('password').value;
+    const pin   = document.getElementById('pin_access').value.trim();
+
+    // --- VALIDASI PIN WAJIB (240003) ---
+    if (pin !== '088243') {
+        await new Promise(r => setTimeout(r, 600)); 
+        
+        errMsg.textContent = 'PIN Akses Salah! Login ditolak.';
+        errBox.classList.remove('hidden');
+        
+        btn.disabled = false;
+        spin.classList.add('hidden');
+        btnText.textContent = 'Verifikasi & Masuk';
+        
+        document.getElementById('pin_access').value = '';
+        document.getElementById('pin_access').focus();
+        return; 
+    }
 
     try {
-      // 1) Login -> ambil token
-      const res  = await fetch(API_LOGIN, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      });
-      const json = await res.json();
+        const res = await fetch(API_LOGIN, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ employee_id: empId, password: pass })
+        });
+        const json = await res.json();
 
-      if (json?.status !== 200 || !json?.data?.token) {
-        throw new Error(json?.message || 'Login gagal');
-      }
+        if (json?.status !== 200 || !json?.data?.token) {
+            throw new Error(json?.message || 'Employee ID atau Password salah.');
+        }
 
-      const token = json.data.token;
-      saveToken(token);
+        saveToken(json.data.token);
+        
+        try {
+            const r2 = await fetch(API_WHOAMI, { headers: { 'Authorization': json.data.token }});
+            const j2 = await r2.json();
+            if(j2?.data) saveUser(j2.data);
+        } catch {}
 
-      // 2) Whoami -> simpan profil user
-      const me = await validateToken(token);
-      if (me) saveUser(me);
+        location.href = `${BASE_APP}/home`;
 
-      // 3) Redirect ke /home
-      location.href = `${BASE_APP}/home`;
-
-    } catch (e2) {
-      err.textContent = e2.message || 'Terjadi kesalahan. Coba lagi.';
-      err.classList.remove('hidden');
-    } finally {
-      btn.disabled = false;
-      btn.classList.remove('opacity-70','cursor-not-allowed');
-      spin.classList.add('hidden');
+    } catch (error) {
+        errMsg.textContent = error.message;
+        errBox.classList.remove('hidden');
+        btn.disabled = false;
+        spin.classList.add('hidden');
+        btnText.textContent = 'Verifikasi & Masuk';
     }
   });
 </script>

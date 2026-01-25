@@ -5,7 +5,7 @@
     <div class="h-14 flex items-center justify-between">
       <a href="home" class="flex items-center gap-2">
         <img src="./img/logodpk.png" class="h-8 w-8 object-contain" alt="Logo">
-        <span class="text-slate-800 text-lg font-semibold">Divisi Penyelesain Kredit</span>
+        <span class="text-slate-800 text-lg font-semibold">ATLAS</span>
       </a>
 
       <div class="flex items-center gap-3">

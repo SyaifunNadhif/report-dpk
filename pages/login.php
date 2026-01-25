@@ -28,10 +28,9 @@
       filter: drop-shadow(0 0 6px #69a0ff);
       animation: meteor 3s linear infinite;
       opacity: 0;
-      z-index: 10; /* Di atas background, di bawah teks */
+      z-index: 10;
     }
     
-    /* Ekor meteor agar terlihat cepat */
     .meteor-effect::before {
       content: '';
       position: absolute;
@@ -64,8 +63,8 @@
          </svg>
       </div>
       <h2 class="text-4xl font-bold mb-4 tracking-tight text-white drop-shadow-lg">Secure Portal</h2>
-      <p class="text-blue-100 text-lg drop-shadow-md">AKSES TERBATAS KHUSUS TIM DPK</p>
-      <p class="text-blue-200 text-sm mt-2 opacity-80">Permintaan Akses Ke TIM DPK</p>
+      <p class="text-blue-100 text-lg drop-shadow-md">ATLAS</p>
+      <p class="text-blue-200 text-sm mt-2 opacity-80">Account Tracking & Lending Analytics System</p>
     </div>
   </div>
 
@@ -75,7 +74,7 @@
       
       <div class="mb-8">
         <h1 class="text-3xl font-extrabold text-gray-900 mb-2">Login Pegawai</h1>
-        <p class="text-gray-500 text-sm">Masukkan kredensial dan PIN keamanan.</p>
+        <p class="text-gray-500 text-sm">Masukkan ID Pegawai dan Password Anda.</p>
       </div>
 
       <div id="alreadyBox" class="hidden border-l-4 border-green-500 rounded-r bg-green-50 p-4 mb-6">
@@ -108,16 +107,6 @@
                </svg>
             </button>
           </div>
-        </div>
-
-        <div class="bg-blue-50 p-5 rounded-xl border border-blue-200">
-            <label for="pin_access" class="block text-sm font-extrabold text-blue-900 mb-2 text-center">
-                PIN Keamanan (Wajib)
-            </label>
-            <input type="password" id="pin_access" maxlength="6" inputmode="numeric" required
-                   class="w-full text-center tracking-[0.5em] font-mono text-xl rounded border-gray-300 bg-white text-gray-900 placeholder-gray-300 focus:border-blue-600 focus:ring-blue-600 py-2"
-                   placeholder="000000">
-            <p class="text-xs text-blue-600 mt-2 text-center font-medium">Masukkan 6 digit PIN otoritas</p>
         </div>
 
         <button type="submit" id="btnLogin" 
@@ -175,26 +164,9 @@
     spin.classList.remove('hidden');
     btnText.textContent = 'Memeriksa...';
 
-    // Ambil Values
+    // Ambil Values (Hanya Emp ID dan Password)
     const empId = document.getElementById('employee_id').value.trim();
     const pass  = document.getElementById('password').value;
-    const pin   = document.getElementById('pin_access').value.trim();
-
-    // --- VALIDASI PIN WAJIB (240003) ---
-    if (pin !== '088243') {
-        await new Promise(r => setTimeout(r, 600)); 
-        
-        errMsg.textContent = 'PIN Akses Salah! Login ditolak.';
-        errBox.classList.remove('hidden');
-        
-        btn.disabled = false;
-        spin.classList.add('hidden');
-        btnText.textContent = 'Verifikasi & Masuk';
-        
-        document.getElementById('pin_access').value = '';
-        document.getElementById('pin_access').focus();
-        return; 
-    }
 
     try {
         const res = await fetch(API_LOGIN, {
