@@ -3,31 +3,58 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
-// Ambil url dari rewrite (?url=...)
+/**
+ * =========================
+ * BASE APP (AUTO)
+ * =========================
+ * Local   : http://localhost/report-dpk
+ * Server  : https://domain.com
+ */
+define('BASE_APP',
+    (isset($_SERVER['HTTPS']) ? 'https' : 'http') . '://' .
+    $_SERVER['HTTP_HOST'] .
+    (strpos($_SERVER['HTTP_HOST'], 'localhost') !== false ? '/report-dpk' : '')
+);
+
+// =========================
+// AMBIL URL DARI REWRITE
+// =========================
 $url = $_GET['url'] ?? '';
-$url = trim($url);
 $url = trim($url, '/');
 
 // =========================
-// Routing default:
-// - Kalau url kosong:
-//      - kalau sudah login  -> home
-//      - kalau belum login  -> login
+// JANGAN LEWATKAN API KE ROUTER HALAMAN
 // =========================
-if ($url === '' || $url === null) {
-    if (!empty($_SESSION['user_id'])) {   // GANTI sesuai nama session login-mu
-        $url = 'home';
+if (str_starts_with($url, 'api/')) {
+    $apiPath = __DIR__ . '/' . $url . '.php';
+
+    if (is_file($apiPath)) {
+        require $apiPath;
     } else {
-        $url = 'login';
+        http_response_code(404);
+        echo json_encode([
+            'status' => false,
+            'message' => 'API endpoint not found'
+        ]);
     }
+    exit;
 }
 
-// Pecah: page / param
+// =========================
+// ROUTING DEFAULT
+// =========================
+if ($url === '') {
+    $url = !empty($_SESSION['user_id']) ? 'home' : 'login';
+}
+
+// page / param
 [$page, $param] = array_pad(explode('/', $url, 2), 2, null);
 
 $baseDir = __DIR__;
 
-// Header
+// =========================
+// HEADER
+// =========================
 include $baseDir . "/views/header.php";
 
 // login tidak pakai navbar
@@ -35,11 +62,13 @@ if ($page !== 'login') {
     include $baseDir . "/views/navbar.php";
 }
 
-// File halaman
+// =========================
+// LOAD PAGE
+// =========================
 $path = $baseDir . "/pages/{$page}.php";
 
 if (is_file($path)) {
-    if ($param !== null && $param !== '') {
+    if ($param !== null) {
         $_GET['id'] = $param;
     }
     include $path;
@@ -48,6 +77,8 @@ if (is_file($path)) {
     echo "<h1>404 - Halaman tidak ditemukan</h1>";
 }
 
-// Script & footer
+// =========================
+// FOOTER
+// =========================
 include $baseDir . "/views/script.php";
 include $baseDir . "/views/footer.php";
