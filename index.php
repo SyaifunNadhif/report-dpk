@@ -25,7 +25,7 @@ $url = trim($url, '/');
 // =========================
 // JANGAN LEWATKAN API KE ROUTER HALAMAN
 // =========================
-if (str_starts_with($url, 'api/')) {
+if (strpos($url, 'api/')) {
     $apiPath = __DIR__ . '/' . $url . '.php';
 
     if (is_file($apiPath)) {
