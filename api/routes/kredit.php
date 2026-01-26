@@ -24,6 +24,8 @@ switch ($method) {
             $controller->getTop50RealisasiKonsolidasi($input);
         } elseif ($input['type'] === 'mob_vintage') {
             $controller->getRekapMob6Bulan($input);
+        } elseif ($input['type'] === 'detail_mob_debitur') {
+            $controller->getDetailMobDebitur($input);
         } elseif ($input['type'] === 'Migrasi Kolek') {
             $controller->getMigrasiKolek($input);
         } elseif ($input['type'] === 'kolektibilitas') {

@@ -15,49 +15,49 @@ pass :
 #insert(1)
 1. acc 
 
-select * from acc_history where tanggal = '20260122'
+select * from acc_history where tanggal = '20260125'
 
 
 2.tabel : kredit_history
 
 check
 
-select count(no_rekening) from kredit_history where tanggal = '20260122' and kode_kantor between  '001' and '010'
+select count(no_rekening) from kredit_history where tanggal = '20260125' and kode_kantor between  '001' and '010'
 
-delete from kredit_history where tanggal = '20260122' and kode_kantor between '021' adn '024'
+delete from kredit_history where tanggal = '20260125' and kode_kantor between '021' adn '024'
 
 select no_rekening,nasabah_id,baki_debet,plafond,tagihan_pokok,tagihan_bunga,denda,tunggakan_pokok,tunggakan_bunga,saldo_pyad,nilai_njop,nilai_taksasi,jaminan_diperhitungkan,perc_ppapwd,nilai_ppapwd,ft_pokok,
 	ft_bunga,ft_jt,kolektibilitas,my_kolek_number,reschedulling,jml_hari_pokok,jml_hari_bunga,jenis_agunan,ikatan_agunan,persen_dijaminkan,tgl_debius,saldo_debius,jml_debius,angs_debius,angsuran_ke,tanggal,
 	waktu,kolektibilitas_lalu,saldo_provisi,saldo_adm_lainnya,saldo_biaya,baki_debet_rra,kode_kantor,jml_hari,pyad_harian,nilai_apht,nilai_pasar,nilai_agunan,next_tagihan_pokok,next_tagihan_bunga,tgl_mulai_macet,
 	saldo_cad_restruk,saldo_bunga_ditangguhkan,tgl_mulai_nunggak,tgl_mulai_nunggak_pokok,tgl_mulai_nunggak_bunga,hari_menunggak,hari_menunggak_pokok,hari_menunggak_bunga,hari_menunggak_jt,kolektibilitas_real,my_kolek_number_real,
 	tgl_mulai_nunggak_relaksasi,tgl_mulai_nunggak_pokok_relaksasi as tgl_mulai_nunggak_pokok_relak,tgl_mulai_nunggak_bunga_relaksasi as tgl_mulai_nunggak_bunga_relak,hari_menunggak_relaksasi,hari_menunggak_pokok_relaksasi,
-	hari_menunggak_bunga_relaksasi from kredit_history where tanggal = '20260122' and kode_kantor between  '001' and '010'
+	hari_menunggak_bunga_relaksasi from kredit_history where tanggal = '20260125' and kode_kantor between  '001' and '010'
 select no_rekening,nasabah_id,baki_debet,plafond,tagihan_pokok,tagihan_bunga,denda,tunggakan_pokok,tunggakan_bunga,saldo_pyad,nilai_njop,nilai_taksasi,jaminan_diperhitungkan,perc_ppapwd,nilai_ppapwd,ft_pokok,
 	ft_bunga,ft_jt,kolektibilitas,my_kolek_number,reschedulling,jml_hari_pokok,jml_hari_bunga,jenis_agunan,ikatan_agunan,persen_dijaminkan,tgl_debius,saldo_debius,jml_debius,angs_debius,angsuran_ke,tanggal,
 	waktu,kolektibilitas_lalu,saldo_provisi,saldo_adm_lainnya,saldo_biaya,baki_debet_rra,kode_kantor,jml_hari,pyad_harian,nilai_apht,nilai_pasar,nilai_agunan,next_tagihan_pokok,next_tagihan_bunga,tgl_mulai_macet,
 	saldo_cad_restruk,saldo_bunga_ditangguhkan,tgl_mulai_nunggak,tgl_mulai_nunggak_pokok,tgl_mulai_nunggak_bunga,hari_menunggak,hari_menunggak_pokok,hari_menunggak_bunga,hari_menunggak_jt,kolektibilitas_real,my_kolek_number_real,
 	tgl_mulai_nunggak_relaksasi,tgl_mulai_nunggak_pokok_relaksasi as tgl_mulai_nunggak_pokok_relak,tgl_mulai_nunggak_bunga_relaksasi as tgl_mulai_nunggak_bunga_relak,hari_menunggak_relaksasi,hari_menunggak_pokok_relaksasi,
-	hari_menunggak_bunga_relaksasi from kredit_history where tanggal = '20260122' and kode_kantor between  '011' and '020'
+	hari_menunggak_bunga_relaksasi from kredit_history where tanggal = '20260125' and kode_kantor between  '011' and '020'
 select no_rekening,nasabah_id,baki_debet,plafond,tagihan_pokok,tagihan_bunga,denda,tunggakan_pokok,tunggakan_bunga,saldo_pyad,nilai_njop,nilai_taksasi,jaminan_diperhitungkan,perc_ppapwd,nilai_ppapwd,ft_pokok,
 	ft_bunga,ft_jt,kolektibilitas,my_kolek_number,reschedulling,jml_hari_pokok,jml_hari_bunga,jenis_agunan,ikatan_agunan,persen_dijaminkan,tgl_debius,saldo_debius,jml_debius,angs_debius,angsuran_ke,tanggal,
 	waktu,kolektibilitas_lalu,saldo_provisi,saldo_adm_lainnya,saldo_biaya,baki_debet_rra,kode_kantor,jml_hari,pyad_harian,nilai_apht,nilai_pasar,nilai_agunan,next_tagihan_pokok,next_tagihan_bunga,tgl_mulai_macet,
 	saldo_cad_restruk,saldo_bunga_ditangguhkan,tgl_mulai_nunggak,tgl_mulai_nunggak_pokok,tgl_mulai_nunggak_bunga,hari_menunggak,hari_menunggak_pokok,hari_menunggak_bunga,hari_menunggak_jt,kolektibilitas_real,my_kolek_number_real,
 	tgl_mulai_nunggak_relaksasi,tgl_mulai_nunggak_pokok_relaksasi as tgl_mulai_nunggak_pokok_relak,tgl_mulai_nunggak_bunga_relaksasi as tgl_mulai_nunggak_bunga_relak,hari_menunggak_relaksasi,hari_menunggak_pokok_relaksasi,
-	hari_menunggak_bunga_relaksasi from kredit_history where tanggal = '20260122' and kode_kantor between  '021' and '024'
+	hari_menunggak_bunga_relaksasi from kredit_history where tanggal = '20260125' and kode_kantor between  '021' and '024'
 select no_rekening,nasabah_id,baki_debet,plafond,tagihan_pokok,tagihan_bunga,denda,tunggakan_pokok,tunggakan_bunga,saldo_pyad,nilai_njop,nilai_taksasi,jaminan_diperhitungkan,perc_ppapwd,nilai_ppapwd,ft_pokok,
 	ft_bunga,ft_jt,kolektibilitas,my_kolek_number,reschedulling,jml_hari_pokok,jml_hari_bunga,jenis_agunan,ikatan_agunan,persen_dijaminkan,tgl_debius,saldo_debius,jml_debius,angs_debius,angsuran_ke,tanggal,
 	waktu,kolektibilitas_lalu,saldo_provisi,saldo_adm_lainnya,saldo_biaya,baki_debet_rra,kode_kantor,jml_hari,pyad_harian,nilai_apht,nilai_pasar,nilai_agunan,next_tagihan_pokok,next_tagihan_bunga,tgl_mulai_macet,
 	saldo_cad_restruk,saldo_bunga_ditangguhkan,tgl_mulai_nunggak,tgl_mulai_nunggak_pokok,tgl_mulai_nunggak_bunga,hari_menunggak,hari_menunggak_pokok,hari_menunggak_bunga,hari_menunggak_jt,kolektibilitas_real,my_kolek_number_real,
 	tgl_mulai_nunggak_relaksasi,tgl_mulai_nunggak_pokok_relaksasi as tgl_mulai_nunggak_pokok_relak,tgl_mulai_nunggak_bunga_relaksasi as tgl_mulai_nunggak_bunga_relak,hari_menunggak_relaksasi,hari_menunggak_pokok_relaksasi,
-	hari_menunggak_bunga_relaksasi from kredit_history where tanggal = '20260122' and kode_kantor between  '025' and '028'
+	hari_menunggak_bunga_relaksasi from kredit_history where tanggal = '20260125' and kode_kantor between  '025' and '028'
 
 3.tabel : inv_history
-select * from inv_history where tanggal = '20260122'
+select * from inv_history where tanggal = '20260125'
 
 4.tabel : tabtrans
-select * from tabtrans where tgl_trans = '20260122'
+select * from tabtrans where tgl_trans = '20260125'
 
-select  count(tgl_trans)  from tabtrans where tgl_trans = '20260122'  and kode_kantor between  '008' and '010'
+select  count(tgl_trans)  from tabtrans where tgl_trans = '20260125'  and kode_kantor between  '008' and '010'
 
 -- nanti aja --
 
@@ -73,11 +73,11 @@ select * from kre_agunan_relasi where id_relasi > '578548'
 
 Delete 
 tabel kretrans:
-hapus dulu dengan perintah ( delete from kretrans where month(tgl_trans) = '10' and year(tgl_trans) = '2025') - 
+hapus dulu dengan perintah ( delete from kretrans where month(tgl_trans) = '10' and year(tgl_trans) = '2026') - 
 kemudian sesuaikan dengan bulan berjalan - kemudian 
 Add / insert (1)
 1.select count(no_rekening) from kretrans where  month(tgl_trans) = '01' and year(tgl_trans) = '2026' and kode_kantor between '001' and '018'
-2.select count(no_rekening) from kretrans where  month(tgl_trans) = '12' and year(tgl_trans) = '2025' and kode_kantor between '019' and '028'
+2.select count(no_rekening) from kretrans where  month(tgl_trans) = '12' and year(tgl_trans) = '2026' and kode_kantor between '019' and '028'
 
 
 1 bulan sekali
@@ -271,7 +271,7 @@ FROM
 WHERE
 	tabung.no_rekening = tabung_history.no_rekening 
 	AND tabung.nasabah_id = nasabah.nasabah_id 
-	AND tabung_history.tanggal = "20260122"
+	AND tabung_history.tanggal = "20260125"
 	AND tabung_history.saldo_akhir >0
 	AND tabung.kode_produk=212
 
@@ -329,7 +329,7 @@ SELECT
       SELECT MAX(t.tgl_trans)
       FROM kretrans t
       WHERE t.no_rekening = k.no_rekening
-        AND t.tgl_trans <= '20260122'
+        AND t.tgl_trans <= '20260125'
         AND FLOOR(t.my_kode_trans/100) = 3
         AND t.pokok > 0
     )
@@ -346,7 +346,7 @@ SELECT
           SELECT MAX(t2.tgl_trans)
           FROM kretrans t2
           WHERE t2.no_rekening = k.no_rekening
-            AND t2.tgl_trans <= '20260122'
+            AND t2.tgl_trans <= '20260125'
             AND FLOOR(t2.my_kode_trans/100)=3
             AND t2.pokok > 0
         )
@@ -392,7 +392,7 @@ FROM kredit k
 JOIN nasabah n ON n.nasabah_id = k.nasabah_id
 JOIN kredit_history kh
   ON kh.no_rekening = k.no_rekening
- AND kh.tanggal = '20260122'
+ AND kh.tanggal = '20260125'
 LEFT JOIN css_kode_dati kd
   ON kd.kode_provinsi = n.propinsi
  AND kd.kode_dati     = n.kota_kab
@@ -663,7 +663,7 @@ select no_rekening,nasabah_id,baki_debet,plafond,tagihan_pokok,tagihan_bunga,den
 	ft_bunga,ft_jt,kolektibilitas,my_kolek_number,reschedulling,jml_hari_pokok,jml_hari_bunga,jenis_agunan,ikatan_agunan,persen_dijaminkan,tgl_debius,saldo_debius,jml_debius,angs_debius,angsuran_ke,tanggal,
 	waktu,kolektibilitas_lalu,saldo_provisi,saldo_adm_lainnya,saldo_biaya,baki_debet_rra,kode_kantor,jml_hari,pyad_harian,nilai_apht,nilai_pasar,nilai_agunan,next_tagihan_pokok,next_tagihan_bunga,tgl_mulai_macet,
 	saldo_cad_restruk,saldo_bunga_ditangguhkan,tgl_mulai_nunggak,tgl_mulai_nunggak_pokok,tgl_mulai_nunggak_bunga,hari_menunggak,hari_menunggak_pokok,hari_menunggak_bunga,hari_menunggak_jt,kolektibilitas_real,my_kolek_number_real,
-	hari_menunggak_bunga_relaksasi from kredit_history where tanggal = '20260122' and kode_kantor between  '001' and '028'and baki_debet > 0;
+	hari_menunggak_bunga_relaksasi from kredit_history where tanggal = '20260125' and kode_kantor between  '001' and '028'and baki_debet > 0;
 
 
 SELECT
@@ -787,7 +787,7 @@ FROM
 WHERE
 	tabung.no_rekening = tabung_history.no_rekening 
 	AND tabung.nasabah_id = nasabah.nasabah_id 
-	AND tabung_history.tanggal = 20260122
+	AND tabung_history.tanggal = 20260125
 	AND tabung_history.saldo_akhir >0
 	AND tabung.kode_produk=212
 ORDER BY
@@ -851,7 +851,7 @@ LEFT JOIN tabung t
   AND t.kode_produk = 212
 LEFT JOIN tabung_history th
   ON th.no_rekening = t.no_rekening
-  AND th.tanggal = 20260122
+  AND th.tanggal = 20260125
 
 WHERE k.no_rekening IN (
   SELECT DISTINCT no_rekening
@@ -964,7 +964,7 @@ LEFT JOIN tabung_history th
 
   ON th.no_rekening = t.no_rekening
 
-  AND th.tanggal = 20260122
+  AND th.tanggal = 20260125
 
 
 
