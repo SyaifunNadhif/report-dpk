@@ -58,6 +58,9 @@ switch ($endpoint) {
     case 'jt':
         require __DIR__ . '/routes/jatuh_tempo.php';
         break;
+    case 'bucket_fe':
+        require __DIR__ . '/routes/bucket_fe.php';
+        break;
 
     default:
         sendResponse(404, "Endpoint tidak ditemukan");

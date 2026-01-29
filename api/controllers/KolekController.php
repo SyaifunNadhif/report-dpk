@@ -369,135 +369,133 @@ class KolekController {
     ]);
   }
 
-  // private function asDate($s) {
-  //   if (!$s) return null;
-  //   $t = strtotime($s);
-  //   return $t ? date('Y-m-d', $t) : null;
-  // }
+  public function getBucketCkpn($input=null){
+    // ---- params
+    $b = is_array($input)?$input:(json_decode(file_get_contents('php://input'),true) ?: []);
+    $closing = $this->asDate($b['closing_date'] ?? null);
+    $harian  = $this->asDate($b['harian_date'] ?? null);
+    $kc_raw  = $b['kode_kantor'] ?? null;
+    $kc      = ($kc_raw===null || $kc_raw==='') ? null : str_pad((string)$kc_raw,3,'0',STR_PAD_LEFT);
+    if (!$closing || !$harian) return sendResponse(400,"closing_date & harian_date wajib (YYYY-MM-DD)");
 
-  // private function snapshotExists($table, $created) {
-  //   $st = $this->pdo->prepare("SELECT 1 FROM {$table} WHERE created = ? LIMIT 1");
-  //   $st->execute([$created]);
-  //   return (bool)$st->fetchColumn();
-  // }
+    [$defs,$nameMap,$tagMap] = $this->loadBuckets();
+    $order = ['A','B','C','D','E','F','G','H','I','J','K','L','M','N'];
 
+    $M1  = $this->computeCKPNForDate($closing,$kc,$defs);
+    $CUR = $this->computeCKPNForDate($harian ,$kc,$defs);
 
-  // private function loadBuckets(): array {
-  //   $rows = $this->pdo->query("
-  //     SELECT dpd_code, dpd_name, min_day, max_day, status_tag
-  //     FROM ref_dpd_bucket ORDER BY min_day
-  //   ")->fetchAll(PDO::FETCH_ASSOC);
-  //   $def = []; $name=[]; $tag=[];
-  //   foreach ($rows as $r){
-  //     $def[] = [
-  //       'code'=>$r['dpd_code'],'name'=>$r['dpd_name'],
-  //       'min'=>(int)$r['min_day'],'max'=>is_null($r['max_day'])?null:(int)$r['max_day'],
-  //       'tag'=>$r['status_tag'] ?? null
-  //     ];
-  //     $name[$r['dpd_code']] = $r['dpd_name'];
-  //     $tag[$r['dpd_code']]  = $r['status_tag'] ?? null;
-  //   }
-  //   return [$def,$name,$tag];
-  // }
+    // ---- O_LUNAS: CKPN M-1 utk akun yang hilang (curr = 0)
+    $o_ckpn = 0; $o_noa = 0;
+    foreach ($M1['accSet'] as $acc=>$_){
+      if (!isset($CUR['accSet'][$acc])){ $o_noa++; $o_ckpn += (int)round($M1['ckpnByAcc'][$acc] ?? 0); }
+    }
 
-  // private function dpdToCode(int $dpd, array $defs): ?string {
-  //   foreach ($defs as $b) {
-  //     if ($dpd >= $b['min'] && ($b['max']===null || $dpd <= $b['max'])) return $b['code'];
-  //   }
-  //   return null;
-  // }
+    // ---- rows A..N + akumulasi subtotal SC/FE/BE
+    $rows=[];
+    $totSC = ['m1'=>0,'cur'=>0];
+    $totFE = ['m1'=>0,'cur'=>0];
+    $totBE = ['m1'=>0,'cur'=>0];
 
-  // private function dayRange(string $d): array {
-  //   return [$d." 00:00:00", date('Y-m-d', strtotime("$d +1 day"))." 00:00:00"];
-  // }
+    foreach ($order as $code){
+      $m1  = (int)round(($M1['perBucket'][$code]['ckpn'] ?? 0));
+      $cur = (int)round(($CUR['perBucket'][$code]['ckpn'] ?? 0));
 
-  // private function computeOSForDate(string $d, ?string $kc, array $defs): array {
-  //   [$ds,$de] = $this->dayRange($d);
-  //   $sql = "SELECT no_rekening, hari_menunggak, baki_debet
-  //           FROM nominatif
-  //           WHERE created >= ? AND created < ?";
-  //   $params = [$ds,$de];
-  //   if ($kc !== null) { $sql .= " AND LPAD(CAST(kode_cabang AS CHAR),3,'0') = ?"; $params[]=$kc; }
-  //   else { $sql .= " AND LPAD(CAST(kode_cabang AS CHAR),3,'0') <> '000'"; }
+      $rows[] = [
+        'dpd_code'=>$code,
+        'dpd_name'=>$nameMap[$code] ?? $code,
+        'status_tag'=>$tagMap[$code] ?? null,
+        'ckpn_m1'=>$m1,
+        'ckpn_curr'=>$cur,
+        'ckpn_inc'=>($cur-$m1)
+      ];
 
-  //   $st = $this->pdo->prepare($sql);
-  //   $st->execute($params);
+      $tag = $tagMap[$code] ?? null;
+      if ($tag==='SC'){ $totSC['m1'] += $m1; $totSC['cur'] += $cur; }
+      elseif($tag==='FE'){ $totFE['m1'] += $m1; $totFE['cur'] += $cur; }
+      elseif($tag==='BE'){ $totBE['m1'] += $m1; $totBE['cur'] += $cur; }
+    }
 
-  //   $sumPer = []; $accSet=[]; $osByAcc=[]; $bucketByAcc=[];
-  //   while ($r = $st->fetch(PDO::FETCH_ASSOC)) {
-  //     $acc = $r['no_rekening'];
-  //     $dpd = (int)($r['hari_menunggak'] ?? 0);
-  //     $os  = (float)($r['baki_debet'] ?? 0);
-  //     $code = $this->dpdToCode($dpd,$defs) ?? 'A';
-  //     if (!isset($sumPer[$code])) $sumPer[$code] = ['noa'=>0,'os'=>0.0];
-  //     $sumPer[$code]['noa']++;
-  //     $sumPer[$code]['os'] += $os;
+    // ---- Subtotal per cluster + GRAND TOTAL (A..N, tanpa O)
+    $row_tot_sc = [
+      'dpd_code'=>'TOTAL_SC','dpd_name'=>'TOTAL SC','status_tag'=>null,
+      'ckpn_m1'=>(int)$totSC['m1'],
+      'ckpn_curr'=>(int)$totSC['cur'],
+      'ckpn_inc'=>(int)($totSC['cur'] - $totSC['m1'])
+    ];
+    $row_tot_fe = [
+      'dpd_code'=>'TOTAL_FE','dpd_name'=>'TOTAL FE','status_tag'=>null,
+      'ckpn_m1'=>(int)$totFE['m1'],
+      'ckpn_curr'=>(int)$totFE['cur'],
+      'ckpn_inc'=>(int)($totFE['cur'] - $totFE['m1'])
+    ];
+    $row_tot_be = [
+      'dpd_code'=>'TOTAL_BE','dpd_name'=>'TOTAL BE','status_tag'=>null,
+      'ckpn_m1'=>(int)$totBE['m1'],
+      'ckpn_curr'=>(int)$totBE['cur'],
+      'ckpn_inc'=>(int)($totBE['cur'] - $totBE['m1'])
+    ];
 
-  //     $accSet[$acc] = true;
-  //     $osByAcc[$acc] = $os;
-  //     $bucketByAcc[$acc] = $code;
-  //   }
-  //   foreach ($sumPer as &$v){ $v['os'] = (int)round($v['os']); } unset($v);
+    $gt_m1  = (int)$totSC['m1'] + (int)$totFE['m1'] + (int)$totBE['m1'];
+    $gt_cur = (int)$totSC['cur'] + (int)$totFE['cur'] + (int)$totBE['cur'];
 
-  //   return [
-  //     'perBucket'   => $sumPer,
-  //     'accSet'      => $accSet,
-  //     'osByAcc'     => $osByAcc,
-  //     'bucketByAcc' => $bucketByAcc
-  //   ];
-  // }
+    $row_grand = [
+      'dpd_code'=>'GRAND_TOTAL','dpd_name'=>'GRAND TOTAL','status_tag'=>null,
+      'ckpn_m1'=>$gt_m1,
+      'ckpn_curr'=>$gt_cur,
+      'ckpn_inc'=> (int)($gt_cur - $gt_m1)
+    ];
 
-  // private function loadGlobalLGD(string $harian_date): float {
-  //   try {
-  //     $st = $this->pdo->prepare("
-  //       SELECT lgd_percent FROM lgd_current
-  //       WHERE created <= ? ORDER BY created DESC LIMIT 1
-  //     ");
-  //     $st->execute([$harian_date]);
-  //     $v = $st->fetchColumn();
-  //     return ($v!==false) ? (float)$v : 59.48;
-  //   } catch (PDOException $e) { return 59.48; }
-  // }
+    // Tambahkan baris total ke rows (urutan: TOTAL_SC, TOTAL_FE, TOTAL_BE, GRAND_TOTAL)
+    $rows[] = $row_tot_sc;
+    $rows[] = $row_tot_fe;
+    $rows[] = $row_tot_be;
+    $rows[] = $row_grand;
 
-  // private function loadPdMap(string $d): array {
-  //   $pdMap=[];
-  //   try {
-  //     $st = $this->pdo->prepare("
-  //       SELECT p.product_code, p.dpd_code, p.pd_percent
-  //       FROM pd_current p
-  //       JOIN (
-  //         SELECT product_code, dpd_code, MAX(created) AS created
-  //         FROM pd_current
-  //         WHERE created <= ?
-  //         GROUP BY product_code, dpd_code
-  //       ) x ON x.product_code=p.product_code AND x.dpd_code=p.dpd_code AND x.created=p.created
-  //     ");
-  //     $st->execute([$d]);
-  //     foreach ($st->fetchAll(PDO::FETCH_ASSOC) as $r){
-  //       $pdMap[(int)$r['product_code']][$r['dpd_code']] = (float)$r['pd_percent'];
-  //     }
-  //     if (!empty($pdMap)) return $pdMap;
-  //   } catch (PDOException $e) {}
-  //   try {
-  //     $q = $this->pdo->query("SELECT product_code, dpd_code, pd_percent FROM pd_current");
-  //     foreach ($q->fetchAll(PDO::FETCH_ASSOC) as $r){
-  //       $pdMap[(int)$r['product_code']][$r['dpd_code']] = (float)str_replace(',','.',$r['pd_percent']);
-  //     }
-  //   } catch (PDOException $e) {}
-  //   return $pdMap;
-  // }
+    // ---- O_LUNAS row (tidak masuk total SC/FE/BE/GRAND)
+    $rows[] = [
+      'dpd_code'=>'O','dpd_name'=>'O_Lunas','status_tag'=>null,
+      'ckpn_m1'=>(int)$o_ckpn,'ckpn_curr'=>0,'ckpn_inc'=>(int)(0 - $o_ckpn)
+    ];
 
-  // private function hasSnapshot(string $d, ?string $kc): bool {
-  //   try {
-  //     [$ds,$de] = $this->dayRange($d);
-  //     $sql = "SELECT COUNT(1) FROM nominatif_ckpn WHERE created >= ? AND created < ?";
-  //     $params = [$ds,$de];
-  //     if ($kc!==null){ $sql.=" AND LPAD(CAST(kode_cabang AS CHAR),3,'0') = ?"; $params[]=$kc; }
-  //     $st = $this->pdo->prepare($sql); $st->execute($params);
-  //     return ((int)$st->fetchColumn() > 0);
-  //   } catch (PDOException $e) { return false; }
-  // }
+    // ---- Response (tambahkan ringkasan top-level agar FE mudah konsumsi)
+    return sendResponse(200,"OK",[
+      'closing_date'=>$closing,
+      'harian_date'=>$harian,
+      'kode_kantor'=>$kc,
+      'rows'=>$rows,
 
+      // Ringkasan per cluster (A..N)
+      'total_sc'=>[
+        'ckpn_m1'=>$row_tot_sc['ckpn_m1'],
+        'ckpn_curr'=>$row_tot_sc['ckpn_curr'],
+        'ckpn_inc' =>$row_tot_sc['ckpn_inc']
+      ],
+      'total_fe'=>[
+        'ckpn_m1'=>$row_tot_fe['ckpn_m1'],
+        'ckpn_curr'=>$row_tot_fe['ckpn_curr'],
+        'ckpn_inc' =>$row_tot_fe['ckpn_inc']
+      ],
+      'total_be'=>[
+        'ckpn_m1'=>$row_tot_be['ckpn_m1'],
+        'ckpn_curr'=>$row_tot_be['ckpn_curr'],
+        'ckpn_inc' =>$row_tot_be['ckpn_inc']
+      ],
+
+      // Grand total A..N (tidak termasuk O_LUNAS)
+      'grand_total'=>[
+        'ckpn_m1'=>$row_grand['ckpn_m1'],
+        'ckpn_curr'=>$row_grand['ckpn_curr'],
+        'ckpn_inc' =>$row_grand['ckpn_inc']
+      ],
+
+      'source'=>[
+        'closing'=>$M1['source'],
+        'current'=>$CUR['source']
+      ]
+    ]);
+  }
+
+  
   /** hitung CKPN per bucket untuk 1 tanggal (pakai snapshot kalau ada; kalau tidak compute) */
   private function computeCKPNForDate(string $d, ?string $kc, array $defs): array {
     $sumPer=[]; $ckByAcc=[]; $accSet=[];
@@ -888,131 +886,7 @@ class KolekController {
   }
 
 
-  public function getBucketCkpn($input=null){
-    // ---- params
-    $b = is_array($input)?$input:(json_decode(file_get_contents('php://input'),true) ?: []);
-    $closing = $this->asDate($b['closing_date'] ?? null);
-    $harian  = $this->asDate($b['harian_date'] ?? null);
-    $kc_raw  = $b['kode_kantor'] ?? null;
-    $kc      = ($kc_raw===null || $kc_raw==='') ? null : str_pad((string)$kc_raw,3,'0',STR_PAD_LEFT);
-    if (!$closing || !$harian) return sendResponse(400,"closing_date & harian_date wajib (YYYY-MM-DD)");
 
-    [$defs,$nameMap,$tagMap] = $this->loadBuckets();
-    $order = ['A','B','C','D','E','F','G','H','I','J','K','L','M','N'];
-
-    $M1  = $this->computeCKPNForDate($closing,$kc,$defs);
-    $CUR = $this->computeCKPNForDate($harian ,$kc,$defs);
-
-    // ---- O_LUNAS: CKPN M-1 utk akun yang hilang (curr = 0)
-    $o_ckpn = 0; $o_noa = 0;
-    foreach ($M1['accSet'] as $acc=>$_){
-      if (!isset($CUR['accSet'][$acc])){ $o_noa++; $o_ckpn += (int)round($M1['ckpnByAcc'][$acc] ?? 0); }
-    }
-
-    // ---- rows A..N + akumulasi subtotal SC/FE/BE
-    $rows=[];
-    $totSC = ['m1'=>0,'cur'=>0];
-    $totFE = ['m1'=>0,'cur'=>0];
-    $totBE = ['m1'=>0,'cur'=>0];
-
-    foreach ($order as $code){
-      $m1  = (int)round(($M1['perBucket'][$code]['ckpn'] ?? 0));
-      $cur = (int)round(($CUR['perBucket'][$code]['ckpn'] ?? 0));
-
-      $rows[] = [
-        'dpd_code'=>$code,
-        'dpd_name'=>$nameMap[$code] ?? $code,
-        'status_tag'=>$tagMap[$code] ?? null,
-        'ckpn_m1'=>$m1,
-        'ckpn_curr'=>$cur,
-        'ckpn_inc'=>($cur-$m1)
-      ];
-
-      $tag = $tagMap[$code] ?? null;
-      if ($tag==='SC'){ $totSC['m1'] += $m1; $totSC['cur'] += $cur; }
-      elseif($tag==='FE'){ $totFE['m1'] += $m1; $totFE['cur'] += $cur; }
-      elseif($tag==='BE'){ $totBE['m1'] += $m1; $totBE['cur'] += $cur; }
-    }
-
-    // ---- Subtotal per cluster + GRAND TOTAL (A..N, tanpa O)
-    $row_tot_sc = [
-      'dpd_code'=>'TOTAL_SC','dpd_name'=>'TOTAL SC','status_tag'=>null,
-      'ckpn_m1'=>(int)$totSC['m1'],
-      'ckpn_curr'=>(int)$totSC['cur'],
-      'ckpn_inc'=>(int)($totSC['cur'] - $totSC['m1'])
-    ];
-    $row_tot_fe = [
-      'dpd_code'=>'TOTAL_FE','dpd_name'=>'TOTAL FE','status_tag'=>null,
-      'ckpn_m1'=>(int)$totFE['m1'],
-      'ckpn_curr'=>(int)$totFE['cur'],
-      'ckpn_inc'=>(int)($totFE['cur'] - $totFE['m1'])
-    ];
-    $row_tot_be = [
-      'dpd_code'=>'TOTAL_BE','dpd_name'=>'TOTAL BE','status_tag'=>null,
-      'ckpn_m1'=>(int)$totBE['m1'],
-      'ckpn_curr'=>(int)$totBE['cur'],
-      'ckpn_inc'=>(int)($totBE['cur'] - $totBE['m1'])
-    ];
-
-    $gt_m1  = (int)$totSC['m1'] + (int)$totFE['m1'] + (int)$totBE['m1'];
-    $gt_cur = (int)$totSC['cur'] + (int)$totFE['cur'] + (int)$totBE['cur'];
-
-    $row_grand = [
-      'dpd_code'=>'GRAND_TOTAL','dpd_name'=>'GRAND TOTAL','status_tag'=>null,
-      'ckpn_m1'=>$gt_m1,
-      'ckpn_curr'=>$gt_cur,
-      'ckpn_inc'=> (int)($gt_cur - $gt_m1)
-    ];
-
-    // Tambahkan baris total ke rows (urutan: TOTAL_SC, TOTAL_FE, TOTAL_BE, GRAND_TOTAL)
-    $rows[] = $row_tot_sc;
-    $rows[] = $row_tot_fe;
-    $rows[] = $row_tot_be;
-    $rows[] = $row_grand;
-
-    // ---- O_LUNAS row (tidak masuk total SC/FE/BE/GRAND)
-    $rows[] = [
-      'dpd_code'=>'O','dpd_name'=>'O_Lunas','status_tag'=>null,
-      'ckpn_m1'=>(int)$o_ckpn,'ckpn_curr'=>0,'ckpn_inc'=>(int)(0 - $o_ckpn)
-    ];
-
-    // ---- Response (tambahkan ringkasan top-level agar FE mudah konsumsi)
-    return sendResponse(200,"OK",[
-      'closing_date'=>$closing,
-      'harian_date'=>$harian,
-      'kode_kantor'=>$kc,
-      'rows'=>$rows,
-
-      // Ringkasan per cluster (A..N)
-      'total_sc'=>[
-        'ckpn_m1'=>$row_tot_sc['ckpn_m1'],
-        'ckpn_curr'=>$row_tot_sc['ckpn_curr'],
-        'ckpn_inc' =>$row_tot_sc['ckpn_inc']
-      ],
-      'total_fe'=>[
-        'ckpn_m1'=>$row_tot_fe['ckpn_m1'],
-        'ckpn_curr'=>$row_tot_fe['ckpn_curr'],
-        'ckpn_inc' =>$row_tot_fe['ckpn_inc']
-      ],
-      'total_be'=>[
-        'ckpn_m1'=>$row_tot_be['ckpn_m1'],
-        'ckpn_curr'=>$row_tot_be['ckpn_curr'],
-        'ckpn_inc' =>$row_tot_be['ckpn_inc']
-      ],
-
-      // Grand total A..N (tidak termasuk O_LUNAS)
-      'grand_total'=>[
-        'ckpn_m1'=>$row_grand['ckpn_m1'],
-        'ckpn_curr'=>$row_grand['ckpn_curr'],
-        'ckpn_inc' =>$row_grand['ckpn_inc']
-      ],
-
-      'source'=>[
-        'closing'=>$M1['source'],
-        'current'=>$CUR['source']
-      ]
-    ]);
-  }
 
 
   public function migrasiBucketOsc($input=null){
@@ -1240,6 +1114,7 @@ class KolekController {
       return ($v!==false) ? (float)$v : 59.48;
     } catch (PDOException $e) { return 59.48; }
   }
+
   private function loadPdMap(string $d): array {
     $pdMap=[];
     try {
@@ -1267,6 +1142,7 @@ class KolekController {
     } catch (PDOException $e) {}
     return $pdMap;
   }
+
   private function hasSnapshot(string $d, ?string $kc): bool {
     try {
       [$ds,$de] = $this->dayRange($d);
