@@ -119,18 +119,18 @@
 
         <li class="nb-li">
           <button data-dropdown="dropdownPemasaran" class="nb-parent nb-tap">
-            <span>Front-end</span>
+            <span>Pemasaran</span>
             <svg class="nb-caret" viewBox="0 0 20 20" fill="currentColor" width="16" height="16">
               <path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.586l3.71-4.354a.75.75 0 111.14.976l-4.25 5a.75.75 0 01-1.14 0l-4.25-5a.75.75 0 01.02-1.06z" clip-rule="evenodd"/>
             </svg>
           </button>
           <div id="dropdownPemasaran" class="dropdown-panel">
             <ul class="nb-list">
-              <li><a href="realisasi_kredit" class="nb-item nb-tap">Realisasi Kredit</a></li>
-              <li><a href="mob" class="nb-item nb-tap">MOB</a></li>
-              <li><a href="realisasi_kredit_terbesar" class="nb-item nb-tap">Realisasi 50 Besar</a></li>
-              <li><a href="jatuh_tempo" class="nb-item nb-tap">Jatuh Tempo</a></li>
+              <li><a href="repayment_rate" class="nb-item nb-tap">RR and OTP</a></li>
               <li><a href="migrasi_bucket_fe" class="nb-item nb-tap">Migrasi Bucket FE</a></li>
+              <li><a href="mob" class="nb-item nb-tap">MOB</a></li>
+              <li><a href="monitoring_realisasi" class="nb-item nb-tap">Monitoring Realisasi Kredit</a></li>
+              <li><a href="jatuh_tempo" class="nb-item nb-tap">Jatuh Tempo</a></li>
             </ul>
           </div>
         </li>

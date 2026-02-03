@@ -61,6 +61,9 @@ switch ($endpoint) {
     case 'bucket_fe':
         require __DIR__ . '/routes/bucket_fe.php';
         break;
+    case 'rr':
+        require __DIR__ . '/routes/rr.php';
+        break;
 
     default:
         sendResponse(404, "Endpoint tidak ditemukan");

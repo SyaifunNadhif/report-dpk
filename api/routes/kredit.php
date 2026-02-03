@@ -20,8 +20,8 @@ switch ($method) {
 
         if ($input['type'] === 'Realisasi Kredit') {
             $controller->getRealisasiKredit($input);
-        } elseif ($input['type'] === '50 besar realisasi') {
-            $controller->getTop50RealisasiKonsolidasi($input);
+        } elseif ($input['type'] === 'top realisasi') {
+            $controller->getTopRealisasi($input);
         } elseif ($input['type'] === 'mob_vintage') {
             $controller->getRekapMob6Bulan($input);
         } elseif ($input['type'] === 'detail_mob_debitur') {

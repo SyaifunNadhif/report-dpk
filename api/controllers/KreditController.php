@@ -678,50 +678,76 @@ class KreditController {
         sendResponse(200, "Berhasil ambil data Kolektibilitas Harian", $data);
     }
 
-    public function getTop50RealisasiKonsolidasi($input = []) {
-        // 1. Setup Variable Flexible
-        // Ambil tgl_akhir dari input, kalau kosong pakai tanggal hari ini
-        $tgl_akhir = $input['tgl_akhir'] ?? date('Y-m-d');
+    public function getTopRealisasi($input = []) {
+        // 1. Setup Variable
+        $closing_date = $input['closing_date'] ?? date('Y-m-d', strtotime('last day of previous month'));
+        $harian_date  = $input['harian_date'] ?? date('Y-m-d');
         
-        // Ambil tgl_awal dari input, kalau kosong defaultnya mundur ke tgl 1 bulan berjalan (sebagai fallback aja)
-        $tgl_awal  = $input['tgl_awal'] ?? date('Y-m-01', strtotime($tgl_akhir));
-
-        // Untuk field 'created', kita asumsikan mengambil data posisi pada tanggal akhir yang dipilih
-        // (Supaya datanya sinkron dengan request terakhir)
-        $harian_date = $input['harian_date'] ?? $tgl_akhir;
+        $kode_kantor = $input['kode_kantor'] ?? null;
+        $kode_ao     = $input['kode_ao'] ?? null;
 
         // 2. Query SQL
+        // Perbaikan: Nama parameter dibedakan (:created_date dan :max_realisasi)
         $sql = "
             SELECT 
-                kode_cabang,
-                no_rekening,
-                nama_nasabah,
-                jml_pinjaman as plafond,
-                alamat,
-                tgl_realisasi,
-                tgl_jatuh_tempo
-            FROM nominatif
-            WHERE created = :harian_date 
-            AND tgl_realisasi BETWEEN :tgl_awal AND :tgl_akhir
-            ORDER BY jml_pinjaman DESC 
-            LIMIT 50
+                t1.kode_cabang,
+                t1.no_rekening,
+                t1.nama_nasabah,
+                t1.jml_pinjaman as plafond,
+                t1.alamat,
+                t1.tgl_realisasi,
+                t1.tgl_jatuh_tempo,
+                t1.kode_group2,
+                COALESCE(ao.nama_ao, t1.kode_group2) as nama_ao
+            FROM nominatif t1
+            LEFT JOIN ao_kredit ao ON t1.kode_group2 = ao.kode_group2
+            
+            WHERE t1.created = :created_date 
+            AND t1.tgl_realisasi > :closing_date 
+            AND t1.tgl_realisasi <= :max_realisasi
         ";
+
+        // Logic Filter
+        if (!empty($kode_kantor)) {
+            $sql .= " AND t1.kode_cabang = :kode_kantor ";
+        }
+        if (!empty($kode_ao)) {
+            $sql .= " AND t1.kode_group2 = :kode_ao ";
+        }
+
+        $sql .= " ORDER BY t1.jml_pinjaman DESC ";
+
+        // Logic Limit
+        if (empty($kode_kantor) && empty($kode_ao)) {
+            $sql .= " LIMIT 50 ";
+        }
 
         try {
             $stmt = $this->pdo->prepare($sql);
             
-            // 3. Binding Value
-            $stmt->bindValue(':harian_date', $harian_date); // Data posisi per tanggal ini
-            $stmt->bindValue(':tgl_awal', $tgl_awal);       // Range awal realisasi
-            $stmt->bindValue(':tgl_akhir', $tgl_akhir);     // Range akhir realisasi
+            // 3. Binding Value (FIXED)
+            // Bind parameter yang namanya sudah dibedakan tadi
+            $stmt->bindValue(':created_date', $harian_date);  // Untuk t1.created
+            $stmt->bindValue(':closing_date', $closing_date); // Untuk > closing
+            $stmt->bindValue(':max_realisasi', $harian_date); // Untuk <= harian
+            
+            if (!empty($kode_kantor)) {
+                $stmt->bindValue(':kode_kantor', $kode_kantor);
+            }
+            if (!empty($kode_ao)) {
+                $stmt->bindValue(':kode_ao', $kode_ao);
+            }
             
             $stmt->execute();
             $data = $stmt->fetchAll(PDO::FETCH_ASSOC);
             
-            sendResponse(200, "Top 50 Realisasi (Periode $tgl_awal s/d $tgl_akhir)", $data);
+            $ket = empty($kode_kantor) ? "Top 50 Realisasi (Konsolidasi)" : "Realisasi Cabang $kode_kantor";
+            
+            // Panggil helper global (tanpa $this->)
+            sendResponse(200, "$ket (Sejak $closing_date s/d $harian_date)", $data);
             
         } catch (PDOException $e) {
-            sendResponse(500, "PDO Error: " . $e->getMessage());
+            sendResponse(500, "Database Error: " . $e->getMessage());
         }
     }
 
