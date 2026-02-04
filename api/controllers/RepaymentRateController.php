@@ -19,9 +19,8 @@ class RepaymentRateController {
         return [$date . ' 00:00:00', $date . ' 23:59:59'];
     }
 
-    // --- FIX: GANTI cal_days_in_month DENGAN date('t') ---
     private function getMappedDay($originalDay, $month, $year) {
-        // Gunakan date('t') untuk hitung jumlah hari dalam bulan (Safe for all PHP versions)
+        // Gunakan date('t') pengganti cal_days_in_month agar aman di Linux
         $lastDayOfMonth = (int)date('t', mktime(0, 0, 0, $month, 1, $year));
         
         $effectiveDay = min($originalDay, $lastDayOfMonth);
@@ -30,8 +29,7 @@ class RepaymentRateController {
             $dateString = "$year-$month-$effectiveDay";
             $dayOfWeek  = date('w', strtotime($dateString)); // 0 = Minggu
             
-            // Jika tanggal terakhir jatuh hari Minggu, mundur sehari (Sabtu)
-            // (Sesuaikan logika bisnis kamu, kadang mundur ke Jumat atau maju ke Senin)
+            // Logika Bisnis: Jika tgl tagih jatuh hari Minggu, geser ke Sabtu
             if ($dayOfWeek == 0) { 
                 $effectiveDay = $effectiveDay - 1; 
             }
@@ -59,11 +57,15 @@ class RepaymentRateController {
         $curMonth = date('n', $curTime);
         $curYear  = date('Y', $curTime);
 
-        // A. TARGET (M-1)
+        // --- A. TARGET (M-1) ---
+        // FIX: Tambahkan filter hari_menunggak = 0 agar benar-benar Lancar Murni
         $sqlM1 = "SELECT no_rekening, baki_debet, DAY(tgl_realisasi) as tgl_ori 
                   FROM nominatif 
                   WHERE created BETWEEN :s1 AND :e1 
-                  AND kolektibilitas = 'L' AND baki_debet > 0";
+                  AND kolektibilitas = 'L' 
+                  AND baki_debet > 0
+                  AND hari_menunggak = 0"; // <--- TAMBAHAN PENTING
+
         if ($kc) $sqlM1 .= " AND kode_cabang = :kc";
 
         $stmt1 = $this->pdo->prepare($sqlM1);
@@ -72,7 +74,7 @@ class RepaymentRateController {
         $stmt1->execute();
         $dataM1 = $stmt1->fetchAll(PDO::FETCH_UNIQUE | PDO::FETCH_ASSOC);
 
-        // B. ACTUAL (Current)
+        // --- B. ACTUAL (Current) ---
         $sqlCur = "SELECT no_rekening, baki_debet, hari_menunggak 
                    FROM nominatif 
                    WHERE created BETWEEN :s2 AND :e2";
@@ -84,7 +86,7 @@ class RepaymentRateController {
         $stmt2->execute();
         $dataCur = $stmt2->fetchAll(PDO::FETCH_UNIQUE | PDO::FETCH_ASSOC);
 
-        // C. MAPPING
+        // --- C. MAPPING ---
         $report = [];
         for ($i = 1; $i <= 31; $i++) {
             $report[$i] = [
@@ -135,13 +137,13 @@ class RepaymentRateController {
                         $grandTotal['lancar_noa']++;
                         $grandTotal['lancar_os'] += $osActual;
                     } else {
-                        // DITAGIH
+                        // DITAGIH (Macet)
                         $report[$tglMap]['macet_noa']++;
                         $report[$tglMap]['macet_os'] += $osActual;
                         $grandTotal['macet_noa']++;
                         $grandTotal['macet_os'] += $osActual;
                     }
-                    // ANGSURAN
+                    // ANGSURAN (Cicilan Pokok)
                     if ($osTarget > $osActual) {
                         $bayar = $osTarget - $osActual;
                         $report[$tglMap]['angsuran'] += $bayar;
@@ -149,7 +151,7 @@ class RepaymentRateController {
                     }
                 }
             } else {
-                // LUNAS (Hilang)
+                // LUNAS (Data Hilang di Current = Lunas)
                 $report[$tglMap]['lunas_noa']++;
                 $report[$tglMap]['lunas_os'] += $osTarget;
                 $grandTotal['lunas_noa']++;
@@ -180,8 +182,8 @@ class RepaymentRateController {
     }
 
     /**
-     * 2. DETAIL DATA (NORMAL: Target, Lancar, Ditagih)
-     * -> JOIN AO via kode_group2
+     * 2. DETAIL DATA
+     * FIX: Filter Target M-1 juga harus (Kolek L + Hari Menunggak 0)
      */
     public function getDetailRepaymentRate($input = null) {
         $b = is_array($input) ? $input : [];
@@ -211,7 +213,7 @@ class RepaymentRateController {
         if (empty($includedDays)) $includedDays = [$tglMap];
         $daysStr = implode(',', $includedDays);
 
-        // Filter Logic
+        // Filter Logic Status Akhir
         $joinType = "LEFT JOIN";
         $whereStatus = "";
         if ($status === 'LUNAS') {
@@ -229,7 +231,9 @@ class RepaymentRateController {
                           AND (t2.created BETWEEN :s2 AND :e2)
                       LEFT JOIN ao_kredit ao ON t1.kode_group2 = ao.kode_group2
                       WHERE (t1.created BETWEEN :s1 AND :e1)
-                      AND t1.kolektibilitas = 'L' AND t1.baki_debet > 0
+                      AND t1.kolektibilitas = 'L' 
+                      AND t1.baki_debet > 0
+                      AND t1.hari_menunggak = 0  -- FIX: Tambahan Filter Detail
                       AND DAY(t1.tgl_realisasi) IN ($daysStr) 
                       $whereStatus";
         
@@ -243,7 +247,7 @@ class RepaymentRateController {
         $stmtCnt->execute();
         $total = $stmtCnt->fetchColumn();
 
-        // Data (SELECT Nama AO)
+        // Data
         $cols = "t1.no_rekening, t1.nama_nasabah, 
                  COALESCE(ao.nama_ao, t1.kode_group2) as nama_ao,
                  t1.tgl_jatuh_tempo, t1.jml_pinjaman,
@@ -281,7 +285,7 @@ class RepaymentRateController {
 
     /**
      * 3. DETAIL LUNAS (REFINANCING CHECK)
-     * -> JOIN AO via kode_group2
+     * FIX: Filter Target M-1 juga harus (Kolek L + Hari Menunggak 0)
      */
     public function getDetailLunasRR($input = null) {
         set_time_limit(300); ini_set('memory_limit', '1024M');
@@ -317,7 +321,9 @@ class RepaymentRateController {
                           AND (t2.created BETWEEN :s2 AND :e2)
                       LEFT JOIN ao_kredit ao ON t1.kode_group2 = ao.kode_group2
                       WHERE (t1.created BETWEEN :s1 AND :e1)
-                      AND t1.kolektibilitas = 'L' AND t1.baki_debet > 0
+                      AND t1.kolektibilitas = 'L' 
+                      AND t1.baki_debet > 0
+                      AND t1.hari_menunggak = 0  -- FIX: Tambahan Filter Detail Lunas
                       AND (t2.no_rekening IS NULL OR t2.baki_debet <= 0)
                       AND DAY(t1.tgl_realisasi) IN ($daysStr)";
 
@@ -331,7 +337,7 @@ class RepaymentRateController {
         $stmtCnt->execute();
         $total = $stmtCnt->fetchColumn();
 
-        // Data (Select Nama AO)
+        // Data
         $sqlData = "SELECT t1.nasabah_id, t1.no_rekening, t1.nama_nasabah, 
                            COALESCE(ao.nama_ao, t1.kode_group2) as nama_ao,
                            t1.jml_pinjaman as plafon_lama, 
