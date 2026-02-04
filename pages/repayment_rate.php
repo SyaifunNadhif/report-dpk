@@ -73,7 +73,7 @@
             <th colspan="2" class="px-2 py-1 border-b border-r bg-blue-50 text-blue-800">TARGET (M-1)</th>
             <th colspan="2" class="px-2 py-1 border-b border-r bg-green-50 text-green-800">OTP (LANCAR)</th>
             <th colspan="2" class="px-2 py-1 border-b border-r bg-red-50 text-red-800">DITAGIH</th>
-            <th colspan="4" class="px-2 py-1 border-b bg-purple-50 text-purple-800">RECOVERY / PEMBAYARAN</th>
+            <th colspan="5" class="px-2 py-1 border-b bg-purple-50 text-purple-800">RECOVERY / PEMBAYARAN</th>
           </tr>
           <tr class="text-[10px] uppercase">
             <th class="px-2 py-1 border-b border-r bg-blue-50 text-blue-700/70">NOA</th>
@@ -82,6 +82,7 @@
             <th class="px-2 py-1 border-b border-r bg-green-50 text-green-700/70">OS</th>
             <th class="px-2 py-1 border-b border-r bg-red-50 text-red-700/70">NOA</th>
             <th class="px-2 py-1 border-b border-r bg-red-50 text-red-700/70">OS</th>
+            <th class="px-2 py-1 border-b border-r bg-purple-50 text-purple-700/70">NOA</th>
             <th class="px-2 py-1 border-b border-r bg-purple-50 text-purple-700/70">LUNAS</th>
             <th class="px-2 py-1 border-b border-r bg-purple-50 text-purple-700/70">ANGSURAN</th>
             <th class="px-2 py-1 border-b border-r bg-purple-50 text-purple-700/70">TOTAL</th>
@@ -107,12 +108,7 @@
         </h3>
         <p class="text-xs text-slate-500 mt-0.5 ml-3" id="modalSubTitleRR">...</p>
       </div>
-      
       <div class="flex items-center gap-3">
-          <select id="filter_ao_modal" class="inp min-w-[150px] border-slate-300 text-xs py-1" onchange="applyFilterAOModal()">
-              <option value="">Semua AO</option>
-          </select>
-
           <button onclick="downloadExcelFull()" class="flex items-center gap-1.5 bg-green-600 hover:bg-green-700 text-white px-3 py-1.5 rounded text-xs font-bold shadow-sm transition">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
             Excel
@@ -144,9 +140,7 @@
 </div>
 
 <script>
-  /* CONFIG */
   const API_RR_URL = './api/rr'; 
-  const API_KODE_URL = './api/kode/'; // Tambahkan URL Kode
   const nfID = new Intl.NumberFormat('id-ID');
   const fmt  = n => nfID.format(Number(n||0));
   const apiCall = (url, opt={}) => (window.apiFetch ? window.apiFetch(url,opt) : fetch(url,opt));
@@ -158,7 +152,6 @@
   let currentMode = 'NORMAL'; 
   const detailLimit = 10;
 
-  /* INIT */
   window.addEventListener('DOMContentLoaded', async () => {
     const user = (window.getUser && window.getUser()) || JSON.parse(localStorage.getItem('app_user')) || { kode: '000' };
     const uKode = String(user.kode || '000').padStart(3, '0');
@@ -188,7 +181,6 @@
 
   document.getElementById('formFilterRR').addEventListener('submit', e => { e.preventDefault(); fetchRekapRR(); });
 
-  /* REKAP TABLE */
   async function fetchRekapRR(){
     const l = document.getElementById('loadingRR');
     const tb = document.getElementById('bodyRR');
@@ -277,24 +269,10 @@
       }
   }
 
-  /* MODAL LOGIC */
+  // --- MODAL FUNCTIONS ---
   function initModalDetail(tgl, status) {
       currentMode = 'NORMAL';
-      const branch = document.getElementById('opt_kantor').value || null;
-      
-      currentDetailParams = { 
-          type: 'detail_rr', 
-          closing_date: document.getElementById('closing_date').value, 
-          harian_date: document.getElementById('harian_date').value, 
-          kode_kantor: branch, 
-          tgl_tagih: tgl, 
-          status: status, 
-          limit: detailLimit,
-          kode_ao: null // Reset filter AO
-      };
-
-      // Populate AO Modal Filter
-      populateModalAO(branch);
+      currentDetailParams = { type: 'detail_rr', closing_date: document.getElementById('closing_date').value, harian_date: document.getElementById('harian_date').value, kode_kantor: document.getElementById('opt_kantor').value || null, tgl_tagih: tgl, status: status, limit: detailLimit };
 
       document.getElementById('headModalRR').innerHTML = `
           <tr>
@@ -318,20 +296,7 @@
 
   function initModalLunas(tgl) {
       currentMode = 'LUNAS';
-      const branch = document.getElementById('opt_kantor').value || null;
-
-      currentDetailParams = { 
-          type: 'detail_lunas_rr', 
-          closing_date: document.getElementById('closing_date').value, 
-          harian_date: document.getElementById('harian_date').value, 
-          kode_kantor: branch, 
-          tgl_tagih: tgl, 
-          limit: detailLimit,
-          kode_ao: null // Reset filter AO
-      };
-
-      // Populate AO Modal Filter
-      populateModalAO(branch);
+      currentDetailParams = { type: 'detail_lunas_rr', closing_date: document.getElementById('closing_date').value, harian_date: document.getElementById('harian_date').value, kode_kantor: document.getElementById('opt_kantor').value || null, tgl_tagih: tgl, limit: detailLimit };
 
       document.getElementById('headModalRR').innerHTML = `
           <tr>
@@ -350,35 +315,6 @@
       document.getElementById('modalSubTitleRR').textContent = `Cek Refinancing vs Prospek`;
       document.getElementById('modalDetailRR').classList.remove('hidden');
       loadDetailPage(1);
-  }
-
-  // --- POPULATE AO DI MODAL ---
-  async function populateModalAO(branch) {
-      const el = document.getElementById('filter_ao_modal');
-      el.innerHTML = '<option value="">Memuat...</option>';
-      
-      try {
-          const payload = { type: 'kode_ao_kredit', kode_kantor: branch };
-          const r = await fetch(API_KODE_URL, { method: 'POST', body: JSON.stringify(payload) });
-          const j = await r.json();
-          
-          let h = '<option value="">Semua AO</option>';
-          if(j.data && Array.isArray(j.data)) {
-              j.data.forEach(x => { 
-                  const rawName = x.nama_ao || x.kode_group2;
-                  const shortName = rawName.split(' ').slice(0, 2).join(' ');
-                  h += `<option value="${x.kode_group2}">${shortName}</option>`;
-              });
-          }
-          el.innerHTML = h;
-      } catch { el.innerHTML = '<option value="">Semua AO</option>'; }
-  }
-
-  // --- APPLY FILTER AO ---
-  function applyFilterAOModal() {
-      const aoVal = document.getElementById('filter_ao_modal').value;
-      currentDetailParams.kode_ao = aoVal; // Update param
-      loadDetailPage(1); // Reload
   }
 
   async function loadDetailPage(page) {
@@ -400,6 +336,7 @@
           } else {
               let h = '';
               list.forEach(r => {
+                  // Logic Nama AO (Max 2 Kata)
                   const aoName = (r.nama_ao || '-').split(' ').slice(0, 2).join(' ');
 
                   if(currentMode === 'NORMAL') {

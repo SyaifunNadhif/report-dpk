@@ -1,61 +1,69 @@
 <?php
 
 // =============================================================
-// ROUTER KHUSUS: REPAYMENT RATE (RR)
+// ROUTER KHUSUS: REPAYMENT RATE (RR) - FIXED
 // =============================================================
 
-// 1. Load Controller & Database
-require_once __DIR__ . '/../controllers/RepaymentRateController.php';
+// 1. Load Dependencies (Gunakan require_once ke helper pusat)
+require_once __DIR__ . '/../helpers/response.php';
 require_once __DIR__ . '/../config/database.php';
+require_once __DIR__ . '/../controllers/RepaymentRateController.php';
 
-// Fungsi Helper Response
-if (!function_exists('sendResponse')) {
-    function sendResponse($code, $msg, $data = []) {
-        header('Content-Type: application/json');
-        http_response_code($code);
-        echo json_encode(['status' => $code, 'message' => $msg, 'data' => $data]);
-        exit;
-    }
+// 2. Init Database (Cara Aman agar $pdo tidak null)
+// Cek apakah function getPDO ada (dari config), atau ambil variabel $pdo langsung
+$pdo = function_exists('getPDO') ? getPDO() : ($pdo ?? null);
+
+if (!$pdo) {
+    sendResponse(500, "Database Connection Failed (PDO is null)");
 }
 
-// 2. Inisialisasi Controller
+// 3. Init Controller
 try {
     $controller = new RepaymentRateController($pdo);
 } catch (Exception $e) {
-    sendResponse(500, "Database Connection Failed: " . $e->getMessage());
+    sendResponse(500, "Controller Init Failed: " . $e->getMessage());
 }
 
-// 3. Ambil Method & Input Body
+// 4. Ambil Method & Input Body
 $method = $_SERVER['REQUEST_METHOD'];
-$input  = json_decode(file_get_contents("php://input"), true);
+$raw    = file_get_contents("php://input");
+$input  = json_decode($raw, true);
 
-// 4. Switch Logic
+// Fallback: Jika input bukan JSON (misal form-data), ambil dari $_POST
+if (!is_array($input)) {
+    $input = $_POST ?: [];
+}
+
+// 5. Switch Logic
 switch ($method) {
     case 'POST':
-        // Pastikan ada parameter 'type' agar tidak error
-        $type = $input['type'] ?? '';
+        // Validasi Parameter Type
+        if (empty($input['type'])) {
+            sendResponse(400, "Parameter 'type' diperlukan.");
+        }
 
-        // --- A. REKAP UTAMA ---
+        // Normalisasi input (kecilkan huruf & hapus spasi)
+        $type = strtolower(trim($input['type']));
+
+        // --- A. REKAP UTAMA (RR) ---
         if ($type === 'rekap_rr') {
-            // Target 1-31 vs Actual (Lancar/Macet) vs Recovery
             $controller->getRepaymentRate($input);
 
         // --- B. DETAIL DRILL DOWN ---
         } elseif ($type === 'detail_rr') {
-            // Detail nasabah per tanggal tagih
             $controller->getDetailRepaymentRate($input);
 
-        // --- C. MONITORING (YANG HILANG TADI) ---
+        // --- C. MONITORING (EARLY WARNING) ---
         } elseif ($type === 'monitoring_rr') {
-            // Early Warning: M-1 Lancar -> Current Menunggak
             $controller->getMonitoringLatePayers($input);
+
+        // --- D. DETAIL PELUNASAN ---
         } elseif ($type === 'detail_lunas_rr') {
-            // Early Warning: M-1 Lancar -> Current Menunggak
             $controller->getDetailLunasRR($input);
 
-        // --- ERROR ---
+        // --- ERROR: TYPE TIDAK DIKENAL ---
         } else {
-            sendResponse(400, "Tipe request tidak dikenali: " . $type);
+            sendResponse(400, "Type request tidak dikenali: " . $type);
         }
         break;
 
