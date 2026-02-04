@@ -755,6 +755,10 @@ class KreditController {
      * API 1: REKAP MATRIKS MOB (View Utama)
      */
     public function getRekapMob6Bulan($input = null) {
+        // 1. Setup Input & Memory
+        set_time_limit(300); 
+        ini_set('memory_limit', '512M');
+        
         $b = is_array($input) ? $input : (json_decode(file_get_contents('php://input'), true) ?: []);
         
         $harian_date = $b['harian_date'] ?? date('Y-m-d'); 
@@ -763,22 +767,31 @@ class KreditController {
         $kc_raw = $b['kode_kantor'] ?? null;
         $kc     = ($kc_raw === null || $kc_raw === '') ? null : str_pad((string)$kc_raw, 3, '0', STR_PAD_LEFT);
 
-        // Range Realisasi (Mundur 6 bulan)
-        $end_date_realisasi   = date('Y-m-t', strtotime($harian_date . ' -1 month')); 
-        $start_date_realisasi = date('Y-m-01', strtotime($end_date_realisasi . ' -5 months')); 
+        // 2. Tentukan Range Realisasi (Mundur 6 bulan Full dari bulan data)
+        // Contoh: Data Februari -> Ambil Realisasi Agustus s/d Januari
+        $tgl_data_obj = new DateTime($harian_date);
+        
+        // End Date = Akhir bulan lalu (M-1)
+        $end_obj = clone $tgl_data_obj;
+        $end_obj->modify('last day of previous month');
+        $end_date_realisasi = $end_obj->format('Y-m-d');
 
-        // Query Utama (Hanya butuh data agregat/summary, tidak perlu select * semua kolom berat)
-        $sql = "
-            SELECT 
-                kode_cabang, 
-                tgl_realisasi,
-                jml_pinjaman as plafond, 
-                baki_debet as os,            
-                hari_menunggak
-            FROM nominatif
-            WHERE created = :harian_date
-            AND tgl_realisasi BETWEEN :start_date AND :end_date
-        ";
+        // Start Date = Awal bulan dari 5 bulan sebelum End Date (Total 6 bulan)
+        $start_obj = clone $end_obj;
+        $start_obj->modify('-5 months'); 
+        $start_obj->modify('first day of this month');
+        $start_date_realisasi = $start_obj->format('Y-m-d');
+
+        // 3. Query Utama
+        $sql = "SELECT 
+                    kode_cabang, 
+                    tgl_realisasi,
+                    jml_pinjaman as plafond, 
+                    baki_debet as os,            
+                    hari_menunggak
+                FROM nominatif
+                WHERE created = :harian_date
+                AND tgl_realisasi BETWEEN :start_date AND :end_date";
 
         if ($kc) {
             $sql .= " AND kode_cabang = :kc"; 
@@ -792,15 +805,69 @@ class KreditController {
             if ($kc) $stmt->bindValue(':kc', $kc);
 
             $stmt->execute();
-            $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-            // Process Matrix via Helper (Pastikan Helper sudah update support NOA)
-            $matrix = MobHelper::processMobMatrix($rows, $harian_date);
             
+            // 4. Processing Data (Manual Grouping agar MOB Pasti 1-6)
+            $grouped = [];
+            $report_year  = (int)$tgl_data_obj->format('Y');
+            $report_month = (int)$tgl_data_obj->format('n');
+
+            while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+                $real_time  = strtotime($row['tgl_realisasi']);
+                $real_month = (int)date('n', $real_time);
+                $real_year  = (int)date('Y', $real_time);
+                $label_bulan = date('Y-m', $real_time);
+
+                // Hitung MOB (Selisih Bulan)
+                // Rumus: ((TahunData - TahunReal) * 12) + (BulanData - BulanReal)
+                // Contoh: Data Feb (2), Real Jan (1) -> (0*12) + (2-1) = 1 (MOB 1)
+                $mob = (($report_year - $real_year) * 12) + ($report_month - $real_month);
+
+                // Pastikan hanya ambil MOB 1 s/d 6 (Safety Filter)
+                if ($mob < 1 || $mob > 6) continue; 
+
+                // Init Array Grouping
+                if (!isset($grouped[$label_bulan])) {
+                    $grouped[$label_bulan] = [
+                        'kode_cabang'     => $kc ?? 'ALL',
+                        'bulan_realisasi' => $label_bulan,
+                        'mob'             => $mob,
+                        'total_plafond'   => 0,
+                        'buckets'         => []
+                    ];
+                    // Init Buckets
+                    $bk = ['0', '1 - 7', '8 - 14', '15 - 21', '22 - 30', '31 - 60', '61 - 90', '> 90'];
+                    foreach($bk as $k) $grouped[$label_bulan]['buckets'][$k] = ['os'=>0, 'noa'=>0];
+                }
+
+                // Aggregasi
+                $grouped[$label_bulan]['total_plafond'] += (float)$row['plafond'];
+                
+                // Tentukan Bucket
+                $dpd = (int)$row['hari_menunggak'];
+                $bucketKey = '0';
+                if ($dpd > 0 && $dpd <= 7) $bucketKey = '1 - 7';
+                elseif ($dpd > 7 && $dpd <= 14) $bucketKey = '8 - 14';
+                elseif ($dpd > 14 && $dpd <= 21) $bucketKey = '15 - 21';
+                elseif ($dpd > 21 && $dpd <= 30) $bucketKey = '22 - 30';
+                elseif ($dpd > 30 && $dpd <= 60) $bucketKey = '31 - 60';
+                elseif ($dpd > 60 && $dpd <= 90) $bucketKey = '61 - 90';
+                elseif ($dpd > 90) $bucketKey = '> 90';
+
+                $grouped[$label_bulan]['buckets'][$bucketKey]['os'] += (float)$row['os'];
+                $grouped[$label_bulan]['buckets'][$bucketKey]['noa']++;
+            }
+
+            // Sort berdasarkan Bulan Realisasi (Ascending)
+            ksort($grouped);
+            
+            // Re-index array supaya jadi list JSON yang rapi
+            $final_data = array_values($grouped);
+
             return sendResponse(200, "Rekap MOB 6 Bulan", [
-                'posisi_data' => $harian_date,
+                'posisi_data'   => $harian_date,
                 'filter_cabang' => $kc ?? 'ALL',
-                'data' => $matrix
+                'buckets_order' => ['0', '1 - 7', '8 - 14', '15 - 21', '22 - 30', '31 - 60', '61 - 90', '> 90'],
+                'data'          => $final_data
             ]);
 
         } catch (PDOException $e) {
