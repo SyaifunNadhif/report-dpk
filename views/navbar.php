@@ -91,16 +91,17 @@
           </button>
           <div id="dropdownPenagihan" class="dropdown-panel">
             <ul class="nb-list">
-              <li><a href="maping_bucket" class="nb-item nb-tap">Maping Backet</a></li>
+              <!-- <li><a href="maping_bucket" class="nb-item nb-tap">Maping Backet</a></li> -->
               <li><a href="migrasi_bucket" class="nb-item nb-tap">Migrasi Bucket</a></li>
               <li><a href="search_debitur" class="nb-item nb-tap">Seach Debitur Kredit</a></li>
               <li><a href="monitoring_ao" class="nb-item nb-tap">Monitoring Ao Remedial</a></li>
+              <li><a href="actual_kredit" class="nb-item nb-tap">Actual Kredit</a></li>
             </ul>
           </div>
         </li>
 
         <!-- Kredit -->
-        <li class="nb-li">
+        <!-- <li class="nb-li">
           <button data-dropdown="dropdownCKPN" class="nb-parent nb-tap">
             <span>Kredit</span>
             <svg class="nb-caret" viewBox="0 0 20 20" fill="currentColor" width="16" height="16">
@@ -115,7 +116,7 @@
               <li><a href="actual_kredit" class="nb-item nb-tap">Actual Kredit</a></li>
             </ul>
           </div>
-        </li>
+        </li> -->
 
         <li class="nb-li">
           <button data-dropdown="dropdownPemasaran" class="nb-parent nb-tap">
@@ -126,11 +127,13 @@
           </button>
           <div id="dropdownPemasaran" class="dropdown-panel">
             <ul class="nb-list">
+              <li><a href="realisasi_kredit" class="nb-item nb-tap">Realisasi Kredit</a></li>
               <li><a href="repayment_rate" class="nb-item nb-tap">RR and OTP</a></li>
               <li><a href="migrasi_bucket_fe" class="nb-item nb-tap">Migrasi Bucket FE</a></li>
               <li><a href="mob" class="nb-item nb-tap">MOB</a></li>
               <li><a href="monitoring_realisasi" class="nb-item nb-tap">Monitoring Realisasi Kredit</a></li>
               <li><a href="jatuh_tempo" class="nb-item nb-tap">Jatuh Tempo</a></li>
+              <li><a href="pipelane_ao_jt" class="nb-item nb-tap">Pipelane AO Kredit</a></li>
             </ul>
           </div>
         </li>

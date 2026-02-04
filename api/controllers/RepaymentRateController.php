@@ -39,6 +39,7 @@ class RepaymentRateController {
 
     /**
      * 1. REKAP UTAMA (Summary)
+     * UPDATE: Menggunakan DAY(tgl_jatuh_tempo)
      */
     public function getRepaymentRate($input = null) {
         set_time_limit(300); ini_set('memory_limit', '1024M');
@@ -58,13 +59,13 @@ class RepaymentRateController {
         $curYear  = date('Y', $curTime);
 
         // --- A. TARGET (M-1) ---
-        // FIX: Tambahkan filter hari_menunggak = 0 agar benar-benar Lancar Murni
-        $sqlM1 = "SELECT no_rekening, baki_debet, DAY(tgl_realisasi) as tgl_ori 
+        // UPDATE: Ganti tgl_realisasi -> tgl_jatuh_tempo
+        $sqlM1 = "SELECT no_rekening, baki_debet, DAY(tgl_jatuh_tempo) as tgl_ori 
                   FROM nominatif 
                   WHERE created BETWEEN :s1 AND :e1 
                   AND kolektibilitas = 'L' 
                   AND baki_debet > 0
-                  AND hari_menunggak = 0"; // <--- TAMBAHAN PENTING
+                  AND hari_menunggak = 0"; 
 
         if ($kc) $sqlM1 .= " AND kode_cabang = :kc";
 
@@ -107,7 +108,7 @@ class RepaymentRateController {
         ];
 
         foreach ($dataM1 as $norek => $row) {
-            $tglOri = (int)$row['tgl_ori'];
+            $tglOri = (int)$row['tgl_ori']; // Ini sekarang adalah Tgl Jatuh Tempo
             if ($tglOri < 1 || $tglOri > 31) continue;
 
             $tglMap = $this->getMappedDay($tglOri, $curMonth, $curYear);
@@ -183,7 +184,7 @@ class RepaymentRateController {
 
     /**
      * 2. DETAIL DATA
-     * FIX: Filter Target M-1 juga harus (Kolek L + Hari Menunggak 0)
+     * UPDATE: Filter berdasarkan DAY(t1.tgl_jatuh_tempo)
      */
     public function getDetailRepaymentRate($input = null) {
         $b = is_array($input) ? $input : [];
@@ -226,6 +227,7 @@ class RepaymentRateController {
             $whereStatus = "AND t2.baki_debet > 0 AND t2.hari_menunggak > 0";
         }
 
+        // UPDATE: Ganti DAY(tgl_realisasi) -> DAY(tgl_jatuh_tempo)
         $baseQuery = "FROM nominatif t1 
                       $joinType nominatif t2 ON t1.no_rekening = t2.no_rekening 
                           AND (t2.created BETWEEN :s2 AND :e2)
@@ -233,8 +235,8 @@ class RepaymentRateController {
                       WHERE (t1.created BETWEEN :s1 AND :e1)
                       AND t1.kolektibilitas = 'L' 
                       AND t1.baki_debet > 0
-                      AND t1.hari_menunggak = 0  -- FIX: Tambahan Filter Detail
-                      AND DAY(t1.tgl_realisasi) IN ($daysStr) 
+                      AND t1.hari_menunggak = 0 
+                      AND DAY(t1.tgl_jatuh_tempo) IN ($daysStr) -- SUDAH DIUPDATE
                       $whereStatus";
         
         if ($kc) $baseQuery .= " AND t1.kode_cabang = :kc";
@@ -285,7 +287,7 @@ class RepaymentRateController {
 
     /**
      * 3. DETAIL LUNAS (REFINANCING CHECK)
-     * FIX: Filter Target M-1 juga harus (Kolek L + Hari Menunggak 0)
+     * UPDATE: Filter berdasarkan DAY(t1.tgl_jatuh_tempo)
      */
     public function getDetailLunasRR($input = null) {
         set_time_limit(300); ini_set('memory_limit', '1024M');
@@ -316,6 +318,7 @@ class RepaymentRateController {
         if (empty($includedDays)) $includedDays = [$tglMap];
         $daysStr = implode(',', $includedDays);
 
+        // UPDATE: Ganti DAY(tgl_realisasi) -> DAY(tgl_jatuh_tempo)
         $baseQuery = "FROM nominatif t1 
                       LEFT JOIN nominatif t2 ON t1.no_rekening = t2.no_rekening 
                           AND (t2.created BETWEEN :s2 AND :e2)
@@ -323,9 +326,9 @@ class RepaymentRateController {
                       WHERE (t1.created BETWEEN :s1 AND :e1)
                       AND t1.kolektibilitas = 'L' 
                       AND t1.baki_debet > 0
-                      AND t1.hari_menunggak = 0  -- FIX: Tambahan Filter Detail Lunas
+                      AND t1.hari_menunggak = 0 
                       AND (t2.no_rekening IS NULL OR t2.baki_debet <= 0)
-                      AND DAY(t1.tgl_realisasi) IN ($daysStr)";
+                      AND DAY(t1.tgl_jatuh_tempo) IN ($daysStr)"; // SUDAH DIUPDATE
 
         if ($kc) $baseQuery .= " AND t1.kode_cabang = :kc";
 
@@ -355,7 +358,7 @@ class RepaymentRateController {
         $stmt->execute();
         $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-        // Check Refinancing
+        // Check Refinancing (LOGIC INI TETAP MENGACU TGL REALISASI UNTUK LOAN BARU)
         $closingDateStr = date('Y-m-d', strtotime($closing));
         $harianDateStr  = date('Y-m-d', strtotime($harian));
 
