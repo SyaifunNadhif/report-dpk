@@ -19,13 +19,22 @@ class RepaymentRateController {
         return [$date . ' 00:00:00', $date . ' 23:59:59'];
     }
 
+    // --- FIX: GANTI cal_days_in_month DENGAN date('t') ---
     private function getMappedDay($originalDay, $month, $year) {
-        $lastDayOfMonth = cal_days_in_month(CAL_GREGORIAN, $month, $year);
+        // Gunakan date('t') untuk hitung jumlah hari dalam bulan (Safe for all PHP versions)
+        $lastDayOfMonth = (int)date('t', mktime(0, 0, 0, $month, 1, $year));
+        
         $effectiveDay = min($originalDay, $lastDayOfMonth);
+        
         if ($effectiveDay == $lastDayOfMonth) {
             $dateString = "$year-$month-$effectiveDay";
-            $dayOfWeek  = date('w', strtotime($dateString)); 
-            if ($dayOfWeek == 0) { $effectiveDay = $effectiveDay - 1; }
+            $dayOfWeek  = date('w', strtotime($dateString)); // 0 = Minggu
+            
+            // Jika tanggal terakhir jatuh hari Minggu, mundur sehari (Sabtu)
+            // (Sesuaikan logika bisnis kamu, kadang mundur ke Jumat atau maju ke Senin)
+            if ($dayOfWeek == 0) { 
+                $effectiveDay = $effectiveDay - 1; 
+            }
         }
         return $effectiveDay;
     }
