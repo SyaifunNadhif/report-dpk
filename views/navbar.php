@@ -128,12 +128,12 @@
           <div id="dropdownPemasaran" class="dropdown-panel">
             <ul class="nb-list">
               <li><a href="realisasi_kredit" class="nb-item nb-tap">Realisasi Kredit</a></li>
-              <li><a href="repayment_rate" class="nb-item nb-tap">RR and OTP</a></li>
-              <li><a href="migrasi_bucket_fe" class="nb-item nb-tap">Migrasi Bucket FE</a></li>
-              <li><a href="mob" class="nb-item nb-tap">MOB</a></li>
-              <li><a href="monitoring_realisasi" class="nb-item nb-tap">Monitoring Realisasi Kredit</a></li>
-              <li><a href="jatuh_tempo" class="nb-item nb-tap">Jatuh Tempo</a></li>
+              <li><a href="realisasi_ao" class="nb-item nb-tap">Realisasi Kredit AO</a></li>
+              <li><a href="repayment_rate" class="nb-item nb-tap">Repayment Rate</a></li>
+              <li><a href="migrasi_bucket_sc" class="nb-item nb-tap">Migrasi Bucket SC</a></li>
+              <li><a href="mob" class="nb-item nb-tap">MOB 6 Bulan</a></li>
               <li><a href="pipelane_ao_jt" class="nb-item nb-tap">Pipelane AO Kredit</a></li>
+              <li><a href="jatuh_tempo" class="nb-item nb-tap">Jatuh Tempo and Refinacing</a></li>
             </ul>
           </div>
         </li>

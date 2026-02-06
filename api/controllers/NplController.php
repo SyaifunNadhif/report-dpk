@@ -10,112 +10,100 @@ class NplController {
     }
 
 
-    public function getNpl($input) {
-        $closing_date = isset($input['closing_date']) ? $input['closing_date'] : date('Y-m-d', strtotime('last day of previous month'));
-        $harian_date  = isset($input['harian_date'])  ? $input['harian_date']  : date('Y-m-d');
+public function getNpl($input) {
+    $closing_date = $input['closing_date'] ?? date('Y-m-d', strtotime('last day of previous month'));
+    $harian_date  = $input['harian_date']  ?? date('Y-m-d');
+    $kc           = $input['kode_kantor']  ?? null;
 
-        $sql = "
-            WITH harian AS (
-                SELECT 
-                    kode_cabang,
-                    kolektibilitas,
-                    baki_debet
-                FROM nominatif
-                WHERE created = :harian_date
-            ),
+    if ($kc === '000') $kc = null;
 
-            closing AS (
-                SELECT 
-                    kode_cabang,
-                    kolektibilitas,
-                    baki_debet
-                FROM nominatif
-                WHERE created = :closing_date
-            ),
+    // Logic Parameter Binding (FIX ERROR 500)
+    if ($kc) {
+        // Mode KANKAS
+        $colKey       = "kode_group1";
+        $selectName   = "COALESCE(k.deskripsi_group1, CONCAT('KAS ', h.kode_key))";
+        $joinTable    = "LEFT JOIN kankas k ON h.kode_key = k.kode_group1";
+        // Kita pakai nama parameter beda (:kc1 dan :kc2) biar PDO tidak bingung
+        $filterClauseHarian = "AND kode_cabang = :kc1";
+        $filterClauseClosing = "AND kode_cabang = :kc2";
+        $kc_val       = str_pad((string)$kc, 3, '0', STR_PAD_LEFT);
+    } else {
+        // Mode KONSOLIDASI
+        $colKey       = "kode_cabang";
+        $selectName   = "k.nama_kantor";
+        $joinTable    = "LEFT JOIN kode_kantor k ON h.kode_key = k.kode_kantor";
+        $filterClauseHarian = "";
+        $filterClauseClosing = "";
+        $kc_val       = null;
+    }
 
-            rekap_harian AS (
-                SELECT 
-                    h.kode_cabang,
-                    k.nama_kantor,
-                    SUM(CASE WHEN h.kolektibilitas IN ('KL', 'D', 'M') THEN h.baki_debet ELSE 0 END) AS npl_harian,
-                    SUM(h.baki_debet) AS total_harian
-                FROM harian h
-                JOIN kode_kantor k ON h.kode_cabang = k.kode_kantor
-                WHERE k.kode_kantor <> '000'
-                GROUP BY h.kode_cabang, k.nama_kantor
-            ),
+    $sql = "
+        WITH 
+        harian AS (
+            SELECT $colKey as kode_key, kolektibilitas, baki_debet
+            FROM nominatif WHERE created = :harian_date $filterClauseHarian
+        ),
+        closing AS (
+            SELECT $colKey as kode_key, kolektibilitas, baki_debet
+            FROM nominatif WHERE created = :closing_date $filterClauseClosing
+        ),
+        rekap_harian AS (
+            SELECT h.kode_key, $selectName as nama_unit,
+                SUM(CASE WHEN h.kolektibilitas IN ('KL', 'D', 'M') THEN h.baki_debet ELSE 0 END) AS npl_harian,
+                SUM(h.baki_debet) AS total_harian
+            FROM harian h $joinTable GROUP BY h.kode_key, $selectName
+        ),
+        rekap_closing AS (
+            SELECT c.kode_key,
+                SUM(CASE WHEN c.kolektibilitas IN ('KL', 'D', 'M') THEN c.baki_debet ELSE 0 END) AS npl_closing,
+                SUM(c.baki_debet) AS total_closing
+            FROM closing c GROUP BY c.kode_key
+        ),
+        gabung AS (
+            SELECT rh.kode_key, rh.nama_unit, COALESCE(rc.npl_closing, 0) AS npl_closing, rh.npl_harian,
+                (rh.npl_harian - COALESCE(rc.npl_closing, 0)) AS selisih_npl,
+                COALESCE(rc.total_closing, 0) AS total_closing, rh.total_harian
+            FROM rekap_harian rh LEFT JOIN rekap_closing rc ON rh.kode_key = rc.kode_key
+        )
+        SELECT kode_key as kode_unit, nama_unit, npl_closing, npl_harian, selisih_npl,
+            ROUND(CASE WHEN total_closing = 0 THEN 0 ELSE (npl_closing * 100.0) / total_closing END, 2) AS npl_closing_persen,
+            ROUND(CASE WHEN total_harian = 0 THEN 0 ELSE (npl_harian * 100.0) / total_harian END, 2) AS npl_harian_persen,
+            ROUND((CASE WHEN total_harian = 0 THEN 0 ELSE (npl_harian * 100.0) / total_harian END) - 
+                  (CASE WHEN total_closing = 0 THEN 0 ELSE (npl_closing * 100.0) / total_closing END), 2) AS selisih_npl_persen
+        FROM gabung
+        UNION ALL
+        SELECT '', 'TOTAL KONSOLIDASI', SUM(npl_closing), SUM(npl_harian), SUM(selisih_npl),
+            ROUND(CASE WHEN SUM(total_closing) = 0 THEN 0 ELSE (SUM(npl_closing) * 100.0) / SUM(total_closing) END, 2),
+            ROUND(CASE WHEN SUM(total_harian) = 0 THEN 0 ELSE (SUM(npl_harian) * 100.0) / SUM(total_harian) END, 2),
+            ROUND((CASE WHEN SUM(total_harian) = 0 THEN 0 ELSE (SUM(npl_harian) * 100.0) / SUM(total_harian) END) - 
+                  (CASE WHEN SUM(total_closing) = 0 THEN 0 ELSE (SUM(npl_closing) * 100.0) / SUM(total_closing) END), 2)
+        FROM gabung
+        ORDER BY CASE WHEN nama_unit = 'TOTAL KONSOLIDASI' THEN 1 ELSE 0 END, kode_unit ASC
+    ";
 
-            rekap_closing AS (
-                SELECT 
-                    c.kode_cabang,
-                    SUM(CASE WHEN c.kolektibilitas IN ('KL', 'D', 'M') THEN c.baki_debet ELSE 0 END) AS npl_closing,
-                    SUM(c.baki_debet) AS total_closing
-                FROM closing c
-                GROUP BY c.kode_cabang
-            ),
-
-            gabung AS (
-                SELECT 
-                    rh.kode_cabang,
-                    rh.nama_kantor,
-                    COALESCE(rc.npl_closing, 0) AS npl_closing,
-                    rh.npl_harian,
-                    (rh.npl_harian - COALESCE(rc.npl_closing, 0)) AS selisih_npl,
-                    COALESCE(rc.total_closing, 0) AS total_closing,
-                    rh.total_harian
-                FROM rekap_harian rh
-                LEFT JOIN rekap_closing rc ON rh.kode_cabang = rc.kode_cabang
-            )
-
-            SELECT 
-                kode_cabang,
-                nama_kantor,
-                npl_closing,
-                npl_harian,
-                selisih_npl,
-                ROUND(CASE WHEN total_closing = 0 THEN 0 ELSE (npl_closing * 100.0) / total_closing END, 2) AS npl_closing_persen,
-                ROUND(CASE WHEN total_harian = 0 THEN 0 ELSE (npl_harian * 100.0) / total_harian END, 2) AS npl_harian_persen,
-                ROUND(CASE 
-                    WHEN total_closing = 0 THEN 0
-                    ELSE ((npl_harian * 100.0) / total_harian) - ((npl_closing * 100.0) / total_closing)
-                END, 2) AS selisih_npl_persen
-            FROM gabung
-
-            UNION ALL
-
-            SELECT
-                NULL,
-                'TOTAL KONSOLIDASI',
-                SUM(npl_closing),
-                SUM(npl_harian),
-                SUM(selisih_npl),
-                ROUND(CASE 
-                    WHEN SUM(total_closing) = 0 THEN 0
-                    ELSE (SUM(npl_closing) * 100.0) / SUM(total_closing)
-                END, 2),
-                ROUND(CASE 
-                    WHEN SUM(total_harian) = 0 THEN 0
-                    ELSE (SUM(npl_harian) * 100.0) / SUM(total_harian)
-                END, 2),
-                ROUND(CASE 
-                    WHEN SUM(total_closing) = 0 THEN 0
-                    ELSE ((SUM(npl_harian) * 100.0) / SUM(total_harian)) - ((SUM(npl_closing) * 100.0) / SUM(total_closing))
-                END, 2)
-            FROM gabung
-
-            ORDER BY 
-                CASE WHEN nama_kantor = 'TOTAL KONSOLIDASI' THEN 1 ELSE 0 END,
-                kode_cabang
-        ";
-
+    try {
         $stmt = $this->pdo->prepare($sql);
         $stmt->bindValue(':closing_date', $closing_date);
         $stmt->bindValue(':harian_date', $harian_date);
+        if ($kc_val) {
+            // Bind 2 kali untuk variabel :kc1 dan :kc2
+            $stmt->bindValue(':kc1', $kc_val);
+            $stmt->bindValue(':kc2', $kc_val);
+        }
         $stmt->execute();
-
         $data = $stmt->fetchAll(PDO::FETCH_ASSOC);
-        sendResponse(200, "Berhasil ambil data NPL", $data);
+        
+        // Pisahkan Grand Total
+        $grandTotal = array_pop($data);
+        if(!$grandTotal) { // Fallback kosong
+             $grandTotal = ['kode_unit'=>'','nama_unit'=>'TOTAL KONSOLIDASI','npl_closing'=>0,'npl_harian'=>0,'selisih_npl'=>0,'npl_closing_persen'=>0,'npl_harian_persen'=>0,'selisih_npl_persen'=>0];
+        }
+
+        sendResponse(200, "Sukses", ['data' => $data, 'grand_total' => $grandTotal]);
+    } catch (Exception $e) {
+        sendResponse(500, "Error: " . $e->getMessage());
     }
+}
 
     public function getRecoveryNPL($input = []) {
         $closing_date = isset($input['closing_date']) ? $input['closing_date'] : date('Y-m-d', strtotime('last day of previous month'));

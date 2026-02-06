@@ -26,7 +26,7 @@ FROM
 WHERE
 	tabung.no_rekening = tabung_history.no_rekening 
 	AND tabung.nasabah_id = nasabah.nasabah_id 
-	AND tabung_history.tanggal = "20260203"
+	AND tabung_history.tanggal = "20260205"
 	AND tabung_history.saldo_akhir >0
 	AND tabung.kode_produk=212
 

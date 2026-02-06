@@ -9,148 +9,215 @@ class KreditController {
     public function __construct($pdo) {
         $this->pdo = $pdo;
     }
-    
+
     public function getRealisasiKredit($input = []) {
-        $closing_date = isset($input['closing_date']) ? $input['closing_date'] : date('Y-m-d', strtotime('last day of previous month'));
-        $harian_date  = isset($input['harian_date'])  ? $input['harian_date']  : date('Y-m-d');
-        $awal_date    = date('Y-m-01', strtotime($harian_date)); // awal bulan dari harian_date
+        $closing_date = $input['closing_date'] ?? date('Y-m-d', strtotime('last day of previous month'));
+        $harian_date  = $input['harian_date']  ?? date('Y-m-d');
+        $kc           = $input['kode_kantor']  ?? null;
+        
+        if ($kc === '000') $kc = null;
+
+        // Setup Logic Grouping
+        if ($kc) {
+            $colKey       = "kode_group1"; 
+            $selectName   = "COALESCE(k.deskripsi_group1, CONCAT('KAS ', t.kode_group1)) as nama_unit";
+            $joinTable    = "LEFT JOIN kankas k ON t.kode_group1 = k.kode_group1";
+            $kc_val       = str_pad((string)$kc, 3, '0', STR_PAD_LEFT);
+        } else {
+            $colKey       = "kode_cabang";
+            $selectName   = "COALESCE(k.nama_kantor, CONCAT('CABANG ', t.kode_cabang)) as nama_unit";
+            $joinTable    = "LEFT JOIN kode_kantor k ON t.kode_cabang = k.kode_kantor";
+            $kc_val       = null;
+        }
+
+        // --- QUERY BUILDER (Hardcode Filter Cabang untuk CTE) ---
+        // Menghindari error HY093 (Invalid parameter number) pada driver PDO tertentu
+        $filterClause = ($kc_val) ? "AND t.kode_cabang = '$kc_val'" : "";
 
         $sql = "
-            WITH closing AS (
-                SELECT no_rekening, kode_cabang, baki_debet
-                FROM nominatif
+            WITH 
+            -- A. DATA CLOSING (Parameter: :closing)
+            closing AS (
+                SELECT no_rekening, kode_cabang, kode_group1, baki_debet
+                FROM nominatif t
                 WHERE created = :closing
+                $filterClause
             ),
+            -- B. DATA HARIAN (Parameter: :harian_1)
             harian AS (
-                SELECT no_rekening, kode_cabang, baki_debet
-                FROM nominatif
-                WHERE created = :harian
+                SELECT no_rekening, kode_cabang, kode_group1, baki_debet
+                FROM nominatif t
+                WHERE created = :harian_1
+                $filterClause
             ),
-            runoff AS (
+            -- C. HITUNG RUN OFF (Penurunan Baki Debet)
+            runoff_calc AS (
                 SELECT 
-                    c.no_rekening,
-                    c.kode_cabang,
-                    c.baki_debet - COALESCE(h.baki_debet, 0) AS run_off
+                    c.kode_cabang, 
+                    c.kode_group1,
+                    (c.baki_debet - COALESCE(h.baki_debet, 0)) AS run_off_amt
                 FROM closing c
                 LEFT JOIN harian h ON c.no_rekening = h.no_rekening
+                WHERE (c.baki_debet - COALESCE(h.baki_debet, 0)) > 0 
             ),
             runoff_agg AS (
-                SELECT kode_cabang, SUM(run_off) AS total_run_off
-                FROM runoff
-                GROUP BY kode_cabang
+                SELECT t.$colKey as kode_key, SUM(run_off_amt) AS total_run_off
+                FROM runoff_calc t
+                GROUP BY t.$colKey
             ),
-            realisasi AS (
-                SELECT kode_cabang, no_rekening, MAX(plafond) AS plafond
-                FROM nominatif
-                WHERE created = :harian_real_1
-                AND tgl_realisasi BETWEEN :awal_realisasi AND :harian_real_2
-                GROUP BY kode_cabang, no_rekening
-            ),
+            -- D. HITUNG REALISASI BARU (Parameter: :harian_2, :closing_2)
+            -- Logic: Created = Harian AND Tgl Realisasi > Closing AND <= Harian
             realisasi_agg AS (
                 SELECT 
-                    kode_cabang,
-                    COUNT(DISTINCT no_rekening) AS noa_realisasi,
-                    SUM(plafond) AS total_realisasi
-                FROM realisasi
-                GROUP BY kode_cabang
+                    t.$colKey as kode_key,
+                    COUNT(DISTINCT t.no_rekening) AS noa_realisasi,
+                    SUM(t.plafond) AS total_realisasi
+                FROM nominatif t
+                WHERE t.created = :harian_2
+                AND t.tgl_realisasi > :closing_2 
+                AND t.tgl_realisasi <= :harian_3
+                $filterClause
+                GROUP BY t.$colKey
             ),
-            rekap AS (
-                SELECT 
-                    k.kode_kantor AS kode_cabang,
-                    k.nama_kantor,
-                    COALESCE(r.noa_realisasi, 0) AS noa_realisasi,
-                    COALESCE(r.total_realisasi, 0) AS total_realisasi,
-                    COALESCE(ro.total_run_off, 0) AS total_run_off,
-                    COALESCE(r.total_realisasi, 0) - COALESCE(ro.total_run_off, 0) AS growth
-                FROM kode_kantor k
-                LEFT JOIN realisasi_agg r ON r.kode_cabang = k.kode_kantor
-                LEFT JOIN runoff_agg ro ON ro.kode_cabang = k.kode_kantor
-                WHERE k.kode_kantor <> '000'
+            -- E. GABUNGKAN KEYS
+            merged_keys AS (
+                SELECT kode_key FROM runoff_agg
+                UNION
+                SELECT kode_key FROM realisasi_agg
             )
 
             SELECT 
-                kode_cabang,
-                nama_kantor,
-                noa_realisasi,
-                total_realisasi,
-                total_run_off,
-                growth
-            FROM rekap
-
-            UNION ALL
-
-            SELECT 
-                NULL,
-                'TOTAL KONSOLIDASI',
-                SUM(noa_realisasi),
-                SUM(total_realisasi),
-                SUM(total_run_off),
-                SUM(growth)
-            FROM rekap
-
-            ORDER BY 
-                CASE WHEN nama_kantor = 'TOTAL KONSOLIDASI' THEN 1 ELSE 0 END,
-                kode_cabang
-        ";
-
-
-        $stmt = $this->pdo->prepare($sql);
-
-        // Hati-hati, ini HARUS cocok semua dengan nama parameter di SQL
-        $stmt->bindValue(':closing', $closing_date);
-        $stmt->bindValue(':harian', $harian_date);
-        $stmt->bindValue(':harian_real_1', $harian_date);
-        $stmt->bindValue(':harian_real_2', $harian_date);
-        $stmt->bindValue(':awal_realisasi', $awal_date);
-
-
-        $stmt->execute();
-        $data = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-        sendResponse(200, "Berhasil ambil data realisasi kredit", $data);
-    }
-
-    public function getDetailRealisasiKredit($input = []) {
-        $kode_cabang  = str_pad($input['kode_kantor'] ?? '', 3, '0', STR_PAD_LEFT);
-        $harian_date  = $input['harian_date'] ?? date('Y-m-d');
-        $awal_date    = date('Y-m-01', strtotime($harian_date));
-
-        if (!$kode_cabang) {
-            sendResponse(400, "Kode kantor wajib diisi");
-            return;
-        }
-
-        $sql = "
-            SELECT 
-                no_rekening,
-                nama_nasabah,
-                plafond,
-                alamat,
-                tgl_realisasi,
-                tgl_jatuh_tempo
-            FROM nominatif
-            WHERE kode_cabang = :kode_cabang
-            AND created = :harian_date
-            AND tgl_realisasi BETWEEN :awal_date AND :harian_date_1
-            ORDER BY no_rekening
+                mk.kode_key as kode_unit,
+                $selectName,
+                COALESCE(r.noa_realisasi, 0) AS noa_realisasi,
+                COALESCE(r.total_realisasi, 0) AS total_realisasi,
+                COALESCE(ro.total_run_off, 0) AS total_run_off,
+                (COALESCE(r.total_realisasi, 0) - COALESCE(ro.total_run_off, 0)) AS growth
+            FROM merged_keys mk
+            LEFT JOIN realisasi_agg r ON mk.kode_key = r.kode_key
+            LEFT JOIN runoff_agg ro ON mk.kode_key = ro.kode_key
+            
+            -- JOIN untuk ambil Nama Unit (Parameter: :harian_4)
+            LEFT JOIN (
+                SELECT DISTINCT kode_cabang, kode_group1 
+                FROM nominatif 
+                WHERE created = :harian_4
+            ) t ON mk.kode_key = t.$colKey 
+            
+            $joinTable
+            
+            GROUP BY mk.kode_key
+            ORDER BY mk.kode_key ASC
         ";
 
         try {
             $stmt = $this->pdo->prepare($sql);
-            $stmt->bindValue(':kode_cabang', $kode_cabang);
-            $stmt->bindValue(':harian_date', $harian_date);
-            $stmt->bindValue(':harian_date_1', $harian_date);
 
-            $stmt->bindValue(':awal_date', $awal_date);
+            // BINDING PARAMETER
+            $stmt->bindValue(':closing', $closing_date);
             
+            $stmt->bindValue(':harian_1', $harian_date);
+            $stmt->bindValue(':harian_2', $harian_date);
+            $stmt->bindValue(':harian_3', $harian_date);
+            $stmt->bindValue(':harian_4', $harian_date); 
+            
+            $stmt->bindValue(':closing_2', $closing_date); // Untuk filter tgl_realisasi > closing
 
             $stmt->execute();
-            $data = $stmt->fetchAll(PDO::FETCH_ASSOC);
-            sendResponse(200, "Detail realisasi kredit cabang $kode_cabang", $data);
-        } catch (PDOException $e) {
-            sendResponse(500, "PDO Error: " . $e->getMessage());
+            $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+            // Hitung Grand Total
+            $grandTotal = [
+                'kode_unit' => '', 'nama_unit' => 'TOTAL KONSOLIDASI',
+                'noa_realisasi' => 0, 'total_realisasi' => 0,
+                'total_run_off' => 0, 'growth' => 0
+            ];
+
+            foreach ($rows as $row) {
+                $grandTotal['noa_realisasi']   += $row['noa_realisasi'];
+                $grandTotal['total_realisasi'] += $row['total_realisasi'];
+                $grandTotal['total_run_off']   += $row['total_run_off'];
+                $grandTotal['growth']          += $row['growth'];
+            }
+
+            sendResponse(200, "Sukses Realisasi & Growth", [
+                'meta' => [
+                    'mode' => $kc ? "BREAKDOWN KANKAS ($kc)" : "KONSOLIDASI CABANG",
+                    'closing' => $closing_date,
+                    'harian' => $harian_date
+                ],
+                'data' => $rows,
+                'grand_total' => $grandTotal
+            ]);
+
+        } catch (Exception $e) {
+            sendResponse(500, "Error: " . $e->getMessage());
         }
     }
+
+    /**
+     * DETAIL REALISASI
+     */
+    public function getDetailRealisasiKredit($input = []) {
+        $harian_date = $input['harian_date'] ?? date('Y-m-d');
+        $awal_date   = date('Y-m-01', strtotime($harian_date));
+        $kc          = $input['kode_kantor'] ?? null;
+        $kankas      = $input['kode_kankas'] ?? null; 
+
+        $where = "WHERE t1.created = :harian 
+                  AND t1.tgl_realisasi BETWEEN :awal AND :akhir";
+        
+        $params = [
+            ':harian' => $harian_date,
+            ':awal'   => $awal_date,
+            ':akhir'  => $harian_date
+        ];
+
+        if ($kc && $kc !== '000') {
+            $where .= " AND t1.kode_cabang = :kc";
+            $params[':kc'] = str_pad((string)$kc, 3, '0', STR_PAD_LEFT);
+        }
+
+        if ($kankas) {
+            $where .= " AND t1.kode_group1 = :kankas";
+            $params[':kankas'] = $kankas;
+        }
+
+        $sql = "SELECT 
+                    t1.no_rekening,
+                    t1.nama_nasabah,
+                    t1.plafond,
+                    t1.baki_debet,
+                    t1.tgl_realisasi,
+                    t1.tgl_jatuh_tempo,
+                    t1.kode_cabang,
+                    COALESCE(k.deskripsi_group1, t1.kode_group1) as nama_kankas,
+                    COALESCE(ao.nama_ao, t1.kode_group2) as nama_ao,
+                    t1.alamat
+                FROM nominatif t1
+                LEFT JOIN kankas k ON t1.kode_group1 = k.kode_group1
+                LEFT JOIN ao_kredit ao ON t1.kode_group2 = ao.kode_group2
+                $where
+                ORDER BY t1.tgl_realisasi DESC, t1.no_rekening ASC";
+
+        try {
+            $stmt = $this->pdo->prepare($sql);
+            foreach ($params as $k => $v) $stmt->bindValue($k, $v);
+            $stmt->execute();
+            $data = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+            sendResponse(200, "Detail Realisasi", $data);
+        } catch (Exception $e) {
+            sendResponse(500, "Error: " . $e->getMessage());
+        }
+    }
+
+
+
+
+
+    
+
 
     public function getMigrasiKolek1($input) {
         $closing_date = !empty($input['closing_date']) ? $input['closing_date'] : date('Y-m-d', strtotime('last day of previous month'));

@@ -203,7 +203,7 @@
 
 <script>
   // --- CONFIG ---
-  const API_URL  = './api/pipelane/index.php'; 
+  const API_URL  = './api/pipelane/'; 
   const API_KODE = './api/kode/'; 
   const API_DATE = './api/date/';
   const nf = new Intl.NumberFormat('id-ID');
@@ -227,29 +227,35 @@
           document.getElementById('harian_date').value = now.toISOString().split('T')[0];
       }
 
-      // 3. Load Kantor sesuai Login
+      // 3. Load Kantor sesuai Login & 4. Load Data
       await populateKantor();
-      
-      // 4. Load Data Awal
       fetchRekap();
   });
 
   async function apiCall(url, payload) {
-      const res = await fetch(url, { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(payload) });
+      // Helper untuk fetch
+      const res = await fetch(url, { 
+          method: 'POST', 
+          headers: {'Content-Type':'application/json'}, 
+          body: JSON.stringify(payload) 
+      });
       return await res.json();
   }
 
-  // --- POPULATE KANTOR (LOGIC LOGIN) ---
+  // --- POPULATE KANTOR (LOGIC LOGIN & LOCK) ---
   async function populateKantor() {
+      // AMBIL USER DARI WINDOW (Global Context)
+      const user = (window.getUser && window.getUser()) || null;
+      const userKode = (user?.kode ? String(user.kode).padStart(3,'0') : '000'); // Default 000 jika null
+
       try {
           const res = await apiCall(API_KODE, { type: 'kode_kantor' });
           const sel = document.getElementById('opt_kantor');
-          const loginKode = window.currentUser.kode_kantor; // Ambil dari variable global yg kita set di atas
           
           let h = '';
 
-          // Logic: Jika Login 000 (Pusat) -> Tampilkan Semua
-          if (loginKode === '000') {
+          // KONDISI 1: PUSAT (000) -> BISA PILIH SEMUA
+          if (userKode === '000') {
               h += '<option value="">SEMUA CABANG</option>';
               if(res.data) {
                   res.data.filter(x => x.kode_kantor !== '000').forEach(x => {
@@ -257,23 +263,24 @@
                   });
               }
               sel.innerHTML = h;
-              sel.disabled = false; // Admin boleh ganti
+              sel.disabled = false; // Enable
           } 
-          // Logic: Jika Login Cabang (ex: 001) -> Kunci ke 001
+          // KONDISI 2: CABANG -> KUNCI
           else {
-              const myBranch = res.data ? res.data.find(k => k.kode_kantor === loginKode) : null;
-              if (myBranch) {
-                  h = `<option value="${myBranch.kode_kantor}">${myBranch.kode_kantor} - ${myBranch.nama_kantor}</option>`;
-                  sel.innerHTML = h;
-                  sel.value = loginKode; // Paksa pilih
-                  sel.disabled = true;   // Disable agar tidak bisa diganti
-              } else {
-                  // Fallback jika data cabang tidak ditemukan di API tapi user login punya kode
-                  sel.innerHTML = `<option value="${loginKode}">CABANG ${loginKode}</option>`;
-                  sel.disabled = true;
-              }
+              const myBranch = res.data ? res.data.find(k => k.kode_kantor === userKode) : null;
+              const branchName = myBranch ? myBranch.nama_kantor : `CABANG ${userKode}`;
+              
+              // Set opsi tunggal
+              h = `<option value="${userKode}" selected>${userKode} - ${branchName}</option>`;
+              sel.innerHTML = h;
+              sel.value = userKode; // Paksa Value
+              sel.disabled = true;  // Disable
           }
-      } catch(e) { console.error("Gagal load kantor", e); }
+      } catch(e) { 
+          console.error("Gagal load kantor", e);
+          // Fallback jika API gagal
+          document.getElementById('opt_kantor').innerHTML = `<option value="${userKode}">${userKode}</option>`;
+      }
   }
 
   document.getElementById('formFilter').addEventListener('submit', e => { e.preventDefault(); fetchRekap(); });
@@ -288,9 +295,8 @@
       l.classList.remove('hidden'); pills.classList.add('hidden');
       tb.innerHTML = ''; tf.innerHTML = '';
 
-      // Tentukan cabang request: Jika disable (user cabang), ambil valuenya. Jika enable (admin), ambil pilihan user.
-      const elKantor = document.getElementById('opt_kantor');
-      const reqCabang = elKantor.value;
+      // Tentukan cabang request: Ambil value dari dropdown (entah itu enabled atau disabled/locked)
+      const reqCabang = document.getElementById('opt_kantor').value;
 
       try {
           const payload = {
@@ -298,14 +304,14 @@
               closing_date: document.getElementById('closing_date').value,
               harian_date: document.getElementById('harian_date').value,
               tahun_jt: document.getElementById('tahun_jt').value,
-              kode_kantor: reqCabang // Kirim kode cabang (kosong berarti semua jika admin)
+              kode_kantor: reqCabang // Kirim kode (kosong = semua)
           };
 
           const json = await apiCall(API_URL, payload);
           const rows = json.data || [];
 
           if(rows.length === 0) {
-              tb.innerHTML = `<tr><td colspan="8" style="text-align:center; padding:30px; color:#94a3b8;">Data tidak ditemukan.</td></tr>`;
+              tb.innerHTML = `<tr><td colspan="8" class="text-center py-10 text-gray-400 italic">Data tidak ditemukan.</td></tr>`;
               return;
           }
 
@@ -319,85 +325,84 @@
 
           let html = '';
           rows.forEach(r => {
-              // Hitung Total
+              // Accumulate
               T.tgt_noa += +r.noa_target; T.tgt_nom += +r.plafon_closing;
-              T.sdh_noa += +r.noa_sudah;  T.sdh_nom += +r.nominal_sudah; // Pastikan key backend 'nominal_sudah'
-              
+              T.sdh_noa += +r.noa_sudah;  T.sdh_nom += +r.nominal_sudah;
               T.lun_noa += +r.noa_lunas;  T.lun_nom += +r.nominal_lunas;
               T.top_noa += +r.noa_topup;  T.top_nom += +r.os_topup;
               T.ret_noa += +r.noa_retensi;T.ret_nom += +r.os_retensi;
-              
               T.drop_noa += +r.noa_drop;  T.drop_nom += +r.os_drop;
 
               const namaK = r.nama_kantor || r.kode_cabang;
 
               html += `
-                <tr onclick="openModal('${r.kode_cabang}', '${namaK}')">
-                    <td class="sticky-col" style="text-align:center; font-family:monospace; font-weight:700; color:#64748b;">${r.kode_cabang}</td>
-                    <td class="sticky-col col-kantor" style="left:50px; z-index:31; font-weight:600; color:#334155; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:140px;" title="${namaK}">${namaK}</td>
+                <tr class="cell-hover bg-white hover:bg-blue-50 transition border-b group" onclick="openModal('${r.kode_cabang}', '${namaK}')">
+                    <td class="px-3 py-2 border-r font-mono text-gray-500 text-center sticky left-0 bg-white group-hover:bg-blue-50 z-20">${r.kode_cabang}</td>
+                    <td class="px-3 py-2 border-r font-medium text-gray-700 sticky left-[60px] bg-white group-hover:bg-blue-50 z-20 truncate max-w-[160px]" title="${namaK}">${namaK}</td>
                     
-                    <td style="text-align:right;">
-                        <div style="font-weight:700; color:#1e293b;">${fmt(r.noa_target)}</div>
-                        <div class="sub-val">${fmt(r.plafon_closing)}</div>
-                    </td>
-                    
-                    <td style="text-align:center; background:#f0fdf4; border-left:1px solid #bbf7d0;">
-                        <div style="font-weight:700;">${fmt(r.noa_sudah)}</div>
-                        <div class="sub-val" style="color:#166534; font-weight:700;">${fmt(r.nominal_sudah)}</div>
+                    <td class="px-3 py-2 border-r text-right">
+                        <div class="font-bold text-gray-800">${fmt(r.noa_target)}</div>
+                        <div class="text-[10px] text-gray-500 font-mono">${fmt(r.plafon_closing)}</div>
                     </td>
                     
-                    <td style="text-align:center; background:#eff6ff; border-left:1px solid #bfdbfe;">
-                        <div style="font-weight:700;">${fmt(r.noa_lunas)}</div>
-                        <div class="sub-val" style="color:#2563eb;">${fmt(r.nominal_lunas)}</div>
-                    </td>
-                    <td style="text-align:center; background:#faf5ff;">
-                        <div style="font-weight:700;">${fmt(r.noa_topup)}</div>
-                        <div class="sub-val" style="color:#7c3aed;">${fmt(r.os_topup)}</div>
-                    </td>
-                    <td style="text-align:center; background:#fffbeb;">
-                        <div style="font-weight:700;">${fmt(r.noa_retensi)}</div>
-                        <div class="sub-val" style="color:#b45309;">${fmt(r.os_retensi)}</div>
+                    <td class="px-3 py-2 border-r text-center bg-green-50/50 text-green-700 border-l border-green-100">
+                        <div class="font-bold">${fmt(r.noa_sudah)}</div>
+                        <div class="text-[10px] text-green-600 font-mono font-bold">${fmt(r.nominal_sudah)}</div>
                     </td>
                     
-                    <td style="text-align:center; background:#fef2f2; border-left:1px solid #fecaca;">
-                        <div style="font-weight:700;">${fmt(r.noa_drop)}</div>
-                        <div class="sub-val" style="color:#dc2626;">${fmt(r.os_drop)}</div>
+                    <td class="px-3 py-2 border-r text-center bg-blue-50/50 text-blue-700 border-l border-blue-100">
+                        <div class="font-bold">${fmt(r.noa_lunas)}</div>
+                        <div class="text-[10px] text-blue-600 font-mono">${fmt(r.nominal_lunas)}</div>
+                    </td>
+                    <td class="px-3 py-2 border-r text-center bg-purple-50/50 text-purple-700">
+                        <div class="font-bold">${fmt(r.noa_topup)}</div>
+                        <div class="text-[10px] text-purple-600 font-mono">${fmt(r.os_topup)}</div>
+                    </td>
+                    <td class="px-3 py-2 border-r text-center bg-orange-50/50 text-orange-700">
+                        <div class="font-bold">${fmt(r.noa_retensi)}</div>
+                        <div class="text-[10px] text-orange-600 font-mono">${fmt(r.os_retensi)}</div>
+                    </td>
+                    
+                    <td class="px-3 py-2 border-r text-center bg-red-50/50 text-red-700 border-l border-red-100">
+                        <div class="font-bold">${fmt(r.noa_drop)}</div>
+                        <div class="text-[10px] text-red-600 font-mono">${fmt(r.os_drop)}</div>
                     </td>
                 </tr>
               `;
           });
           tb.innerHTML = html;
 
-          // Footer Total
+          // Footer
           tf.innerHTML = `
-            <tr>
-                <td class="sticky-col" colspan="2" style="text-align:center; font-weight:700; z-index:35;">GRAND TOTAL</td>
-                <td style="text-align:right;"><div>${fmt(T.tgt_noa)}</div><div class="sub-val" style="font-weight:700; color:#475569;">${fmt(T.tgt_nom)}</div></td>
+            <tr class="bg-gray-50">
+                <td class="px-3 py-3 border-r sticky left-0 bg-gray-100 z-30 text-center border-t-2 border-gray-300" colspan="2">GRAND TOTAL</td>
+                <td class="px-3 py-3 border-r text-right border-t-2 border-gray-300"><div>${fmt(T.tgt_noa)}</div><div class="text-[10px] font-mono">${fmt(T.tgt_nom)}</div></td>
                 
-                <td style="text-align:center; background:#dcfce7; border-left:1px solid #bbf7d0;">
-                    <div>${fmt(T.sdh_noa)}</div><div class="sub-val" style="color:#166534; font-weight:700;">${fmt(T.sdh_nom)}</div>
-                </td>
-                
-                <td style="text-align:center; background:#dbeafe; border-left:1px solid #bfdbfe;">
-                    <div>${fmt(T.lun_noa)}</div><div class="sub-val" style="color:#1d4ed8; font-weight:700;">${fmt(T.lun_nom)}</div>
-                </td>
-                <td style="text-align:center; background:#f3e8ff;">
-                    <div>${fmt(T.top_noa)}</div><div class="sub-val" style="color:#7e22ce; font-weight:700;">${fmt(T.top_nom)}</div>
-                </td>
-                <td style="text-align:center; background:#fef3c7;">
-                    <div>${fmt(T.ret_noa)}</div><div class="sub-val" style="color:#b45309; font-weight:700;">${fmt(T.ret_nom)}</div>
+                <td class="px-3 py-3 border-r text-center bg-green-100 text-green-900 border-t-2 border-green-300">
+                    <div>${fmt(T.sdh_noa)}</div><div class="text-[10px] font-mono font-bold">${fmt(T.sdh_nom)}</div>
                 </td>
                 
-                <td style="text-align:center; background:#fee2e2; border-left:1px solid #fecaca;">
-                    <div>${fmt(T.drop_noa)}</div><div class="sub-val" style="color:#b91c1c; font-weight:700;">${fmt(T.drop_nom)}</div>
+                <td class="px-3 py-3 border-r text-center bg-blue-100 text-blue-900 border-t-2 border-blue-300">
+                    <div>${fmt(T.lun_noa)}</div><div class="text-[10px] font-mono font-bold">${fmt(T.lun_nom)}</div>
+                </td>
+                <td class="px-3 py-3 border-r text-center bg-purple-100 text-purple-900 border-t-2 border-purple-300">
+                    <div>${fmt(T.top_noa)}</div><div class="text-[10px] font-mono font-bold">${fmt(T.top_nom)}</div>
+                </td>
+                <td class="px-3 py-3 border-r text-center bg-orange-100 text-orange-900 border-t-2 border-orange-300">
+                    <div>${fmt(T.ret_noa)}</div><div class="text-[10px] font-mono font-bold">${fmt(T.ret_nom)}</div>
+                </td>
+                
+                <td class="px-3 py-3 border-r text-center bg-red-100 text-red-900 border-t-2 border-red-300">
+                    <div>${fmt(T.drop_noa)}</div><div class="text-[10px] font-mono font-bold">${fmt(T.drop_nom)}</div>
                 </td>
             </tr>
           `;
 
-          // Update Pills
+          // Hitung Total Potensi
           T.pot_noa = T.lun_noa + T.top_noa + T.ret_noa;
           T.pot_nom = T.lun_nom + T.top_nom + T.ret_nom;
 
+          // Update Pills
           document.getElementById('sum_target').innerText = fmt(T.tgt_noa);
           document.getElementById('sum_target_nom').innerText = 'Rp ' + fmt(T.tgt_nom);
           
@@ -458,17 +463,19 @@
           const stats = json.data?.stats || {};
           const aoList = json.data?.list_ao || [];
 
-          // Stats Bar Modal
+          // Update Stats Bar di Modal
           document.getElementById('modalStats').innerHTML = `
-             <div>Total: <span style="font-weight:700; color:#1e293b;">${fmt(stats.total_data)}</span></div>
-             <div style="color:#166534;">Sudah: <span style="font-weight:700;">${fmt(stats.cnt_sudah)}</span></div>
-             <div style="color:#2563eb;">Lunas: <span style="font-weight:700;">${fmt(stats.cnt_lunas)}</span></div>
-             <div style="color:#7c3aed;">TopUp: <span style="font-weight:700;">${fmt(stats.cnt_topup)}</span></div>
-             <div style="color:#b45309;">Retensi: <span style="font-weight:700;">${fmt(stats.cnt_retensi)}</span></div>
-             <div style="color:#dc2626;">Drop: <span style="font-weight:700;">${fmt(stats.cnt_drop)}</span></div>
+             <div class="flex gap-6">
+                 <div>Total: <span class="font-bold text-gray-800">${fmt(stats.total_data)}</span></div>
+                 <div class="text-green-700">Sudah: <span class="font-bold">${fmt(stats.cnt_sudah)}</span></div>
+                 <div class="text-blue-700">Lunas: <span class="font-bold">${fmt(stats.cnt_lunas)}</span></div>
+                 <div class="text-purple-700">TopUp: <span class="font-bold">${fmt(stats.cnt_topup)}</span></div>
+                 <div class="text-orange-700">Retensi: <span class="font-bold">${fmt(stats.cnt_retensi)}</span></div>
+                 <div class="text-red-700">Drop: <span class="font-bold">${fmt(stats.cnt_drop)}</span></div>
+             </div>
           `;
 
-          // AO Filter
+          // Isi Filter AO jika belum ada
           const selAO = document.getElementById('filter_ao_modal');
           if(selAO.options.length === 1 && aoList.length > 0) {
               aoList.forEach(ao => {
@@ -478,7 +485,7 @@
           }
 
           if(rows.length === 0) {
-              tb.innerHTML = `<tr><td colspan="9" style="text-align:center; padding:20px; color:#94a3b8;">Tidak ada data detail.</td></tr>`;
+              tb.innerHTML = `<tr><td colspan="9" class="text-center py-10 text-gray-400 italic">Tidak ada data detail.</td></tr>`;
               document.getElementById('pageInfo').innerText = '0 Data';
               return;
           }
@@ -490,24 +497,32 @@
           rows.forEach(r => {
               const aoName = (r.nama_ao || '-').split(' ')[0];
               const nomBaru = r.plafon_baru > 0 
-                  ? `<div style="font-weight:700; color:#166534; font-size:11px;">${fmt(r.plafon_baru)}</div><div class="sub-val" style="color:#166534;">${r.tgl_baru}</div>` 
+                  ? `<div class="font-bold text-green-700 text-[11px]">${fmt(r.plafon_baru)}</div><div class="text-[9px] text-green-600">${r.tgl_baru}</div>` 
                   : '-';
               
+              // Badge Styles (Tailwind)
+              let badgeClass = "bg-gray-100 text-gray-600";
+              if(r.status_ket.includes("SUDAH")) badgeClass = "bg-green-100 text-green-800";
+              if(r.status_ket.includes("LUNAS")) badgeClass = "bg-blue-100 text-blue-800";
+              if(r.status_ket.includes("TOP UP")) badgeClass = "bg-purple-100 text-purple-800";
+              if(r.status_ket.includes("RETENSI")) badgeClass = "bg-orange-100 text-orange-800";
+              if(r.status_ket.includes("DROP")) badgeClass = "bg-red-100 text-red-800";
+
               const btn = r.enable 
-                  ? `<button class="btn btn-primary" style="height:24px; padding:0 8px; font-size:10px;">PROSPEK</button>`
-                  : `<span style="font-size:10px; font-weight:700; color:#cbd5e1;">LOCKED</span>`;
+                  ? `<button class="bg-blue-600 hover:bg-blue-700 text-white h-[24px] px-2 rounded text-[10px] shadow-sm">PROSPEK</button>`
+                  : `<span class="text-[10px] font-bold text-gray-300">LOCKED</span>`;
 
               html += `
-                <tr style="border-bottom:1px solid #f1f5f9;">
-                    <td style="font-family:monospace; font-size:11px; color:#64748b;">${r.no_rekening}</td>
-                    <td style="font-weight:600; font-size:11px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:180px;" title="${r.nama_nasabah}">${r.nama_nasabah}</td>
-                    <td style="font-size:11px; color:#2563eb; font-weight:700;">${aoName}</td>
-                    <td style="text-align:right; font-family:monospace; font-size:11px; color:#64748b;">${fmt(r.plafon_awal)}</td>
-                    <td style="text-align:center; font-family:monospace; font-size:11px;">${r.tgl_jatuh_tempo}</td>
-                    <td style="text-align:right; font-weight:700; font-family:monospace; font-size:11px; color:#2563eb;">${fmt(r.os_actual)}</td>
-                    <td style="text-align:center;"><span class="badge ${r.badge.replace('text-','text-color:').replace('bg-','background-color:')}" style="background:#f1f5f9; border:1px solid #e2e8f0;">${r.status_ket}</span></td>
-                    <td style="text-align:right; background:#f0fdf4; border-left:1px solid #bbf7d0;">${nomBaru}</td>
-                    <td style="text-align:center;">${btn}</td>
+                <tr class="hover:bg-gray-50 border-b transition">
+                    <td class="px-4 py-2 font-mono text-[11px] text-gray-500">${r.no_rekening}</td>
+                    <td class="px-4 py-2 font-medium text-gray-700 text-xs truncate max-w-[180px]" title="${r.nama_nasabah}">${r.nama_nasabah}</td>
+                    <td class="px-4 py-2 text-xs text-blue-700 font-bold">${aoName}</td>
+                    <td class="px-4 py-2 text-right text-[11px] text-gray-500 font-mono">${fmt(r.plafon_awal)}</td>
+                    <td class="px-4 py-2 text-center font-mono text-[11px] text-gray-500">${r.tgl_jatuh_tempo}</td>
+                    <td class="px-4 py-2 text-right font-bold text-blue-700 text-[11px] font-mono">${fmt(r.os_actual)}</td>
+                    <td class="px-4 py-2 text-center"><span class="px-2 py-0.5 rounded text-[9px] font-bold uppercase ${badgeClass}">${r.status_ket}</span></td>
+                    <td class="px-4 py-2 text-right bg-green-50/30 border-l border-green-50">${nomBaru}</td>
+                    <td class="px-4 py-2 text-center">${btn}</td>
                 </tr>
               `;
           });
@@ -522,7 +537,11 @@
   // --- DOWNLOAD ---
   async function downloadExcel() {
       try {
-          const btn = event.target; const ori = btn.innerHTML; btn.innerHTML = '...'; btn.disabled = true;
+          const btn = event.target.closest('button'); 
+          const originalText = btn.innerHTML;
+          btn.innerHTML = `<span class="animate-spin inline-block h-3 w-3 border-2 border-white border-t-transparent rounded-full mr-1"></span> Loading...`;
+          btn.disabled = true;
+
           const payload = {
               type: 'detail_pipeline',
               closing_date: document.getElementById('closing_date').value,
@@ -532,7 +551,8 @@
           };
           const json = await apiCall(API_URL, payload);
           const rows = json.data?.data || [];
-          if(rows.length===0) { alert('Data kosong'); btn.innerHTML=ori; btn.disabled=false; return; }
+          
+          if(rows.length===0) { alert('Data kosong'); btn.innerHTML=originalText; btn.disabled=false; return; }
 
           let csv = "No Rekening\tNama Nasabah\tAO\tPlafon Awal\tTgl JT\tSisa OS\tStatus\tTgl Realisasi Baru\tPlafon Baru\n";
           rows.forEach(r => {
@@ -542,7 +562,8 @@
           const blob = new Blob([csv], { type: 'application/vnd.ms-excel' });
           const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
           a.download = `Pipeline_JT_${state.cabang}.xls`; a.click();
-          btn.innerHTML=ori; btn.disabled=false;
+          
+          btn.innerHTML=originalText; btn.disabled=false;
       } catch(e) { alert('Gagal export'); }
   }
 

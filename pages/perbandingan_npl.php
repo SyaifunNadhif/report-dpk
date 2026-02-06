@@ -1,274 +1,313 @@
-<!-- 📊 REKAP NPL (sticky header + freeze kiri + responsive toolbar) -->
-<div class="max-w-7xl mx-auto px-4 py-4 h-screen flex flex-col">
-  <!-- Header / Toolbar -->
-  <div class="hdr flex flex-wrap items-start gap-2 mb-3">
-    <h1 class="title text-2xl font-bold flex items-center gap-2">
-      <span>📊</span><span>Rekap NPL</span>
-    </h1>
-
-    <!-- Filter -->
-    <form id="formFilterNpl" class="ml-auto sm:ml-auto">
-      <div id="filterNPL" class="flex items-center gap-2">
-        <label for="closing_date_npl" class="lbl text-sm text-slate-700">Closing:</label>
-        <input type="date" id="closing_date_npl" class="inp" required>
-
-        <label for="harian_date_npl" class="lbl text-sm text-slate-700">Harian:</label>
-        <input type="date" id="harian_date_npl" class="inp" required>
-
-        <button type="submit" class="btn-icon" title="Terapkan">
-          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
-            <circle cx="11" cy="11" r="7"></circle>
-            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-          </svg>
-        </button>
-      </div>
-    </form>
-  </div>
-
-  <!-- Loading -->
-  <div id="loadingNpl" class="hidden flex items-center gap-2 text-sm text-gray-600 mb-2">
-    <svg class="animate-spin h-5 w-5 text-green-600" viewBox="0 0 24 24">
-      <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-      <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
-    </svg>
-    <span>Memuat data NPL...</span>
-  </div>
-
-  <!-- Scroller -->
-  <div id="nplScroller" class="flex-1 min-h-0 overflow-hidden rounded border border-gray-200 bg-white">
-    <div class="h-full overflow-auto">
-      <table id="tabelNpl" class="min-w-full text-sm text-left text-gray-700">
-        <thead class="uppercase">
-          <tr id="nplHead1" class="text-xs">
-            <th class="px-4 py-2 sticky-npl freeze-1 col1 col-kode">KODE KANTOR</th>
-            <th class="px-4 py-2 sticky-npl freeze-2 col2 col-nama">NAMA KANTOR</th>
-            <th class="px-4 py-2 text-right sticky-npl" data-sort="npl_closing">NPL CLOSING</th>
-            <th class="px-4 py-2 text-right sticky-npl" data-sort="npl_harian">NPL HARIAN</th>
-            <th class="px-4 py-2 text-right sticky-npl" data-sort="selisih_npl">SELISIH</th>
-            <th class="px-4 py-2 text-right sticky-npl" data-sort="npl_closing_persen">% CLOSING</th>
-            <th class="px-4 py-2 text-right sticky-npl" data-sort="npl_harian_persen">% HARIAN</th>
-            <th class="px-4 py-2 text-right sticky-npl" data-sort="selisih_npl_persen">% SELISIH</th>
-          </tr>
-        </thead>
-        <!-- TOTAL tepat di bawah header (sticky) -->
-        <tbody id="nplTotalRow"></tbody>
-        <!-- Baris cabang -->
-        <tbody id="nplBody"></tbody>
-      </table>
-    </div>
-  </div>
-</div>
-
 <style>
-  /* ===== Toolbar ===== */
-  .inp{ border:1px solid #cbd5e1; border-radius:.6rem; padding:.5rem .75rem; font-size:14px; background:#fff; }
-  .btn-icon{ width:42px; height:42px; border-radius:999px; display:inline-flex; align-items:center; justify-content:center;
-             background:#2563eb; color:#fff; box-shadow:0 6px 14px rgba(37,99,235,.25); }
-  .btn-icon:hover{ background:#1e40af; }
-  .hdr{ row-gap:.5rem; }
-  @media (max-width:640px){
-    .title{ font-size:1.25rem; }
-    .hdr{ flex-direction:column; align-items:flex-start; }
-    #filterNPL{ width:100%; gap:.5rem; }
-    .lbl{ display:none; }
-    .inp{ flex:0 0 auto; width:200px; max-width:70vw; font-size:13px; padding:.45rem .6rem; }
-    .btn-icon{ width:40px; height:40px; }
+  :root { --primary: #2563eb; --bg: #f8fafc; --text: #334155; }
+  body { font-family: 'Inter', system-ui, sans-serif; background: var(--bg); color: var(--text); overflow: hidden; }
+  
+  /* Input & Button */
+  .inp { border: 1px solid #cbd5e1; border-radius: 0.5rem; padding: 0.4rem 0.75rem; font-size: 13px; background: #fff; width: 100%; height: 38px; cursor: pointer; }
+  .inp:disabled { background-color: #f1f5f9; color: #64748b; font-weight: 600; cursor: not-allowed; border-color: #e2e8f0; }
+  .lbl { font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; margin-bottom: 4px; display: block; }
+  
+  /* DATEPICKER FIX */
+  input[type="date"]::-webkit-inner-spin-button,
+  input[type="date"]::-webkit-calendar-picker-indicator { display: none; -webkit-appearance: none; }
+  input[type="date"] { -moz-appearance: textfield; }
+
+  .btn-icon { width: 38px; height: 38px; border-radius: 8px; background: var(--primary); color: white; border: none; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; transition: 0.2s; }
+  .btn-icon:hover { background: #1d4ed8; }
+
+  /* Table Wrapper */
+  .table-wrapper { 
+      overflow: auto; 
+      height: 100%; 
+      border-radius: 8px; 
+      border: 1px solid #e2e8f0; 
+      background: white; 
+      position: relative;
+      padding-bottom: 0; /* Reset padding */
+  }
+  
+  table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 12px; }
+  
+  /* Header Sticky */
+  th { position: sticky; top: 0; z-index: 40; background: #d9ead3; color: #1e293b; font-weight: 700; padding: 10px; border-bottom: 1px solid #cbd5e1; text-transform: uppercase; }
+  td { padding: 8px 10px; border-bottom: 1px solid #f1f5f9; color: #334155; vertical-align: middle; }
+  
+  /* Sticky Kolom Kiri */
+  .sticky-col { position: sticky; left: 0; z-index: 30; background: white; border-right: 1px solid #e2e8f0; }
+  th.sticky-col { z-index: 50; background: #d9ead3; }
+  
+  /* FOOTER STICKY (Floating Grand Total) */
+  tfoot td { 
+      position: sticky; 
+      bottom: 0; 
+      z-index: 60; 
+      background: #eff6ff; 
+      font-weight: 700; 
+      border-top: 2px solid #60a5fa; /* Border lebih tegas */
+      color: #1e3a8a;
+      box-shadow: 0 -4px 10px -2px rgba(0,0,0,0.15); /* Shadow ke atas */
+      padding-top: 15px; 
+      padding-bottom: 15px;
+  }
+  
+  /* Merged Cell Sticky Kiri di Footer */
+  tfoot td.merged-total {
+      position: sticky; left: 0; z-index: 65;
+      text-align: center; border-right: 1px solid #93c5fd; background: #eff6ff; 
   }
 
-  /* ===== Tabel: sticky header + freeze kiri ===== */
-  body{ overflow:hidden; }
-  #nplScroller{ --npl_col1:5rem; --npl_col2:16rem; --npl_head:40px; --npl_totalH:36px; --npl_safe:28px; }
-  @supports(padding:max(0px)){ #nplScroller{ --npl_safe:max(28px, env(safe-area-inset-bottom)); } }
-
-  #tabelNpl{ font-size: clamp(11px, 1.6vw, 14px); }
-  #tabelNpl thead th{ font-size: clamp(10px, 1.4vw, 12px); }
-
-  #tabelNpl .col1{ width:var(--npl_col1); min-width:var(--npl_col1); }
-  #tabelNpl .col2{ width:var(--npl_col2); min-width:var(--npl_col2); }
-  /* Nama Kantor jangan melebar */
-  #tabelNpl th.col-nama, #tabelNpl td.col-nama{
-    max-width:var(--npl_col2); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
-  }
-
-  /* Freeze kiri */
-  #tabelNpl .freeze-1{ position:sticky; left:0; z-index:41;  box-shadow:1px 0 0 rgba(0,0,0,.06); background:#fff; }
-  #tabelNpl .freeze-2{ position:sticky; left:var(--npl_col1); z-index:40;  box-shadow:1px 0 0 rgba(0,0,0,.06); background:#fff; }
-
-  /* Sticky header */
-  #tabelNpl thead th{ position:sticky; }
-  #tabelNpl thead th.sticky-npl{ top:0; background:#d9ead3; z-index:88; }
-  #tabelNpl thead th.freeze-1{ left:0; z-index:90; background:#d9ead3; }
-  #tabelNpl thead th.freeze-2{ left:var(--npl_col1); z-index:89; background:#d9ead3; }
-
-  /* Sticky TOTAL tepat di bawah header */
-  #tabelNpl tbody tr.sticky-total td{
-    position:sticky; top:var(--npl_head); background:#eaf2ff; color:#1e40af; z-index:70; border-bottom:1px solid #c7d2fe;
-  }
-  #tabelNpl tbody tr.sticky-total td.freeze-1{ z-index:91; }
-  #tabelNpl tbody tr.sticky-total td.freeze-2{ z-index:90; }
-
-  /* Hilangkan spacer default semua tbody */
-  #tabelNpl tbody::after{ content:""; display:block; height:0; }
-  /* Spacer hanya untuk BODY supaya baris terakhir tidak ketutup */
-  #tabelNpl #nplBody::after{
-    content:""; display:block;
-    height: calc(var(--npl_head) + var(--npl_totalH) + var(--npl_safe));
-  }
-
-  #tabelNpl tbody tr:hover td{ background:#f9fafb; }
-
-  /* ===== Mobile tweaks ===== */
-  @media (max-width:640px){
-    /* sembunyikan kolom KODE di header + total + body */
-    #tabelNpl th.col-kode, #tabelNpl td.col-kode{ display:none; }
-
-    /* geser kolom Nama ke paling kiri dan PERKECIL lebarnya */
-    #nplScroller{ --npl_col1:0px; --npl_col2: 9.5rem; } /* 9–11rem aman, bisa disetel lagi */
-    #tabelNpl .freeze-2, #tabelNpl thead th.freeze-2{ left:0 !important; }
-  }
+  tr:hover td { background-color: #f8fafc; }
+  .hidden { display: none !important; }
 </style>
 
 <script>
-  const nfID  = new Intl.NumberFormat('id-ID');
-  const fmt   = n => nfID.format(Number(n || 0));
-  const fmt2  = x => (x == null || x === '' ? '0.00' : Number(x).toFixed(2));
+    // --- SIMULASI USER LOGIN ---
+    // Ganti ini sesuai sistem loginmu nanti
+    const user = (window.getUser && window.getUser()) || null;
+    const userKode = (user?.kode ? String(user.kode).padStart(3,'0') : '000'); 
+    window.currentUser = { kode: userKode };
+    console.log("Login User:", userKode);
+</script>
 
-  let nplDataRaw = [], nplTotal = null, nplSortKey = '', nplSortAsc = false, abortCtrl;
+<div class="max-w-7xl mx-auto px-4 py-4 h-[calc(100vh-120px)] flex flex-col">
+  
+  <div class="flex flex-col lg:flex-row lg:items-end justify-between gap-4 mb-3">
+    <div>
+      <h1 class="text-2xl font-bold flex items-center gap-2 text-slate-800">
+        <span class="bg-blue-600 text-white p-1 rounded">💳</span> 
+        <span>Rekap NPL</span>
+      </h1>
+      <p class="text-xs text-slate-500 mt-1">*Data NPL = Kolektibilitas Macet (KL, D, M)</p>
+    </div>
 
-  /* ===== Sticky & scroller ===== */
-  function setNplStickyOffsets(){
-    const h = document.getElementById('nplHead1')?.offsetHeight || 40;
-    const total = document.querySelector('#tabelNpl tr.sticky-total')?.offsetHeight || 36;
-    const holder = document.getElementById('nplScroller');
-    holder.style.setProperty('--npl_head', h + 'px');
-    holder.style.setProperty('--npl_totalH', total + 'px');
+    <form id="formFilterNpl" class="flex flex-wrap items-end gap-2 bg-white p-2 rounded-lg border border-slate-200 shadow-sm">
+      <div style="width: 110px;">
+        <label class="lbl">Closing</label>
+        <input type="date" id="closing_date_npl" class="inp" required onclick="try{this.showPicker()}catch(e){}">
+      </div>
+      <div style="width: 110px;">
+        <label class="lbl">Harian</label>
+        <input type="date" id="harian_date_npl" class="inp" required onclick="try{this.showPicker()}catch(e){}">
+      </div>
+      <div style="min-width: 180px;">
+        <label class="lbl">Kantor</label>
+        <select id="opt_kantor_npl" class="inp"><option value="">Memuat...</option></select>
+      </div>
+      <button type="submit" class="btn-icon" title="Cari Data">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="7"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+      </button>
+    </form>
+  </div>
+
+  <div class="flex-1 min-h-0 relative flex flex-col">
+    <div id="loadingNpl" class="hidden absolute inset-0 bg-white/80 z-50 flex flex-col items-center justify-center text-blue-600 font-bold text-sm">
+        <div class="animate-spin h-8 w-8 border-4 border-blue-200 border-t-blue-600 rounded-full mb-2"></div>
+        Memuat Data...
+    </div>
+
+    <div class="table-wrapper">
+      <table id="tabelNpl">
+        <thead>
+          <tr>
+            <th class="sticky-col text-center w-[60px]">Kode</th>
+            <th class="sticky-col" style="left:60px; min-width:180px;" id="thNamaNpl">NAMA KANTOR</th>
+            <th class="text-right">NPL Closing</th>
+            <th class="text-right">NPL Harian</th>
+            <th class="text-right">Selisih</th>
+            <th class="text-right">% Closing</th>
+            <th class="text-right">% Harian</th>
+            <th class="text-right">% Selisih</th>
+          </tr>
+        </thead>
+        <tbody id="bodyNpl"></tbody>
+        <tfoot id="footNpl"></tfoot>
+      </table>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  // --- CONFIG ---
+  const API_NPL  = './api/npl/'; 
+  const API_KODE = './api/kode/';
+  const API_DATE = './api/date/';
+  const nf = new Intl.NumberFormat('id-ID');
+  const fmt = n => nf.format(Number(n)||0);
+  const fmt2 = x => (x == null || x === '' ? '0.00' : Number(x).toFixed(2));
+
+  // Helper
+  async function apiCall(url, options = {}) {
+      const res = await fetch(url, options);
+      if(!res.ok) throw new Error(`HTTP Error ${res.status}`);
+      return res;
   }
-  function sizeNplScroller(){
-    const wrap = document.getElementById('nplScroller');
-    if(!wrap) return;
-    const rectTop = wrap.getBoundingClientRect().top;
-    wrap.style.height = Math.max(260, window.innerHeight - rectTop - 18) + 'px';
-  }
-  window.addEventListener('resize', ()=>{ setNplStickyOffsets(); sizeNplScroller(); });
 
-  /* ===== Init ===== */
-  (async () => {
-    const d = await getLastHarianData();
-    if (!d) return;
-    closing_date_npl.value = d.last_closing;
-    harian_date_npl.value  = d.last_created;
-    fetchNplData(d.last_closing, d.last_created);
-    setNplStickyOffsets(); sizeNplScroller();
-  })();
+  // --- INIT ---
+  window.addEventListener('DOMContentLoaded', async () => {
+      // Ambil kode user yang login
+      const uKode = window.currentUser.kode;
+      
+      // Load Dropdown dulu (Sesuai User)
+      await populateKantorOptionsNpl(uKode);
 
-  async function getLastHarianData() {
-    try { const r = await fetch('./api/date/'); const j = await r.json(); return j.data || null; }
-    catch { return null; }
-  }
+      // Load Tanggal Default
+      const d = await getLastHarianData(); 
+      if (d) {
+          document.getElementById('closing_date_npl').value = d.last_closing;
+          document.getElementById('harian_date_npl').value  = d.last_created;
+      } else {
+          document.getElementById('harian_date_npl').value = new Date().toISOString().split('T')[0];
+      }
 
-  document.getElementById('formFilterNpl').addEventListener('submit', e => {
-    e.preventDefault();
-    fetchNplData(closing_date_npl.value, harian_date_npl.value);
+      // Fetch Data
+      fetchNplData();
   });
 
-  // Header sort (delegation)
-  document.querySelector('#tabelNpl thead').addEventListener('click', e => {
-    const key = e.target?.dataset?.sort; if (!key) return; sortNpl(key);
-  });
+  async function getLastHarianData(){
+    try { const r = await apiCall(API_DATE); const j = await r.json(); return j.data || null; } catch{ return null; }
+  }
 
-  /* ===== Render helpers (warna selisih) ===== */
-  const selisihNominal = (n) => {
-    const v = Number(n || 0);
-    if (v < 0) return { text: `-${fmt(Math.abs(v))}`, cls: 'text-green-700' };
-    if (v > 0) return { text: `${fmt(v)}`,           cls: 'text-red-600'  };
-    return { text: fmt(0), cls: 'text-gray-700' };
-  };
-  const selisihPersen = (p) => {
-    const v = Number(p || 0);
-    if (v < 0) return { text: `-${fmt2(Math.abs(v))}%`, cls: 'text-green-700' };
-    if (v > 0) return { text: `${fmt2(v)}%`,            cls: 'text-red-600'  };
-    return { text: `${fmt2(0)}%`, cls: 'text-gray-700' };
-  };
-
-  /* ===== Fetch + render ===== */
-  async function fetchNplData(closing_date, harian_date) {
-    loadingNpl.classList.remove('hidden');
-
-    if (abortCtrl) abortCtrl.abort();
-    abortCtrl = new AbortController();
-
-    nplTotalRow.innerHTML = `<tr><td colspan="8" class="px-4 py-3 text-gray-500">Memuat...</td></tr>`;
-    nplBody.innerHTML = '';
-
+  // --- POPULATE DROPDOWN (LOGIC USER LOGIN & LOCK) ---
+  async function populateKantorOptionsNpl(userKode){
+    const optKantor = document.getElementById('opt_kantor_npl');
+    
     try {
-      const res = await fetch('./api/npl/', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ type: 'NPL', closing_date, harian_date }),
-        signal: abortCtrl.signal
-      });
-      const json = await res.json();
-      const data = Array.isArray(json.data) ? json.data : [];
+        // Ambil Data Kode Kantor dari API
+        const res = await apiCall(API_KODE, { 
+            method:'POST', 
+            headers:{'Content-Type':'application/json'}, 
+            body:JSON.stringify({type:'kode_kantor'}) 
+        });
+        const json = await res.json();
+        const list = Array.isArray(json.data) ? json.data : [];
 
-      nplTotal = data.find(d => (d.nama_kantor||'').toUpperCase().includes('TOTAL')) || null;
-      nplDataRaw = data.filter(d => !(d.nama_kantor||'').toUpperCase().includes('TOTAL'));
+        let html = '';
 
-      nplSortKey = 'npl_harian'; nplSortAsc = false;
-      renderAll(nplDataRaw);
-    } catch (err) {
-      if (err.name !== 'AbortError')
-        nplTotalRow.innerHTML = `<tr><td colspan="8" class="px-4 py-3 text-red-600">Gagal memuat data</td></tr>`;
-    } finally {
-      loadingNpl.classList.add('hidden');
+        // KONDISI 1: JIKA USER PUSAT (000) -> LOAD SEMUA
+        if(userKode === '000'){
+            html += `<option value="">KONSOLIDASI (SEMUA)</option>`;
+            list.filter(x => x.kode_kantor && x.kode_kantor !== '000')
+                .sort((a,b) => String(a.kode_kantor).localeCompare(b.kode_kantor))
+                .forEach(it => {
+                   html += `<option value="${String(it.kode_kantor).padStart(3,'0')}">${String(it.kode_kantor).padStart(3,'0')} - ${it.nama_kantor}</option>`;
+                });
+            
+            optKantor.innerHTML = html;
+            optKantor.disabled = false; // Buka akses
+        } 
+        // KONDISI 2: JIKA USER CABANG (MISAL 002) -> LOCK
+        else {
+            // Cari nama cabang user tersebut
+            const myBranch = list.find(k => k.kode_kantor === userKode);
+            const branchName = myBranch ? myBranch.nama_kantor : `CABANG ${userKode}`;
+            
+            // Set opsi tunggal
+            html = `<option value="${userKode}" selected>${userKode} - ${branchName}</option>`;
+            optKantor.innerHTML = html;
+            optKantor.value = userKode; // Paksa value
+            optKantor.disabled = true;  // Kunci dropdown
+        }
+
+    } catch(e){
+        console.error("Gagal load kantor:", e);
+        // Fallback aman jika API error
+        optKantor.innerHTML = `<option value="${userKode}">${userKode}</option>`;
+        optKantor.value = userKode;
+        if(userKode !== '000') optKantor.disabled = true;
     }
   }
 
-  function renderAll(rows){
-    nplTotalRow.innerHTML = nplTotal ? totalRowHTML(nplTotal) : '';
-    nplBody.innerHTML = rows.map(r => rowHTML(r)).join('');
-    setNplStickyOffsets(); sizeNplScroller();
-    setTimeout(()=>{ setNplStickyOffsets(); sizeNplScroller(); }, 50);
+  // --- FETCH DATA ---
+  document.getElementById('formFilterNpl').addEventListener('submit', e => { e.preventDefault(); fetchNplData(); });
+
+  async function fetchNplData() {
+      const loading = document.getElementById('loadingNpl');
+      const tbody = document.getElementById('bodyNpl');
+      const tfoot = document.getElementById('footNpl');
+      
+      const closing = document.getElementById('closing_date_npl').value;
+      const harian  = document.getElementById('harian_date_npl').value;
+      const kantor  = document.getElementById('opt_kantor_npl').value;
+
+      document.getElementById('thNamaNpl').innerText = (kantor && kantor !== '') ? "NAMA KANKAS" : "NAMA KANTOR";
+
+      loading.classList.remove('hidden');
+      tbody.innerHTML = ''; tfoot.innerHTML = '';
+
+      try {
+          const payload = { type: 'NPL', closing_date: closing, harian_date: harian, kode_kantor: kantor };
+          const res = await fetch(API_NPL, { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(payload) });
+          const json = await res.json();
+          if(json.status && json.status !== 200) throw new Error(json.message);
+
+          const rows = json.data?.data || [];
+          const gt   = json.data?.grand_total || { npl_closing:0, npl_harian:0, selisih_npl:0, npl_closing_persen:0, npl_harian_persen:0, selisih_npl_persen:0 };
+
+          if (rows.length === 0) {
+              tbody.innerHTML = `<tr><td colspan="8" class="text-center py-10 text-slate-400">Data Kosong</td></tr>`;
+              return;
+          }
+
+          let html = '';
+          rows.forEach(r => {
+              const n = styleVal(r.selisih_npl);
+              const p = stylePct(r.selisih_npl_persen);
+              
+              html += `
+                <tr class="hover:bg-blue-50 transition border-b">
+                    <td class="sticky-col text-center font-mono font-bold text-slate-500">${r.kode_unit}</td>
+                    <td class="sticky-col font-semibold text-slate-700 text-xs" style="left:60px;">${r.nama_unit}</td>
+                    <td class="text-right">${fmt(r.npl_closing)}</td>
+                    <td class="text-right font-bold text-blue-800">${fmt(r.npl_harian)}</td>
+                    <td class="text-right ${n.cls}">${n.txt}</td>
+                    <td class="text-right text-slate-600">${fmt2(r.npl_closing_persen)}%</td>
+                    <td class="text-right font-bold text-blue-800">${fmt2(r.npl_harian_persen)}%</td>
+                    <td class="text-right ${p.cls}">${p.txt}</td>
+                </tr>
+              `;
+          });
+          
+          // === SPACER ROW (Agar Data Bawah Tidak Ketutup Footer Sticky) ===
+          html += `<tr style="height: 60px;"><td colspan="8" class="border-none bg-transparent"></td></tr>`;
+          
+          tbody.innerHTML = html;
+
+          // === FOOTER STICKY ===
+          const gtVal = styleVal(gt.selisih_npl);
+          const gtPct = stylePct(gt.selisih_npl_persen);
+
+          tfoot.innerHTML = `
+            <tr>
+                <td colspan="2" class="merged-total text-center uppercase tracking-wide">GRAND TOTAL</td>
+                <td class="text-right font-bold">${fmt(gt.npl_closing)}</td>
+                <td class="text-right font-bold bg-blue-100 text-blue-900">${fmt(gt.npl_harian)}</td>
+                <td class="text-right font-bold ${gtVal.cls}">${gtVal.txt}</td>
+                <td class="text-right font-bold">${fmt2(gt.npl_closing_persen)}%</td>
+                <td class="text-right font-bold bg-blue-100 text-blue-900">${fmt2(gt.npl_harian_persen)}%</td>
+                <td class="text-right font-bold ${gtPct.cls}">${gtPct.txt}</td>
+            </tr>
+          `;
+
+      } catch(e) {
+          console.error(e);
+          tbody.innerHTML = `<tr><td colspan="8" class="text-center py-10 text-red-500">Error: ${e.message}</td></tr>`;
+      } finally {
+          loading.classList.add('hidden');
+      }
   }
 
-  function rowHTML(r){
-    const n = selisihNominal(r.selisih_npl);
-    const p = selisihPersen(r.selisih_npl_persen);
-    return `
-      <tr class="border-b hover:bg-gray-50">
-        <td class="px-4 py-3 text-center freeze-1 col1 col-kode">${r.kode_cabang || '-'}</td>
-        <td class="px-4 py-3 freeze-2 col2 col-nama">${r.nama_kantor || '-'}</td>
-        <td class="px-4 py-3 text-right">${fmt(r.npl_closing)}</td>
-        <td class="px-4 py-3 text-right">${fmt(r.npl_harian)}</td>
-        <td class="px-4 py-3 text-right ${n.cls}">${n.text}</td>
-        <td class="px-4 py-3 text-right">${fmt2(r.npl_closing_persen)}%</td>
-        <td class="px-4 py-3 text-right">${fmt2(r.npl_harian_persen)}%</td>
-        <td class="px-4 py-3 text-right ${p.cls}">${p.text}</td>
-      </tr>`;
+  // --- Helper ---
+  function styleVal(v) {
+      const n = Number(v||0);
+      if(n < 0) return { txt: `(${fmt(Math.abs(n))})`, cls:'text-green-600 font-bold' };
+      if(n > 0) return { txt: `+${fmt(n)}`, cls:'text-red-600 font-bold' };
+      return { txt: '-', cls:'text-slate-400' };
   }
-
-  function totalRowHTML(t){
-    const n = selisihNominal(t.selisih_npl);
-    const p = selisihPersen(t.selisih_npl_persen);
-    return `
-      <tr class="sticky-total font-semibold text-sm">
-        <td class="px-4 py-2 freeze-1 col1 col-kode">TOTAL</td>
-        <td class="px-4 py-2 freeze-2 col2 col-nama"><span class="ttl-mobile">TOTAL</span></td>
-        <td class="px-4 py-2 text-right">${fmt(t.npl_closing)}</td>
-        <td class="px-4 py-2 text-right">${fmt(t.npl_harian)}</td>
-        <td class="px-4 py-2 text-right ${n.cls}">${n.text}</td>
-        <td class="px-4 py-2 text-right">${fmt2(t.npl_closing_persen)}%</td>
-        <td class="px-4 py-2 text-right">${fmt2(t.npl_harian_persen)}%</td>
-        <td class="px-4 py-2 text-right ${p.cls}">${p.text}</td>
-      </tr>`;
-  }
-
-  function sortNpl(key){
-    if (nplSortKey === key) nplSortAsc = !nplSortAsc;
-    else { nplSortKey = key; nplSortAsc = false; }
-    const sorted = [...nplDataRaw].sort((a,b)=>{
-      const A = Number(a[key] || 0), B = Number(b[key] || 0);
-      return nplSortAsc ? A - B : B - A;
-    });
-    renderAll(sorted);
+  function stylePct(v) {
+      const n = Number(v||0);
+      if(n < 0) return { txt: `▼ ${fmt2(Math.abs(n))}%`, cls:'text-green-600 font-bold' };
+      if(n > 0) return { txt: `▲ ${fmt2(n)}%`, cls:'text-red-600 font-bold' };
+      return { txt: '0.00%', cls:'text-slate-400' };
   }
 </script>

@@ -20,7 +20,7 @@
       </div>
       <div class="field">
         <label class="lbl">Posisi Data</label>
-        <input type="date" id="harian_date_mob" class="inp" required>
+        <input type="date" id="harian_date_mob" class="inp" required onclick="try{this.showPicker()}catch(e){}">
       </div>
       <button type="submit" id="btnFilterMob" class="btn-icon" title="Cari Data">
         <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5">
@@ -33,7 +33,7 @@
 
   <div id="mobScroller" class="flex-1 min-h-0 overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm relative">
     
-    <div id="loadingMob" class="hidden absolute inset-0 bg-white/80 z-20 flex flex-col items-center justify-center text-sm text-blue-600 font-medium">
+    <div id="loadingMob" class="hidden absolute inset-0 bg-white/80 z-50 flex flex-col items-center justify-center text-sm text-blue-600 font-medium">
         <svg class="animate-spin h-8 w-8 mb-2 text-blue-500" viewBox="0 0 24 24">
             <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
             <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
@@ -41,12 +41,12 @@
         <span>Sedang memuat Matrix MOB...</span>
     </div>
 
-    <div class="h-full overflow-auto">
-      <table id="tabelMob" class="min-w-full text-xs text-center text-gray-700 border-collapse">
+    <div class="h-full overflow-auto pb-0 relative">
+      <table id="tabelMob" class="min-w-full text-xs text-center text-gray-700 border-collapse border-spacing-0">
         <thead class="uppercase font-bold bg-gray-100 text-gray-800 sticky top-0 z-30 shadow-sm">
           <tr>
-            <th rowspan="2" class="px-3 py-3 border-r border-b sticky left-0 bg-gray-100 z-40 w-[80px] align-middle">Cabang</th>
-            <th rowspan="2" class="px-3 py-3 border-r border-b sticky left-[80px] bg-gray-100 z-40 w-[100px] align-middle">Bulan<br>Realisasi</th>
+            <th rowspan="2" class="px-3 py-3 border-r border-b sticky left-0 bg-gray-100 z-40 w-[80px] align-middle shadow-[1px_0_0_0_#e5e7eb]">Cabang</th>
+            <th rowspan="2" class="px-3 py-3 border-r border-b sticky left-[80px] bg-gray-100 z-40 w-[100px] align-middle shadow-[1px_0_0_0_#e5e7eb]">Bulan<br>Realisasi</th>
             <th rowspan="2" class="px-2 py-3 border-r border-b bg-blue-50 align-middle text-blue-900">MOB</th>
             <th rowspan="2" class="px-3 py-3 border-r border-b bg-blue-50 text-right min-w-[110px] align-middle text-blue-900">Total<br>Plafond</th>
             
@@ -66,7 +66,7 @@
         </thead>
         <tbody id="bodyMob" class="divide-y divide-gray-200"></tbody>
         
-        <tfoot id="footMob" class="bg-gray-800 text-white font-bold sticky bottom-0 z-30 text-[11px] shadow-lg"></tfoot>
+        <tfoot id="footMob" class="sticky-footer"></tfoot>
       </table>
     </div>
   </div>
@@ -124,16 +124,40 @@
 </div>
 
 <style>
-  .inp { border:1px solid #cbd5e1; border-radius:.5rem; padding:.4rem .75rem; font-size:13px; background:#fff; }
+  .inp { border:1px solid #cbd5e1; border-radius:.5rem; padding:.4rem .75rem; font-size:13px; background:#fff; cursor: pointer; }
   .inp:disabled { background-color: #f1f5f9; color: #64748b; cursor: not-allowed; }
   .lbl { font-size:11px; color:#64748b; font-weight: 600; display: block; margin-bottom: 2px; text-transform: uppercase; }
-  .btn-icon { width:38px; height:38px; border-radius:8px; display:inline-flex; align-items:center; justify-content:center; background:#2563eb; color:#fff; transition:0.2s; }
+  
+  /* FIX DATEPICKER ICON */
+  input[type="date"]::-webkit-inner-spin-button,
+  input[type="date"]::-webkit-calendar-picker-indicator { display: none; -webkit-appearance: none; }
+  
+  .btn-icon { width:38px; height:38px; border-radius:8px; display:inline-flex; align-items:center; justify-content:center; background:#2563eb; color:#fff; transition:0.2s; border:none; cursor:pointer;}
   .btn-icon:hover { background:#1d4ed8; }
   .field { display: flex; flex-direction: column; }
+  
   @keyframes scaleUp { from { transform: scale(0.95); opacity: 0; } to { transform: scale(1); opacity: 1; } }
   .animate-scale-up { animation: scaleUp 0.2s ease-out forwards; }
+  
   /* Hover efek sel */
   .cell-hover:hover { background-color: #e0f2fe !important; cursor: pointer; transform: scale(1.02); transition: 0.1s; z-index: 5; position: relative; box-shadow: 0 2px 5px rgba(0,0,0,0.1); border: 1px solid #3b82f6; }
+
+  /* CSS KHUSUS FOOTER FLOATING */
+  .sticky-footer {
+      position: sticky;
+      bottom: 0;
+      z-index: 50;
+  }
+  .sticky-footer tr td {
+      background-color: #1f2937; /* Gray-800 */
+      color: white;
+      font-weight: 700;
+      border-top: 3px solid #3b82f6; /* Aksen biru di atas */
+      box-shadow: 0 -4px 10px rgba(0,0,0,0.2); /* Efek bayangan ke atas */
+      padding-top: 12px;
+      padding-bottom: 12px;
+      font-size: 11px;
+  }
 </style>
 
 <script>
@@ -239,7 +263,7 @@
             return;
         }
 
-        // --- AGGREGATION LOGIC (KONSOLIDASI) ---
+        // --- AGGREGATION LOGIC ---
         let displayData = [];
         
         if (!kode) { // KONSOLIDASI (Gabung Data)
@@ -258,30 +282,35 @@
                 }
                 
                 // Sum Total Values
-                grouped[key].total_plafond += parseFloat(row.total_plafond);
+                grouped[key].total_plafond += parseFloat(row.total_plafond || 0);
                 
                 // Sum Bucket Values
                 bucketsKey.forEach(b => {
                     const srcBucket = row.buckets[b] || { os:0, noa:0 };
-                    grouped[key].buckets[b].os  += parseFloat(srcBucket.os);
-                    grouped[key].buckets[b].noa += parseInt(srcBucket.noa);
+                    grouped[key].buckets[b].os  += parseFloat(srcBucket.os || 0);
+                    grouped[key].buckets[b].noa += parseInt(srcBucket.noa || 0);
                 });
             });
 
-            // Convert to Array & Hitung Ulang %
+            // Convert to Array
             displayData = Object.values(grouped).sort((a,b) => a.bulan_realisasi.localeCompare(b.bulan_realisasi));
             
-            displayData.forEach(row => {
-                const pembagi = row.total_plafond > 0 ? row.total_plafond : 1;
-                bucketsKey.forEach(b => {
-                    row.buckets[b].pct = ((row.buckets[b].os / pembagi) * 100).toFixed(2);
-                });
-            });
-
         } else {
-            // PER CABANG
+            // PER CABANG (Data Asli)
             displayData = rawData;
         }
+
+        // --- PERBAIKAN: HITUNG PERSENTASE UNTUK KEDUA KONDISI ---
+        // (Sebelumnya hanya dihitung saat konsolidasi, makanya filter cabang undefined)
+        displayData.forEach(row => {
+            const pembagi = parseFloat(row.total_plafond) > 0 ? parseFloat(row.total_plafond) : 1;
+            bucketsKey.forEach(b => {
+                if(!row.buckets[b]) row.buckets[b] = { os:0, noa:0, pct:0 }; // Safety check
+                
+                // Hitung Ulang % (Pastikan selalu ada value)
+                row.buckets[b].pct = ((parseFloat(row.buckets[b].os) / pembagi) * 100).toFixed(2);
+            });
+        });
 
         // --- RENDER TABLE ---
         let html = '';
@@ -290,15 +319,15 @@
 
         displayData.forEach(r => {
             // Accumulate Grand Total
-            grandTotal.plafond += parseFloat(r.total_plafond);
+            grandTotal.plafond += parseFloat(r.total_plafond || 0);
 
             let cells = '';
             bucketsKey.forEach(key => {
                 const bData = r.buckets[key] || { pct:0, noa:0, os:0 };
                 
                 // Add Bucket to Grand Total
-                grandTotal.buckets[key].os  += parseFloat(bData.os);
-                grandTotal.buckets[key].noa += parseInt(bData.noa);
+                grandTotal.buckets[key].os  += parseFloat(bData.os || 0);
+                grandTotal.buckets[key].noa += parseInt(bData.noa || 0);
 
                 // Styling
                 let bgClass = 'bg-transparent';
@@ -307,7 +336,6 @@
 
                 const cabangParam = (!kode) ? '' : r.kode_cabang;
 
-                // [UPDATED] Render Cell with OS
                 cells += `
                     <td class="px-2 py-2 border-r text-[11px] ${bgClass} cell-hover transition"
                         onclick="openModalMob('${cabangParam}', '${r.bulan_realisasi}', '${key}')">
@@ -322,8 +350,8 @@
 
             html += `
                 <tr class="hover:bg-gray-50 border-b group">
-                    <td class="px-3 py-2 border-r font-mono text-gray-500 sticky left-0 bg-white group-hover:bg-gray-50">${labelCabang}</td>
-                    <td class="px-3 py-2 border-r font-medium sticky left-[80px] bg-white group-hover:bg-gray-50">${r.bulan_realisasi}</td>
+                    <td class="px-3 py-2 border-r font-mono text-gray-500 sticky left-0 bg-white group-hover:bg-gray-50 shadow-[1px_0_0_0_#e5e7eb] z-10">${labelCabang}</td>
+                    <td class="px-3 py-2 border-r font-medium sticky left-[80px] bg-white group-hover:bg-gray-50 shadow-[1px_0_0_0_#e5e7eb] z-10">${r.bulan_realisasi}</td>
                     <td class="px-2 py-2 border-r font-bold text-blue-600 bg-blue-50/20">${r.mob}</td>
                     <td class="px-3 py-2 border-r text-right font-mono text-[11px] text-gray-600">${fmt(r.total_plafond)}</td>
                     ${cells}
@@ -341,7 +369,7 @@
 
             footerCells += `
                 <td class="px-2 py-3 border-r border-gray-600 text-center">
-                    <div class="font-bold">${pctTotal}%</div>
+                    <div class="font-bold text-white">${pctTotal}%</div>
                     <div class="text-[10px] text-gray-300 font-mono mt-0.5 whitespace-nowrap">${fmt(bTot.os)}</div>
                     <div class="text-[9px] opacity-70">(${bTot.noa})</div>
                 </td>
@@ -350,9 +378,9 @@
 
         tfoot.innerHTML = `
             <tr>
-                <td class="px-3 py-3 border-r border-gray-600 sticky left-0 bg-gray-800 z-30" colspan="2">GRAND TOTAL</td>
+                <td class="px-3 py-3 border-r border-gray-600 sticky left-0 bg-gray-800 z-50 shadow-[1px_0_0_0_#4b5563]" colspan="2">GRAND TOTAL</td>
                 <td class="px-2 py-3 border-r border-gray-600 text-center">-</td>
-                <td class="px-3 py-3 border-r border-gray-600 text-right font-mono">${fmt(grandTotal.plafond)}</td>
+                <td class="px-3 py-3 border-r border-gray-600 text-right font-mono text-white">${fmt(grandTotal.plafond)}</td>
                 ${footerCells}
             </tr>
         `;

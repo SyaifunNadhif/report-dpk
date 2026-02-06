@@ -1,4 +1,6 @@
 <?php
+// Panggil Helper Response
+require_once __DIR__ . '/../helpers/response.php';
 
 class PipelineController {
     private $pdo;
@@ -7,12 +9,7 @@ class PipelineController {
         $this->pdo = $pdo;
     }
 
-    private function send($status, $msg, $data = []) {
-        header('Content-Type: application/json');
-        http_response_code($status);
-        echo json_encode(['status' => $status, 'message' => $msg, 'data' => $data]);
-        exit;
-    }
+    // Fungsi send() DIHAPUS karena sudah pakai helper sendResponse()
 
     private function preparePipelineQuery($closing_date, $harian_date, $tahun_jt, $kc = null, $filter_ao = null, $filter_status = null) {
         $sql = "FROM nominatif t1
@@ -92,10 +89,11 @@ class PipelineController {
             $stmt->execute();
             $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-            return $this->send(200, "Sukses Rekap", $rows);
+            // Ganti $this->send() dengan sendResponse()
+            sendResponse(200, "Sukses Rekap", $rows);
 
         } catch (Exception $e) {
-            return $this->send(500, "Error Rekap: " . $e->getMessage());
+            sendResponse(500, "Error Rekap: " . $e->getMessage());
         }
     }
 
@@ -140,7 +138,7 @@ class PipelineController {
                         COALESCE(t2.baki_debet, 0) as os_actual,
                         COALESCE(t2.kolektibilitas, 'Lunas') as kol_actual,
                         t3.no_rekening as rek_baru,
-                        t3.jml_pinjaman as plafon_baru, -- alias plafon_baru di detail
+                        t3.jml_pinjaman as plafon_baru,
                         t3.tgl_realisasi as tgl_baru
                     " . $base['query'] . " 
                     ORDER BY t1.tgl_jatuh_tempo ASC
@@ -185,13 +183,14 @@ class PipelineController {
             $stmtAO->execute();
             $list_ao = $stmtAO->fetchAll(PDO::FETCH_ASSOC);
 
-            return $this->send(200, "Sukses Detail", [
+            // Gunakan sendResponse()
+            sendResponse(200, "Sukses Detail", [
                 'pagination' => ['total_records' => (int)$stats['total_data'], 'total_pages' => ceil($stats['total_data']/$limit), 'current_page' => (int)$page],
                 'stats' => $stats, 'list_ao' => $list_ao, 'data' => $rows
             ]);
 
         } catch (Exception $e) {
-            return $this->send(500, $e->getMessage());
+            sendResponse(500, $e->getMessage());
         }
     }
 }
