@@ -674,54 +674,88 @@ class KreditController {
 
 
     public function getKolek($input) {
+        // 1. Ambil Parameter
         $harian_date = isset($input['harian_date']) ? $input['harian_date'] : date('Y-m-d');
+        $kc          = isset($input['kode_kantor']) ? $input['kode_kantor'] : null;
+
+        // Normalisasi: '000' dianggap null (Pusat)
+        if ($kc === '000' || $kc === '') $kc = null;
+
+        // 2. Logic Switch Query (Pusat vs Cabang)
+        if ($kc) {
+            // === MODE DETAIL PER KANKAS (User Cabang) ===
+            $colKey       = "kode_group1"; 
+            // Nama Unit diambil dari tabel kankas
+            $selectName   = "COALESCE(k.deskripsi_group1, CONCAT('KAS ', d.kode_key))";
+            $joinTable    = "LEFT JOIN kankas k ON d.kode_key = k.kode_group1";
+            
+            // Filter Data Harian hanya untuk cabang ini
+            $filterClause = "AND kode_cabang = :kc"; 
+            $kc_val       = str_pad((string)$kc, 3, '0', STR_PAD_LEFT);
+        } else {
+            // === MODE KONSOLIDASI (User Pusat) ===
+            $colKey       = "kode_cabang";
+            $selectName   = "k.nama_kantor";
+            $joinTable    = "LEFT JOIN kode_kantor k ON d.kode_key = k.kode_kantor";
+            
+            // Ambil semua data
+            $filterClause = ""; 
+            $kc_val       = null;
+        }
 
         $sql = "
             WITH data_harian AS (
                 SELECT 
-                    kode_cabang,
+                    $colKey as kode_key, -- Dinamis (Cabang/Group1)
                     kolektibilitas,
-                    baki_debet,
-                    no_rekening
+                    baki_debet
                 FROM nominatif
                 WHERE created = :harian_date
+                $filterClause
             ),
             
             agregat AS (
                 SELECT
-                    d.kode_cabang,
-                    k.nama_kantor,
+                    d.kode_key,
+                    $selectName as nama_unit,
 
+                    -- LANCAR (L)
                     COUNT(CASE WHEN d.kolektibilitas = 'L' THEN 1 END) AS noa_L,
                     SUM(CASE WHEN d.kolektibilitas = 'L' THEN d.baki_debet ELSE 0 END) AS bd_L,
 
+                    -- DALAM PERHATIAN KHUSUS (DP)
                     COUNT(CASE WHEN d.kolektibilitas = 'DP' THEN 1 END) AS noa_DP,
                     SUM(CASE WHEN d.kolektibilitas = 'DP' THEN d.baki_debet ELSE 0 END) AS bd_DP,
 
+                    -- KURANG LANCAR (KL)
                     COUNT(CASE WHEN d.kolektibilitas = 'KL' THEN 1 END) AS noa_KL,
                     SUM(CASE WHEN d.kolektibilitas = 'KL' THEN d.baki_debet ELSE 0 END) AS bd_KL,
 
+                    -- DIRAGUKAN (D)
                     COUNT(CASE WHEN d.kolektibilitas = 'D' THEN 1 END) AS noa_D,
                     SUM(CASE WHEN d.kolektibilitas = 'D' THEN d.baki_debet ELSE 0 END) AS bd_D,
 
+                    -- MACET (M)
                     COUNT(CASE WHEN d.kolektibilitas = 'M' THEN 1 END) AS noa_M,
                     SUM(CASE WHEN d.kolektibilitas = 'M' THEN d.baki_debet ELSE 0 END) AS bd_M,
 
+                    -- TOTAL PORTOFOLIO
                     COUNT(*) AS total_noa,
                     SUM(d.baki_debet) AS total_bd,
 
+                    -- TOTAL NPL (KL + D + M)
                     SUM(CASE WHEN d.kolektibilitas IN ('KL', 'D', 'M') THEN 1 ELSE 0 END) AS noa_npl,
                     SUM(CASE WHEN d.kolektibilitas IN ('KL', 'D', 'M') THEN d.baki_debet ELSE 0 END) AS bd_npl
 
                 FROM data_harian d
-                JOIN kode_kantor k ON d.kode_cabang = k.kode_kantor
-                WHERE k.kode_kantor <> '000'
-                GROUP BY d.kode_cabang, k.nama_kantor
+                $joinTable
+                GROUP BY d.kode_key, $selectName
             )
 
+            -- SELECT DATA PER BARIS
             SELECT
-                kode_cabang,
-                nama_kantor,
+                kode_key as kode_unit,
+                nama_unit,
                 noa_L, bd_L,
                 noa_DP, bd_DP,
                 noa_KL, bd_KL,
@@ -734,16 +768,62 @@ class KreditController {
                 ROUND(CASE WHEN total_bd = 0 THEN 0 ELSE (bd_npl * 100.0) / total_bd END, 2) AS persentase_npl
             FROM agregat
 
+            UNION ALL
 
+            -- SELECT GRAND TOTAL (BARIS TERAKHIR)
+            SELECT
+                '' as kode_unit,
+                'TOTAL KONSOLIDASI' as nama_unit,
+                SUM(noa_L), SUM(bd_L),
+                SUM(noa_DP), SUM(bd_DP),
+                SUM(noa_KL), SUM(bd_KL),
+                SUM(noa_D), SUM(bd_D),
+                SUM(noa_M), SUM(bd_M),
+                SUM(total_noa),
+                SUM(total_bd),
+                SUM(noa_npl),
+                SUM(bd_npl),
+                ROUND(CASE WHEN SUM(total_bd) = 0 THEN 0 ELSE (SUM(bd_npl) * 100.0) / SUM(total_bd) END, 2)
+            FROM agregat
+
+            ORDER BY 
+                CASE WHEN nama_unit = 'TOTAL KONSOLIDASI' THEN 1 ELSE 0 END,
+                kode_unit ASC
         ";
 
-        $stmt = $this->pdo->prepare($sql);
-        $stmt->bindValue(':harian_date', $harian_date);
-        $stmt->execute();
+        try {
+            $stmt = $this->pdo->prepare($sql);
+            $stmt->bindValue(':harian_date', $harian_date);
+            
+            // Bind kode kantor jika ada
+            if ($kc_val) {
+                $stmt->bindValue(':kc', $kc_val);
+            }
 
-        $data = $stmt->fetchAll(PDO::FETCH_ASSOC);
-        sendResponse(200, "Berhasil ambil data Kolektibilitas Harian", $data);
-    }
+            $stmt->execute();
+            $data = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+            // Pisahkan Grand Total (agar format JSON konsisten dengan menu lain)
+            $grandTotal = array_pop($data);
+            if (!$grandTotal) {
+                // Fallback object kosong jika tidak ada data
+                $grandTotal = [
+                    'kode_unit' => '', 'nama_unit' => 'TOTAL KONSOLIDASI',
+                    'noa_L'=>0, 'bd_L'=>0, 'noa_DP'=>0, 'bd_DP'=>0, 
+                    'noa_KL'=>0, 'bd_KL'=>0, 'noa_D'=>0, 'bd_D'=>0, 'noa_M'=>0, 'bd_M'=>0,
+                    'total_noa'=>0, 'total_bd'=>0, 'noa_npl'=>0, 'bd_npl'=>0, 'persentase_npl'=>0
+                ];
+            }
+
+            sendResponse(200, "Berhasil ambil data Kolektibilitas", [
+                'data' => $data,
+                'grand_total' => $grandTotal
+            ]);
+
+        } catch (Exception $e) {
+            sendResponse(500, "Error: " . $e->getMessage());
+        }
+}
 
     public function getTopRealisasi($input = []) {
         // 1. Setup Variable

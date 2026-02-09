@@ -1,324 +1,316 @@
-<!-- KOLEKTIBILITAS (sticky, freeze, mobile, abort fetch) -->
-<div class="max-w-7xl mx-auto px-4 py-6 h-screen flex flex-col">
-  <div class="flex flex-wrap items-start gap-2 mb-3">
-    <h1 class="text-2xl font-bold flex items-center gap-2">
-      <span>📈</span><span>Rekap Kolektibilitas</span>
-    </h1>
+<style>
+  :root { --primary: #2563eb; --bg: #f8fafc; --text: #334155; }
+  /* Ganti height body agar pas di mobile browser */
+  body { font-family: 'Inter', system-ui, sans-serif; background: var(--bg); color: var(--text); overflow: hidden; }
+  
+  /* Input & Button */
+  .inp { 
+      border: 1px solid #cbd5e1; border-radius: 0.5rem; padding: 0.4rem 0.75rem; 
+      font-size: 13px; background: #fff; width: 100%; height: 38px; cursor: pointer; 
+  }
+  .inp:disabled { background-color: #f1f5f9; color: #64748b; font-weight: 600; cursor: not-allowed; border-color: #e2e8f0; }
+  .lbl { font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; margin-bottom: 4px; display: block; }
+  
+  /* === DATEPICKER FIX === */
+  input[type="date"] { position: relative; cursor: pointer; }
+  input[type="date"]::-webkit-inner-spin-button,
+  input[type="date"]::-webkit-calendar-picker-indicator {
+      position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+      width: 100%; height: 100%; opacity: 0; cursor: pointer;
+  }
 
-    <!-- Filter -->
-    <form id="formFilterKolektibilitas" class="ml-auto">
-      <div id="filterKolek" class="flex items-center gap-2">
-        <label for="harian_date_kolek" class="lbl text-sm text-slate-700">Tanggal Harian:</label>
+  .btn-icon { width: 100%; height: 38px; border-radius: 8px; background: var(--primary); color: white; border: none; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; transition: 0.2s; }
+  .btn-icon:hover { background: #1d4ed8; }
+
+  /* Table Wrapper */
+  .table-wrapper { 
+      overflow: auto; 
+      height: 100%; 
+      border-radius: 8px; 
+      border: 1px solid #e2e8f0; 
+      background: white; 
+      position: relative;
+      -webkit-overflow-scrolling: touch; /* Smooth scroll iOS */
+  }
+  
+  table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 12px; }
+  
+  /* PENTING: Agar angka tidak turun baris */
+  th, td { white-space: nowrap; }
+
+  /* Header Sticky */
+  th { position: sticky; top: 0; z-index: 40; background: #d9ead3; color: #1e293b; font-weight: 700; padding: 10px; border-bottom: 1px solid #cbd5e1; text-transform: uppercase; }
+  td { padding: 8px 10px; border-bottom: 1px solid #f1f5f9; color: #334155; vertical-align: middle; }
+  
+  /* Sticky Kolom Kiri (Kode) */
+  .sticky-col { position: sticky; left: 0; z-index: 45; background: white; border-right: 1px solid #e2e8f0; }
+  th.sticky-col { z-index: 50; background: #d9ead3; }
+  
+  /* Sticky Kolom Kedua (Nama Kantor) - Default Desktop */
+  .sticky-col-2 { position: sticky; left: 60px; z-index: 45; background: white; border-right: 1px solid #e2e8f0; }
+  th.sticky-col-2 { z-index: 50; background: #d9ead3; }
+
+  /* === FOOTER STICKY (Nempel Bawah) === */
+  tfoot { position: sticky; bottom: 0; z-index: 60; }
+  
+  tfoot td { 
+      background: #eff6ff; 
+      font-weight: 700; 
+      border-top: 2px solid #bfdbfe; 
+      color: #1e3a8a;
+      box-shadow: 0 -4px 6px -1px rgba(0,0,0,0.1); 
+      padding-top: 12px; padding-bottom: 12px;
+  }
+  
+  /* Merged Cell Sticky Kiri */
+  tfoot td.merged-total {
+      position: sticky; left: 0; z-index: 65;
+      text-align: center; border-right: 1px solid #bfdbfe; background: #eff6ff; 
+  }
+
+  tr:hover td { background-color: #f8fafc; }
+  .hidden { display: none !important; }
+
+  /* === RESPONSIVE MEDIA QUERIES === */
+  @media (min-width: 768px) {
+    .btn-icon { width: 38px; } /* Balikin ukuran tombol di desktop */
+  }
+
+  @media (max-width: 767px) {
+    /* Di HP, kolom Nama Kantor JANGAN sticky biar lega */
+    .sticky-col-2, th.sticky-col-2 { position: static; border-right: none; }
+    
+    /* Font size tabel agak gede dikit di HP */
+    table { font-size: 11px; }
+  }
+</style>
+
+
+<div class="max-w-7xl mx-auto px-2 md:px-4 py-4 h-[calc(100vh-80px)] md:h-[calc(100vh-120px)] flex flex-col">
+  
+  <div class="flex flex-col lg:flex-row lg:items-end justify-between gap-4 mb-3">
+    <div>
+      <h1 class="text-xl md:text-2xl font-bold flex items-center gap-2 text-slate-800">
+        <span class="bg-blue-600 text-white p-1 rounded">💳</span> 
+        <span>Rekap Kolektibilitas</span>
+      </h1>
+      <p class="text-xs text-slate-500 mt-1 ml-1">*Data Posisi Harian (NOA & Baki Debet)</p>
+    </div>
+
+    <form id="formFilterKolek" class="grid grid-cols-6 md:flex md:items-end gap-2 bg-white p-2 rounded-lg border border-slate-200 shadow-sm w-full md:w-auto">
+      
+      <div class="col-span-6 md:w-[180px]">
+        <label class="lbl">Kantor</label>
+        <select id="opt_kantor_kolek" class="inp"><option value="">Memuat...</option></select>
+      </div>
+      
+      <div class="col-span-5 md:w-[130px]">
+        <label class="lbl">Tanggal</label>
         <input type="date" id="harian_date_kolek" class="inp" required>
-        <button type="submit" id="btnKolek" class="btn-icon" title="Tampilkan">
-          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
-            <circle cx="11" cy="11" r="7"></circle>
-            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-          </svg>
+      </div>
+      
+      <div class="col-span-1 md:w-auto">
+        <label class="lbl md:invisible">.</label> <button type="submit" class="btn-icon" title="Cari Data">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="7"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
         </button>
       </div>
     </form>
   </div>
 
-  <!-- Loading -->
-  <div id="loadingKolek" class="hidden flex items-center gap-2 text-sm text-gray-600 mb-2">
-    <svg class="animate-spin h-5 w-5 text-blue-600" viewBox="0 0 24 24">
-      <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-      <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
-    </svg>
-    <span>Memuat data kolektibilitas...</span>
-  </div>
+  <div class="flex-1 min-h-0 relative flex flex-col">
+    <div id="loadingKolek" class="hidden absolute inset-0 bg-white/80 z-50 flex flex-col items-center justify-center text-blue-600 font-bold text-sm backdrop-blur-sm rounded-lg">
+        <div class="animate-spin h-8 w-8 border-4 border-blue-200 border-t-blue-600 rounded-full mb-2"></div>
+        Memuat Data...
+    </div>
 
-  <!-- Scroller tabel -->
-  <div id="kolScroller" class="flex-1 min-h-0 overflow-hidden rounded border border-gray-200 bg-white">
-    <div class="h-full overflow-auto">
-      <table id="tabelKolektibilitas" class="min-w-full text-sm text-left text-gray-700">
-        <thead class="uppercase">
-          <tr id="kolHead1" class="text-xs">
-            <th class="px-4 py-2 sticky-kol freeze-1 col1 col-kode">Kode Kantor</th>
-            <th class="px-4 py-2 align-top freeze-2 col2 col-nama">Nama Kantor</th>
-            <th class="px-4 py-2 text-right sticky-kol">L<br><small class="text-gray-600">NOA / BD</small></th>
-            <th class="px-4 py-2 text-right sticky-kol">DP<br><small class="text-gray-600">NOA / BD</small></th>
-            <th class="px-4 py-2 text-right sticky-kol">KL<br><small class="text-gray-600">NOA / BD</small></th>
-            <th class="px-4 py-2 text-right sticky-kol">D<br><small class="text-gray-600">NOA / BD</small></th>
-            <th class="px-4 py-2 text-right sticky-kol">M<br><small class="text-gray-600">NOA / BD</small></th>
-            <th class="px-4 py-2 text-right sticky-kol">Total NPL<br><small class="text-gray-600">NOA / BD</small></th>
-            <th class="px-4 py-2 text-right sticky-kol">Total<br><small class="text-gray-600">NOA / BD</small></th>
-            <th class="px-4 py-2 text-right sticky-kol">% NPL</th>
+    <div class="table-wrapper">
+      <table id="tabelKolektibilitas">
+        <thead>
+          <tr>
+            <th class="sticky-col text-center w-[60px]">Kode</th>
+            <th class="sticky-col-2 text-left min-w-[180px]" id="thNamaKolek">NAMA KANTOR</th>
+            
+            <th class="text-right min-w-[100px]">Lancar (L)</th>
+            <th class="text-right min-w-[100px]">DPK (DP)</th>
+            <th class="text-right min-w-[100px]">Kurang Lancar</th>
+            <th class="text-right min-w-[100px]">Diragukan (D)</th>
+            <th class="text-right min-w-[100px]">Macet (M)</th>
+            <th class="text-right min-w-[100px] bg-red-50 text-red-800 border-l border-red-100">Total NPL</th>
+            <th class="text-right min-w-[110px] bg-blue-50 text-blue-800 border-l border-blue-100">Total Portofolio</th>
+            <th class="text-right min-w-[70px]">% NPL</th>
           </tr>
         </thead>
-        <tbody id="tbodyKolek"></tbody>
+        <tbody id="bodyKolek"></tbody>
+        <tfoot id="footKolek"></tfoot>
       </table>
     </div>
   </div>
+
 </div>
 
-<style>
-  /* Kontrol & tombol */
-  .inp{ border:1px solid #cbd5e1; border-radius:.6rem; padding:.5rem .75rem; font-size:14px; background:#fff; }
-  .btn-icon{ width:42px; height:42px; border-radius:999px; display:inline-flex; align-items:center; justify-content:center;
-             background:#2563eb; color:#fff; box-shadow:0 6px 14px rgba(37,99,235,.25); }
-  .btn-icon:hover{ background:#1e40af; }
-  .btn-icon[disabled]{ opacity:.6; cursor:not-allowed; }
-  .lbl{ font-size:13px; color:#334155; }
-
-  /* Header responsif */
-  .hdr{ row-gap:.5rem; }
-  @media (max-width:640px){
-    #filterKolek{ width:100%; gap:.5rem; }
-    .lbl{ display:none; }
-    .inp{ flex:1 1 0; min-width:0; font-size:13px; padding:.45rem .6rem; }
-    .btn-icon{ width:40px; height:40px; }
-  }
-
-  /* Tabel sticky + freeze */
-  body{ overflow:hidden; }
-  #kolScroller{ --kol_col1:6rem; --kol_col2:18rem; --kol_headH:40px; --kol_totalH:36px; --kol_safe:28px; }
-  @supports(padding:max(0px)){ #kolScroller{ --kol_safe:max(28px, env(safe-area-inset-bottom)); } }
-
-  #tabelKolektibilitas .col1{ width:var(--kol_col1); min-width:var(--kol_col1); }
-  #tabelKolektibilitas .col2{ width:var(--kol_col2); min-width:var(--kol_col2); }
-
-  #tabelKolektibilitas .freeze-1{ position:sticky; left:0; z-index:41; background:#fff; box-shadow:1px 0 0 rgba(0,0,0,.06); }
-  #tabelKolektibilitas .freeze-2{ position:sticky; left:var(--kol_col1); z-index:40; background:#fff; box-shadow:1px 0 0 rgba(0,0,0,.06); }
-
-  #tabelKolektibilitas thead th{ position:sticky; top:0; background:#d9ead3; z-index:88; }
-  #tabelKolektibilitas thead th.freeze-1{ left:0; z-index:91 !important; background:#d9ead3; }
-  #tabelKolektibilitas thead th.freeze-2{ left:var(--kol_col1); z-index:90 !important; background:#d9ead3; }
-
-  /* Baris TOTAL sticky di bawah header */
-  #tabelKolektibilitas tbody tr.sticky-total td{
-    position:sticky; top:var(--kol_headH); z-index:70; background:#eaf2ff; color:#1e40af; border-bottom:1px solid #c7d2fe;
-  }
-  #tabelKolektibilitas tbody tr.sticky-total td.freeze-1{ z-index:91; }
-  #tabelKolektibilitas tbody tr.sticky-total td.freeze-2{ z-index:90; }
-
-  #tabelKolektibilitas tbody tr:hover td{ background:#f9fafb; }
-
-  /* Spacer bawah agar baris terakhir tidak ketutup */
-  #tabelKolektibilitas tbody::after{
-    content:""; display:block; height: calc(var(--kol_headH) + var(--kol_totalH) + var(--kol_safe));
-  }
-
-  /* Mobile tweaks */
-  @media (max-width:640px){
-    #tabelKolektibilitas{ font-size:12px; }
-    #tabelKolektibilitas thead th{ font-size:11px; }
-    #tabelKolektibilitas th, #tabelKolektibilitas td{ padding:.5rem .5rem; }
-
-    /* Sembunyikan kolom KODE di mobile; freeze Nama jadi kiri */
-    #tabelKolektibilitas th.col-kode, #tabelKolektibilitas td.col-kode{ display:none; }
-    #kolScroller{ --kol_col1:0px; }
-    #tabelKolektibilitas .freeze-2, #tabelKolektibilitas thead th.freeze-2{ left:0 !important; }
-  }
-
-  /* === Fix gap kiri di MOBILE untuk Kolektibilitas === */
-@media (max-width:640px){
-  /* tarik scroller keluar sedikit agar rata kiri-kanan */
-  #kolScroller{ margin-left:-8px; margin-right:-8px; }
-
-  /* pastikan kolom KODE benar2 nol dan disembunyikan */
-  #tabelKolektibilitas th.col-kode,
-  #tabelKolektibilitas td.col-kode{ display:none !important; }
-  #tabelKolektibilitas .col1{ width:0 !important; min-width:0 !important; }
-  #kolScroller{ --kol_col1:0px; } /* offset freeze mengikuti 0 */
-
-  /* kolom NAMA jadi paling kiri (freeze tepat left:0) */
-  #tabelKolektibilitas .freeze-2,
-  #tabelKolektibilitas thead th.freeze-2{ left:0 !important; }
-
-  /* rapatkan padding biar tidak terlihat mengambang */
-  #tabelKolektibilitas{ border-collapse:separate; border-spacing:0; }
-  #tabelKolektibilitas th, #tabelKolektibilitas td{
-    padding-left:.375rem;  /* ~6px */
-    padding-right:.5rem;   /* 8px */
-  }
-}
-
-
-/* ==== Lebar kolom 'Nama Kantor' (col2) ==== */
-#kolScroller{ --kol_col2: 13rem; }                 /* default desktop: dari 16rem → 13rem */
-#tabelKolektibilitas .col2,
-#tabelKolektibilitas th.col-nama,
-#tabelKolektibilitas td.col-nama{
-  width: var(--kol_col2);
-  min-width: var(--kol_col2);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;                          /* potong nama panjang */
-}
-
-/* Tablet */
-@media (max-width:1023px){
-  #kolScroller{ --kol_col2: 11.5rem; }
-}
-
-/* Mobile */
-@media (max-width:640px){
-  #kolScroller{ --kol_col2: 9.5rem; }              /* makin ramping di HP */
-}
-
-</style>
-
 <script>
-  const kolekApiUrl = './api/kredit/';
-  let kolekAbort = null;
+  // --- CONFIG ---
+  const API_KOLEK = './api/kredit/'; 
+  const API_KODE  = './api/kode/';
+  const API_DATE  = './api/date/';
 
-  // Helpers
-  const fmtInt = n => new Intl.NumberFormat('id-ID', { maximumFractionDigits: 0 }).format(+n||0);
-  const fmtRp  = n => new Intl.NumberFormat('id-ID', { maximumFractionDigits: 0 }).format(+n||0);
+  const nf = new Intl.NumberFormat('id-ID');
+  const fmt = n => nf.format(Number(n)||0);
+  const fmt2 = x => (x == null || x === '' ? '0.00' : Number(x).toFixed(2));
 
-  function setKolSticky(){
-    const h = document.getElementById('kolHead1')?.offsetHeight || 40;
-    const t = document.querySelector('#tabelKolektibilitas tr.sticky-total')?.offsetHeight || 36;
-    const holder = document.getElementById('kolScroller');
-    holder.style.setProperty('--kol_headH', h + 'px');
-    holder.style.setProperty('--kol_totalH', t + 'px');
+  // Helper
+  async function apiCall(url, options = {}) {
+      const res = await fetch(url, options);
+      if(!res.ok) throw new Error(`HTTP Error ${res.status}`);
+      return res;
   }
-  function sizeKolScroller(){
-    const wrap = document.getElementById('kolScroller');
-    const rectTop = wrap.getBoundingClientRect().top;
-    wrap.style.height = Math.max(260, window.innerHeight - rectTop - 18) + 'px';
-  }
-  window.addEventListener('resize', ()=>{ setKolSticky(); sizeKolScroller(); });
 
-  // Init
-  (async () => {
-    try{
-      const r = await fetch('./api/date/'); const j = await r.json();
-      const last = j?.data?.last_created || new Date().toISOString().slice(0,10);
-      document.getElementById('harian_date_kolek').value = last;
-      await fetchKolektibilitasData(last);
-      setKolSticky(); sizeKolScroller();
-    }catch(e){ console.error(e); }
-  })();
+  // --- INIT ---
+  window.addEventListener('DOMContentLoaded', async () => {
+    const user = (window.getUser && window.getUser()) || null;
+    const uKode = (user?.kode ? String(user.kode).padStart(3,'0') : null);
+      
+      // 1. Load Dropdown (Logic User)
+      await populateKantorKolek(uKode);
 
-  document.getElementById('formFilterKolektibilitas').addEventListener('submit', (e)=>{
-    e.preventDefault();
-    fetchKolektibilitasData(document.getElementById('harian_date_kolek').value);
+      // 2. Load Date
+      const d = await getLastHarianData(); 
+      if (d) {
+          document.getElementById('harian_date_kolek').value = d.last_created;
+      } else {
+          document.getElementById('harian_date_kolek').value = new Date().toISOString().split('T')[0];
+      }
+
+      // 3. Fetch Initial Data
+      fetchKolektibilitas();
   });
 
-  function setFilterDisabled(dis){ document.getElementById('btnKolek').disabled = !!dis; }
+  async function getLastHarianData(){
+    try { const r = await apiCall(API_DATE); const j = await r.json(); return j.data || null; } catch{ return null; }
+  }
 
-  async function fetchKolektibilitasData(harian_date){
-    if(kolekAbort) kolekAbort.abort();
-    kolekAbort = new AbortController();
+  // --- POPULATE DROPDOWN (BY USER) ---
+  async function populateKantorKolek(userKode){
+    const optKantor = document.getElementById('opt_kantor_kolek');
 
-    document.getElementById('loadingKolek').classList.remove('hidden');
-    setFilterDisabled(true);
+    // JIKA USER CABANG (001, dll) -> LOCK
+    if(userKode !== '000' && userKode){
+        optKantor.innerHTML = `<option value="${userKode}">CABANG ${userKode}</option>`;
+        optKantor.value = userKode;
+        optKantor.disabled = true; // Kunci
+        return; 
+    }
 
-    try{
-      const res = await fetch(kolekApiUrl, {
-        method:'POST',
-        headers:{'Content-Type':'application/json'},
-        body: JSON.stringify({ type:'kolektibilitas', harian_date }),
-        signal: kolekAbort.signal
-      });
-      const json = await res.json();
-      const rows = (json?.data || []).filter(d => d?.kode_cabang !== null); // buang null
-
-      renderKolektibilitasTable(rows);
-    }catch(err){
-      if(err.name !== 'AbortError') console.error('fetch kolektibilitas error', err);
-      renderKolektibilitasTable([]);
-    }finally{
-      document.getElementById('loadingKolek').classList.add('hidden');
-      setFilterDisabled(false);
-      setKolSticky(); sizeKolScroller(); setTimeout(()=>{ setKolSticky(); sizeKolScroller(); }, 50);
+    // JIKA USER PUSAT (000) -> OPEN
+    try {
+        const res = await apiCall(API_KODE, { 
+            method:'POST', 
+            headers:{'Content-Type':'application/json'}, 
+            body:JSON.stringify({type:'kode_kantor'}) 
+        });
+        const json = await res.json();
+        const list = Array.isArray(json.data) ? json.data : [];
+        
+        let html = `<option value="">KONSOLIDASI (SEMUA)</option>`;
+        
+        list.filter(x => x.kode_kantor && x.kode_kantor !== '000')
+            .sort((a,b) => String(a.kode_kantor).localeCompare(b.kode_kantor))
+            .forEach(it => {
+               html += `<option value="${String(it.kode_kantor).padStart(3,'0')}">${String(it.kode_kantor).padStart(3,'0')} - ${it.nama_kantor}</option>`;
+            });
+        
+        optKantor.innerHTML = html;
+        optKantor.disabled = false;
+    } catch(e){
+        optKantor.innerHTML = `<option value="">Error Load</option>`;
     }
   }
 
-  function renderKolektibilitasTable(data){
-    const tb = document.getElementById('tbodyKolek');
-    tb.innerHTML = '';
+  // --- FETCH DATA ---
+  document.getElementById('formFilterKolek').addEventListener('submit', e => { e.preventDefault(); fetchKolektibilitas(); });
 
-    // Hitung total
-    const T = {
-      noa_L:0, bd_L:0, noa_DP:0, bd_DP:0, noa_KL:0, bd_KL:0,
-      noa_D:0, bd_D:0, noa_M:0, bd_M:0, noa_npl:0, bd_npl:0,
-      total_noa:0, total_bd:0
-    };
+  async function fetchKolektibilitas() {
+      const loading = document.getElementById('loadingKolek');
+      const tbody = document.getElementById('bodyKolek');
+      const tfoot = document.getElementById('footKolek');
+      
+      const harian  = document.getElementById('harian_date_kolek').value;
+      const kantor  = document.getElementById('opt_kantor_kolek').value;
 
-    // Bangun baris data
-    const buf = [];
+      document.getElementById('thNamaKolek').innerText = (kantor && kantor !== '') ? "NAMA KANKAS" : "NAMA KANTOR";
 
-    // TOTAL sticky disisipkan paling atas (dikosongkan dulu, diisi setelah loop)
-    buf.push(`
-      <tr class="sticky-total font-semibold text-sm text-blue-800">
-        <td class="px-4 py-2 freeze-1 col1 col-kode"></td>
-        <td class="px-4 py-2 freeze-2 col2 col-nama"><span class="ttl-mobile">TOTAL</span></td>
-        <td class="px-4 py-2 text-right" data-ttl="L"></td>
-        <td class="px-4 py-2 text-right" data-ttl="DP"></td>
-        <td class="px-4 py-2 text-right" data-ttl="KL"></td>
-        <td class="px-4 py-2 text-right" data-ttl="D"></td>
-        <td class="px-4 py-2 text-right" data-ttl="M"></td>
-        <td class="px-4 py-2 text-right" data-ttl="NPL"></td>
-        <td class="px-4 py-2 text-right" data-ttl="TOTAL"></td>
-        <td class="px-4 py-2 text-right" data-ttl="PERSEN"></td>
-      </tr>
-    `);
+      loading.classList.remove('hidden');
+      tbody.innerHTML = ''; tfoot.innerHTML = '';
 
-    data.forEach(r=>{
-      T.noa_L+=+r.noa_L||0; T.bd_L+=+r.bd_L||0;
-      T.noa_DP+=+r.noa_DP||0; T.bd_DP+=+r.bd_DP||0;
-      T.noa_KL+=+r.noa_KL||0; T.bd_KL+=+r.bd_KL||0;
-      T.noa_D+=+r.noa_D||0; T.bd_D+=+r.bd_D||0;
-      T.noa_M+=+r.noa_M||0; T.bd_M+=+r.bd_M||0;
-      T.noa_npl+=+r.noa_npl||0; T.bd_npl+=+r.bd_npl||0;
-      T.total_noa+=+r.total_noa||0; T.total_bd+=+r.total_bd||0;
+      try {
+          const payload = { type: 'kolektibilitas', harian_date: harian, kode_kantor: kantor };
+          
+          const res = await fetch(API_KOLEK, { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(payload) });
+          const json = await res.json();
+          
+          if(json.status && json.status !== 200) throw new Error(json.message);
 
-      buf.push(`
-        <tr class="border-b hover:bg-gray-50">
-          <td class="px-4 py-3 text-center freeze-1 col1 col-kode">${r.kode_cabang ?? '-'}</td>
-          <td class="px-4 py-3 freeze-2 col2 col-nama">${r.nama_kantor ?? '-'}</td>
+          const rows = json.data?.data || [];
+          const gt   = json.data?.grand_total || null;
 
-          <td class="px-4 py-3 text-right">
-            ${fmtInt(r.noa_L)}<br><span class="text-xs text-gray-500">${fmtRp(r.bd_L)}</span>
-          </td>
-          <td class="px-4 py-3 text-right">
-            ${fmtInt(r.noa_DP)}<br><span class="text-xs text-gray-500">${fmtRp(r.bd_DP)}</span>
-          </td>
-          <td class="px-4 py-3 text-right">
-            ${fmtInt(r.noa_KL)}<br><span class="text-xs text-gray-500">${fmtRp(r.bd_KL)}</span>
-          </td>
-          <td class="px-4 py-3 text-right">
-            ${fmtInt(r.noa_D)}<br><span class="text-xs text-gray-500">${fmtRp(r.bd_D)}</span>
-          </td>
-          <td class="px-4 py-3 text-right">
-            ${fmtInt(r.noa_M)}<br><span class="text-xs text-gray-500">${fmtRp(r.bd_M)}</span>
-          </td>
-          <td class="px-4 py-3 text-right">
-            ${fmtInt(r.noa_npl)}<br><span class="text-xs text-gray-500">${fmtRp(r.bd_npl)}</span>
-          </td>
-          <td class="px-4 py-3 text-right">
-            ${fmtInt(r.total_noa)}<br><span class="text-xs text-gray-500">${fmtRp(r.total_bd)}</span>
-          </td>
-          <td class="px-4 py-3 text-right">${persen(r.bd_npl, r.total_bd)}</td>
-        </tr>
-      `);
-    });
+          if (rows.length === 0) {
+              tbody.innerHTML = `<tr><td colspan="10" class="text-center py-10 text-slate-400">Data Kosong</td></tr>`;
+              return;
+          }
 
-    tb.innerHTML = buf.join('');
+          let html = '';
+          rows.forEach(r => {
+              // Note: Class sticky-col-2 ditambahkan di kolom kedua
+              html += `
+                <tr class="hover:bg-blue-50 transition border-b group">
+                    <td class="sticky-col text-center font-mono font-bold text-slate-500 bg-white group-hover:bg-blue-50">${r.kode_unit}</td>
+                    
+                    <td class="sticky-col-2 font-semibold text-slate-700 text-xs bg-white group-hover:bg-blue-50">
+                        <div class="truncate" style="max-width: 200px;" title="${r.nama_unit}">${r.nama_unit}</div>
+                    </td>
+                    
+                    <td class="text-right">${fmt(r.bd_L)} <div class="text-[10px] text-gray-400">${fmt(r.noa_L)} NOA</div></td>
+                    <td class="text-right">${fmt(r.bd_DP)} <div class="text-[10px] text-gray-400">${fmt(r.noa_DP)} NOA</div></td>
+                    <td class="text-right text-orange-700 bg-orange-50/20">${fmt(r.bd_KL)} <div class="text-[10px] text-orange-400">${fmt(r.noa_KL)} NOA</div></td>
+                    <td class="text-right text-orange-800 bg-orange-50/40">${fmt(r.bd_D)} <div class="text-[10px] text-orange-500">${fmt(r.noa_D)} NOA</div></td>
+                    <td class="text-right text-red-700 bg-red-50/20">${fmt(r.bd_M)} <div class="text-[10px] text-red-400">${fmt(r.noa_M)} NOA</div></td>
+                    
+                    <td class="text-right bg-red-50 text-red-800 font-bold border-l border-red-100">${fmt(r.bd_npl)}</td>
+                    <td class="text-right bg-blue-50 text-blue-800 font-bold border-l border-blue-100">${fmt(r.total_bd)}</td>
+                    <td class="text-right font-bold ${r.persentase_npl > 5 ? 'text-red-600' : 'text-green-600'}">${fmt2(r.persentase_npl)}%</td>
+                </tr>
+              `;
+          });
+          
+          html += `<tr style="height: 80px;"><td colspan="10" class="border-none bg-transparent"></td></tr>`;
+          tbody.innerHTML = html;
 
-    // Isi sel TOTAL (pakai data-ttl)
-    const persenNpl = persenRaw(T.bd_npl, T.total_bd);
-    const ttlCells = {
-      L:     `${fmtInt(T.noa_L)}<br><span class="text-xs text-gray-500">${fmtRp(T.bd_L)}</span>`,
-      DP:    `${fmtInt(T.noa_DP)}<br><span class="text-xs text-gray-500">${fmtRp(T.bd_DP)}</span>`,
-      KL:    `${fmtInt(T.noa_KL)}<br><span class="text-xs text-gray-500">${fmtRp(T.bd_KL)}</span>`,
-      D:     `${fmtInt(T.noa_D)}<br><span class="text-xs text-gray-500">${fmtRp(T.bd_D)}</span>`,
-      M:     `${fmtInt(T.noa_M)}<br><span class="text-xs text-gray-500">${fmtRp(T.bd_M)}</span>`,
-      NPL:   `${fmtInt(T.noa_npl)}<br><span class="text-xs text-gray-500">${fmtRp(T.bd_npl)}</span>`,
-      TOTAL: `${fmtInt(T.total_noa)}<br><span class="text-xs text-gray-500">${fmtRp(T.total_bd)}</span>`,
-      PERSEN: persenNpl
-    };
-    tb.querySelectorAll('[data-ttl]').forEach(el=>{
-      const k = el.getAttribute('data-ttl');
-      el.innerHTML = ttlCells[k] ?? '';
-    });
+          if(gt) {
+              // Cek mobile untuk colspan footer
+              const isMobile = window.innerWidth < 768;
+              
+              tfoot.innerHTML = `
+                <tr>
+                    <td class="merged-total text-center uppercase tracking-wide bg-blue-100 text-blue-900" colspan="${isMobile ? 2 : 1}">TOTAL</td>
+                    ${!isMobile ? `<td class="sticky-col-2 bg-blue-100 border-r border-blue-200"></td>` : ''}
+
+                    <td class="text-right font-bold">${fmt(gt.bd_L)}</td>
+                    <td class="text-right font-bold">${fmt(gt.bd_DP)}</td>
+                    <td class="text-right font-bold text-orange-700">${fmt(gt.bd_KL)}</td>
+                    <td class="text-right font-bold text-orange-800">${fmt(gt.bd_D)}</td>
+                    <td class="text-right font-bold text-red-700">${fmt(gt.bd_M)}</td>
+                    <td class="text-right font-bold bg-red-200 text-red-900 border-l border-red-300">${fmt(gt.bd_npl)}</td>
+                    <td class="text-right font-bold bg-blue-200 text-blue-900 border-l border-blue-300">${fmt(gt.total_bd)}</td>
+                    <td class="text-right font-bold bg-slate-200 text-slate-900">${fmt2(gt.persentase_npl)}%</td>
+                </tr>
+              `;
+          }
+
+      } catch(e) {
+          console.error(e);
+          tbody.innerHTML = `<tr><td colspan="10" class="text-center py-10 text-red-500">Error: ${e.message}</td></tr>`;
+      } finally {
+          loading.classList.add('hidden');
+      }
   }
-
-  // Helper persentase
-  const persenRaw = (num, den) => (den? ((+num||0)*100/(+den||0)).toFixed(2):'0.00') + '%';
-  const persen    = (num, den) => persenRaw(num, den);
 </script>

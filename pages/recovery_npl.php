@@ -1,267 +1,244 @@
-<!-- 💰 Recovery NPL (sticky header + freeze kiri + spacer fix yang ramping) -->
-<div class="max-w-7xl mx-auto px-4 py-4 h-screen flex flex-col">
-  <!-- Header / Toolbar -->
-  <div class="hdr flex flex-wrap items-start gap-2 mb-3">
-    <h1 class="title text-2xl font-bold flex items-center gap-2">
-      <span>💰</span><span>Recovery NPL</span>
-    </h1>
+<style>
+  :root { --primary: #2563eb; --bg: #f8fafc; --text: #334155; }
+  
+  /* Input & Controls */
+  .inp { 
+    border: 1px solid #cbd5e1; border-radius: 0.5rem; padding: 0 0.5rem; 
+    font-size: 13px; background: #fff; width: 100%; height: 38px;
+    /* Agar di HP text tanggal tidak kepotong */
+    min-width: 0; 
+  }
+  
+  /* Label kecil di atas input */
+  .lbl { 
+    font-size: 10px; font-weight: 700; color: #64748b; text-transform: uppercase; 
+    margin-bottom: 2px; display: block; white-space: nowrap;
+  }
+  
+  .btn-icon { 
+    width: 100%; height: 38px; border-radius: 8px; 
+    background: var(--primary); color: white; border: none; cursor: pointer; 
+    display: inline-flex; align-items: center; justify-content: center; 
+    transition: 0.2s; 
+  }
+  .btn-icon:hover { background: #1d4ed8; }
 
-    <!-- Filter -->
-    <form id="formFilterRecovery" class="ml-auto">
-      <div id="filterREC" class="flex items-center gap-2">
-        <label for="closing_date_recovery" class="lbl text-sm text-slate-700">Closing:</label>
+  /* === TABLE SCROLLER & STICKY CONFIG === */
+  #recScroller {
+      --rec_col1: 50px;  /* Lebar Kolom Kode */
+      --rec_col2: 160px; /* Lebar Kolom Nama */
+      position: relative;
+      border: 1px solid #e2e8f0; border-radius: 8px; background: white;
+      height: 100%; overflow: auto;
+      -webkit-overflow-scrolling: touch;
+  }
+
+  table { border-collapse: separate; border-spacing: 0; width: 100%; font-size: 12px; }
+  th, td { white-space: nowrap; padding: 8px 10px; border-bottom: 1px solid #f1f5f9; vertical-align: middle; }
+  
+  /* Header Styles */
+  thead th { 
+      position: sticky; top: 0; z-index: 80; 
+      background: #d9ead3; color: #1e293b; font-weight: 700; text-transform: uppercase; 
+      height: 40px; border-bottom: 1px solid #cbd5e1; font-size: 11px;
+  }
+
+  /* Sticky Columns Logic */
+  .sticky-left-1 { position: sticky; left: 0; z-index: 85; background: #fff; border-right: 1px solid #e2e8f0; width: var(--rec_col1); text-align: center; }
+  .sticky-left-2 { position: sticky; left: var(--rec_col1); z-index: 84; background: #fff; border-right: 1px solid #e2e8f0; width: var(--rec_col2); max-width: var(--rec_col2); overflow: hidden; text-overflow: ellipsis; }
+  
+  /* Header Sticky Priority */
+  thead th.sticky-left-1 { z-index: 90; background: #d9ead3; }
+  thead th.sticky-left-2 { z-index: 89; background: #d9ead3; }
+
+  /* Total Row Sticky */
+  .row-total td { 
+      position: sticky; top: 40px; z-index: 75; 
+      background: #eff6ff; color: #1e3a8a; font-weight: bold; 
+      border-bottom: 2px solid #bfdbfe; box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+  }
+  .row-total td.sticky-left-1 { z-index: 88; background: #eff6ff; }
+  .row-total td.sticky-left-2 { z-index: 87; background: #eff6ff; }
+
+  /* Hover Effects */
+  tbody tr:hover td { background-color: #f8fafc; }
+  
+  /* === MODAL STYLES === */
+  .modal-table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 12px; }
+  .modal-table th { position: sticky; top: 0; background: #f1f5f9; z-index: 10; padding: 8px; text-align: left; font-weight: 600; color: #475569; }
+  .modal-table td { padding: 8px; border-bottom: 1px solid #e2e8f0; color: #334155; }
+
+  /* === RESPONSIVE === */
+  @media (min-width: 768px) {
+      .btn-icon { width: 42px; }
+      .lbl { font-size: 11px; margin-bottom: 4px; }
+      /* Kembalikan ukuran input normal di desktop */
+      .inp { padding: 0.4rem 0.75rem; }
+  }
+  
+  @media (max-width: 767px) {
+      /* Mobile: Matikan sticky kolom ke-2 (Nama) biar layar lega */
+      .sticky-left-2, thead th.sticky-left-2, .row-total td.sticky-left-2 {
+          position: static !important; border-right: none; width: auto; max-width: none;
+      }
+      /* Geser sticky kolom 1 (Kode) tetap di kiri */
+      .sticky-left-1 { border-right: 1px solid #e2e8f0; }
+      
+      /* Input Date di Mobile fontnya dikecilin dikit biar muat */
+      input[type="date"] { font-size: 11px; }
+  }
+</style>
+
+<div class="max-w-7xl mx-auto px-2 md:px-3 py-3 h-[100dvh] flex flex-col font-sans bg-slate-50">
+  
+  <div class="flex flex-col md:flex-row md:items-end justify-between gap-3 mb-3 shrink-0">
+    
+    <div class="flex items-center justify-between">
+      <div>
+        <h1 class="text-lg md:text-2xl font-bold flex items-center gap-2 text-slate-800">
+            <span class="bg-blue-600 text-white p-1 rounded text-sm md:text-base">💰</span> 
+            <span>Recovery NPL</span>
+        </h1>
+        <p class="text-[10px] text-slate-500 mt-1 ml-1 md:block">*Posisi Closing vs Harian</p>
+      </div>
+      <div id="loadingMini" class="hidden md:hidden animate-spin h-5 w-5 border-2 border-blue-600 border-t-transparent rounded-full"></div>
+    </div>
+
+    <form id="formFilterRecovery" class="grid grid-cols-[1fr_1fr_40px] md:flex md:items-end gap-2 bg-white p-2 rounded-lg border border-slate-200 shadow-sm w-full md:w-auto">
+      
+      <div class="md:w-[130px] min-w-0">
+        <label class="lbl">Closing</label>
         <input type="date" id="closing_date_recovery" class="inp" required>
-
-        <label for="harian_date_recovery" class="lbl text-sm text-slate-700">Harian:</label>
+      </div>
+      
+      <div class="md:w-[130px] min-w-0">
+        <label class="lbl">Harian</label>
         <input type="date" id="harian_date_recovery" class="inp" required>
+      </div>
 
-        <button type="submit" class="btn-icon" title="Terapkan">
-          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
-            <circle cx="11" cy="11" r="7"></circle>
-            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-          </svg>
+      <div class="md:w-auto flex items-end">
+        <label class="lbl md:invisible hidden md:block">Act</label> <button type="submit" class="btn-icon" title="Terapkan Filter">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="7"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
         </button>
       </div>
     </form>
   </div>
 
-  <!-- Loading -->
-  <div id="loadingRecovery" class="hidden flex items-center gap-2 text-sm text-gray-600 mb-2">
-    <svg class="animate-spin h-5 w-5 text-blue-600" viewBox="0 0 24 24">
-      <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-      <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
-    </svg>
-    <span>Memuat data Recovery NPL...</span>
-  </div>
+  <div class="flex-1 min-h-0 relative flex flex-col">
+    
+    <div id="loadingRecovery" class="hidden absolute inset-0 bg-white/80 z-[60] flex flex-col items-center justify-center text-blue-600 font-bold backdrop-blur-sm rounded-lg">
+       <div class="animate-spin h-8 w-8 border-4 border-blue-200 border-t-blue-600 rounded-full mb-2"></div>
+       <span>Memuat Data...</span>
+    </div>
 
-  <!-- SCROLLER -->
-  <div id="recScroller" class="flex-1 min-h-0 overflow-hidden rounded border border-gray-200 bg-white">
-    <div class="h-full overflow-auto">
-      <table id="tabelRecovery" class="min-w-full text-sm text-left text-gray-700">
-        <thead class="uppercase">
-          <tr id="recHead1" class="text-xs">
-            <th class="px-4 py-2 sticky-rec freeze-1 col1 col-kode">KODE CABANG</th>
-            <th class="px-4 py-2 sticky-rec freeze-2 col2 col-nama">NAMA KANTOR</th>
-            <th class="px-4 py-2 text-right sticky-rec">NOA LUNAS</th>
-            <th class="px-4 py-2 text-right sticky-rec">BAKI DEBET LUNAS</th>
-            <th class="px-4 py-2 text-right sticky-rec">NOA BACKFLOW</th>
-            <th class="px-4 py-2 text-right sticky-rec">BAKI DEBET BACKFLOW</th>
-            <th class="px-4 py-2 text-right sticky-rec" id="sortTotalNoa">TOTAL NOA ⬍</th>
-            <th class="px-4 py-2 text-right sticky-rec" id="sortTotalBaki">TOTAL BAKI ⬍</th>
+    <div id="recScroller">
+      <table id="tabelRecovery">
+        <thead>
+          <tr>
+            <th class="sticky-left-1">Kode</th>
+            <th class="sticky-left-2 text-left">NAMA KANTOR</th>
+            <th class="text-right">NOA Lunas</th>
+            <th class="text-right">Baki Lunas</th>
+            <th class="text-right">NOA Backflow</th>
+            <th class="text-right">Baki Backflow</th>
+            <th class="text-right cursor-pointer hover:bg-green-200 whitespace-nowrap" id="sortTotalNoa">Tot NOA ⬍</th>
+            <th class="text-right cursor-pointer hover:bg-green-200 whitespace-nowrap" id="sortTotalBaki">Tot Baki ⬍</th>
           </tr>
         </thead>
-
-        <!-- TOTAL tepat di bawah header -->
+        
         <tbody id="recoveryTotalRow"></tbody>
 
-        <!-- BODY data -->
         <tbody id="recoveryBody"></tbody>
       </table>
     </div>
   </div>
+
 </div>
 
-<!-- ===== MODAL: Recovery (lebih responsif + kolom tidak terlalu lebar) ===== -->
-<div id="modalDebiturRecovery"
-     class="fixed inset-0 hidden bg-gray-900/55 backdrop-blur-sm items-center justify-center"
-     style="z-index:100000;">
-  <div id="modalCardREC"
-       class="bg-white rounded-lg shadow overflow-hidden"
-       style="width:min(1100px,94vw); max-height:86vh; font-size:clamp(12px,1.05vw,14px);">
-    <!-- Header -->
-    <div class="flex items-center justify-between p-3 md:p-4 border-b">
-      <h3 id="modalTitleRecovery" class="font-semibold"
-          style="font-size:clamp(16px,1.6vw,20px);">Detail Debitur Recovery</h3>
-      <button id="btnCloseRecovery" class="text-gray-500 hover:text-gray-700 text-xl" aria-label="Tutup">✕</button>
+<div id="modalDebiturRecovery" class="fixed inset-0 hidden bg-slate-900/60 backdrop-blur-sm items-center justify-center z-[9999] px-2 md:px-4">
+  <div id="modalCardREC" class="bg-white rounded-xl shadow-2xl flex flex-col w-full max-w-[1100px] h-[85vh] md:max-h-[85vh] overflow-hidden">
+    
+    <div class="flex items-center justify-between p-3 md:p-4 border-b border-slate-100 bg-slate-50 shrink-0">
+      <div>
+        <h3 class="font-bold text-slate-800 text-base md:text-xl flex items-center gap-2">
+            📄 <span id="modalTitleRecovery" class="truncate max-w-[200px] md:max-w-none">Detail Debitur</span>
+        </h3>
+        <p class="text-[10px] md:text-xs text-slate-500 mt-1" id="modalSubtitleRecovery">Daftar rekening</p>
+      </div>
+      <button id="btnCloseRecovery" class="w-8 h-8 flex items-center justify-center rounded-full bg-slate-200 hover:bg-red-100 hover:text-red-600 transition">✕</button>
     </div>
 
-    <!-- Body: vertikal scroll + horizontal scroll -->
-    <div class="p-2 md:p-4 overflow-y-auto" style="max-height:calc(86vh - 56px);">
-      <div class="rmodal-x overflow-x-auto -mx-2 md:mx-0" style="-webkit-overflow-scrolling:touch;">
-        <div id="modalBodyRecovery">
-          <p class="text-sm text-gray-500">Memuat data debitur...</p>
-        </div>
-      </div>
+    <div class="flex-1 overflow-auto bg-white relative">
+        <div id="modalBodyRecovery" class="min-w-full inline-block align-middle p-2 md:p-4">
+            </div>
     </div>
   </div>
 </div>
 
-
-<style>
-  /* ==== Controls / toolbar ==== */
-  .inp{ border:1px solid #cbd5e1; border-radius:.6rem; padding:.5rem .75rem; font-size:14px; background:#fff; }
-  .btn-icon{ width:42px; height:42px; border-radius:999px; display:inline-flex; align-items:center; justify-content:center;
-             background:#2563eb; color:#fff; box-shadow:0 6px 14px rgba(37,99,235,.25); }
-  .btn-icon:hover{ background:#1e40af; }
-  .hdr{ row-gap:.5rem; }
-
-  @media (max-width:640px){
-    .title{ font-size:1.25rem; }
-    .hdr{ flex-direction:column; align-items:flex-start; }
-    #filterREC{ width:100%; gap:.5rem; }
-    .lbl{ display:none; }
-    .inp{ flex:0 0 auto; width:200px; max-width:70vw; font-size:13px; padding:.45rem .6rem; }
-    .btn-icon{ width:40px; height:40px; }
-  }
-
-  /* ==== Table: sticky header + freeze kiri ==== */
-  body{ overflow:hidden; }
-  #recScroller{ --rec_col1:5rem; --rec_col2:16rem; --rec_head:40px; --rec_totalH:36px; }
-
-  #tabelRecovery{ font-size: clamp(11px, 1.6vw, 14px); }
-  #tabelRecovery thead th{ font-size: clamp(10px, 1.4vw, 12px); }
-
-  #tabelRecovery .col1{ width:var(--rec_col1); min-width:var(--rec_col1); }
-  #tabelRecovery .col2{ width:var(--rec_col2); min-width:var(--rec_col2); }
-  #tabelRecovery th.col-nama, #tabelRecovery td.col-nama{
-    max-width:var(--rec_col2); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
-  }
-
-  #tabelRecovery .freeze-1{ position:sticky; left:0; z-index:41; background:#fff; box-shadow:1px 0 0 rgba(0,0,0,.06); }
-  #tabelRecovery .freeze-2{ position:sticky; left:var(--rec_col1); z-index:40; background:#fff; box-shadow:1px 0 0 rgba(0,0,0,.06); }
-
-  #tabelRecovery thead th{ position:sticky; }
-  #tabelRecovery thead th.sticky-rec{ top:0; background:#d9ead3; z-index:88; }
-  #tabelRecovery thead th.freeze-1{ left:0; z-index:90; background:#d9ead3; }
-  #tabelRecovery thead th.freeze-2{ left:var(--rec_col1); z-index:89; background:#d9ead3; }
-
-  #tabelRecovery tbody tr.sticky-total td{
-    position:sticky; top:var(--rec_head);
-    background:#eaf2ff; color:#1e40af; z-index:70; border-bottom:1px solid #c7d2fe;
-  }
-  #tabelRecovery tbody tr.sticky-total td.freeze-1{ z-index:91; }
-  #tabelRecovery tbody tr.sticky-total td.freeze-2{ z-index:90; }
-
-  #tabelRecovery tbody tr:hover td{ background:#f9fafb; }
-  #recoveryBody::after{ content:""; display:block; height: calc(var(--rec_head) + var(--rec_totalH) + 20px); }
-
-  /* ===== Mobile tweaks ===== */
-  @media (max-width:640px){
-    #tabelRecovery th.col-kode, #tabelRecovery td.col-kode{ display:none; }
-    #recScroller{ --rec_col1:0px; --rec_col2:10.5rem; }
-    #tabelRecovery .freeze-2, #tabelRecovery thead th.freeze-2{ left:0 !important; }
-  }
-
-  /* ===== Modal table helpers (biar tidak terpotong & tetap rapi) ===== */
-  .modal-table{ table-layout:fixed; width:100%; }
-  .modal-table th, .modal-table td{ white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-
-  /* tablet */
-  @media (max-width:768px){
-    #modalCardREC{ width:94vw !important; }
-  }
-  /* mobile */
-  @media (max-width:640px){
-    #modalCardREC{ width:94vw !important; max-height:80vh; font-size:12px !important; }
-    #modalBodyRecovery{ max-height:72vh !important; }
-  }
-  /* very small phones */
-  @media (max-width:380px){
-    #modalCardREC{ width:96vw !important; }
-  }
-</style>
-
-<style>
-  /* ===== Modal table ===== */
-  .rmodal-table{ table-layout:fixed; width:100%; border-collapse:separate; border-spacing:0; }
-  .rmodal-table thead th{
-    position:sticky; top:0; z-index:2;
-    background:#f3f4f6; /* abu header */
-  }
-  .rmodal-table th, .rmodal-table td{
-    padding:.5rem .6rem;
-    white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
-    line-height:1.35;
-  }
-
-  /* Lebar kolom pakai clamp agar tidak kelebaran & tetap bisa digeser */
-  .c-rek  { width:clamp(110px, 26vw, 160px); }
-  .c-nama { width:clamp(160px, 34vw, 260px); }   /* nama diperkecil di mobile */
-  .c-rp   { width:clamp(110px, 26vw, 150px); text-align:right; }
-  .c-kol  { width:clamp(70px, 18vw, 96px);  text-align:center; }
-  .c-date { width:clamp(120px, 28vw, 150px); text-align:center; }
-
-  /* garis halus */
-  .rmodal-table tbody tr{ border-bottom:1px solid #e5e7eb; }
-  .rmodal-table tbody tr:hover td{ background:#f9fafb; }
-
-  /* Tablet */
-  @media (max-width:768px){
-    #modalCardREC{ width:94vw; }
-  }
-  /* Mobile */
-  @media (max-width:640px){
-    #modalCardREC{ width:94vw; max-height:82vh; font-size:12px; }
-    .rmodal-table th, .rmodal-table td{ padding:.45rem .5rem; }
-  }
-  /* HP kecil sekali */
-  @media (max-width:380px){
-    #modalCardREC{ width:96vw; }
-    .rmodal-table{ font-size:11px; }
-  }
-</style>
-
 <script>
+  // --- UTILS ---
   const nfID = new Intl.NumberFormat('id-ID');
   const fmt  = n => nfID.format(Number(n||0));
   const num  = v => Number(v||0);
   const kodeNum = v => Number(String(v??'').replace(/\D/g,'')||0);
+  const formatDate = (s) => { if(!s) return '-'; const d=new Date(s); return isNaN(d)?'-': `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()}`; };
 
-  let recoveryDataRaw = [], recoveryTotal = null;
-  let sortState = { column:null, direction: 1 };
-  let abortCtrl;
+  // --- STATE ---
+  let recoveryDataRaw = [];
+  let sortState = { column: null, direction: 1 };
   let currentFilter = { closing:'', harian:'' };
+  let abortCtrl;
 
-  /* ===== Sticky & scroller ===== */
-  function setRecSticky(){
-    const h   = document.getElementById('recHead1')?.offsetHeight || 40;
-    const tot = document.querySelector('#tabelRecovery tr.sticky-total')?.offsetHeight || 36;
-    const holder = document.getElementById('recScroller');
-    holder.style.setProperty('--rec_head', h + 'px');
-    holder.style.setProperty('--rec_totalH', tot + 'px');
-  }
-  function sizeRecScroller(){
-    const wrap = document.getElementById('recScroller');
-    if(!wrap) return;
-    const rectTop = wrap.getBoundingClientRect().top;
-    wrap.style.height = Math.max(260, window.innerHeight - rectTop - 8) + 'px';
-  }
-  window.addEventListener('resize', ()=>{ setRecSticky(); sizeRecScroller(); });
-
-  /* ===== INIT ===== */
-  (async () => {
+  // --- MAIN INIT ---
+  window.addEventListener('DOMContentLoaded', async () => {
+    // 1. Ambil User Login
+    const user = (window.getUser && window.getUser()) || JSON.parse(localStorage.getItem('app_user')) || { kode: '000' };
+    window.currentUserKode = String(user.kode || '000').padStart(3, '0');
+    
+    // 2. Load Tanggal Default
     const d = await getLastHarianData();
-    if(!d) return;
-    closing_date_recovery.value = d.last_closing;
-    harian_date_recovery.value  = d.last_created;
-    currentFilter = { closing:d.last_closing, harian:d.last_created };
-    fetchRecoveryData(d.last_closing, d.last_created);
-    setRecSticky(); sizeRecScroller();
-  })();
+    if(d) {
+        document.getElementById('closing_date_recovery').value = d.last_closing;
+        document.getElementById('harian_date_recovery').value  = d.last_created;
+        currentFilter = { closing:d.last_closing, harian:d.last_created };
+        
+        // 3. Fetch Data Awal
+        fetchRecoveryData(d.last_closing, d.last_created);
+    }
+  });
 
   async function getLastHarianData(){
-    try{ const r = await fetch('./api/date/'); const j = await r.json(); return j.data||null; }
-    catch{ return null; }
+    try { const r = await fetch('./api/date/'); const j = await r.json(); return j.data||null; } catch { return null; }
   }
 
-  formFilterRecovery.addEventListener('submit', e=>{
+  // --- FILTER HANDLER ---
+  document.getElementById('formFilterRecovery').addEventListener('submit', e => {
     e.preventDefault();
-    const closing = closing_date_recovery.value;
-    const harian  = harian_date_recovery.value;
+    const closing = document.getElementById('closing_date_recovery').value;
+    const harian  = document.getElementById('harian_date_recovery').value;
     currentFilter = { closing, harian };
-    sortState = { column:null, direction:1 };
+    sortState = { column:null, direction:1 }; 
     fetchRecoveryData(closing, harian);
   });
 
+  // --- FETCH DATA ---
   async function fetchRecoveryData(closing_date, harian_date){
-    loadingRecovery.classList.remove('hidden');
+    const loading = document.getElementById('loadingRecovery');
+    const loadingMini = document.getElementById('loadingMini');
+    
+    loading.classList.remove('hidden');
+    loadingMini.classList.remove('hidden'); // Munculkan loading mini di mobile header
+    
     if(abortCtrl) abortCtrl.abort();
     abortCtrl = new AbortController();
 
-    recoveryTotalRow.innerHTML = `<tr><td colspan="8" class="px-4 py-3 text-gray-500">Memuat...</td></tr>`;
-    recoveryBody.innerHTML = '';
+    const tbody = document.getElementById('recoveryBody');
+    const ttotal = document.getElementById('recoveryTotalRow');
+    
+    tbody.innerHTML = ''; 
+    ttotal.innerHTML = `<tr><td colspan="8" class="p-4 text-center text-slate-400 italic">Memuat data...</td></tr>`;
 
-    try{
+    try {
       const res = await fetch('./api/npl/', {
         method:'POST', headers:{'Content-Type':'application/json'},
         body: JSON.stringify({ type:'Recovery NPL', closing_date, harian_date }),
@@ -270,166 +247,214 @@
       const json = await res.json();
       const data = Array.isArray(json.data) ? json.data : [];
 
-      recoveryTotal = data.find(d => (d.nama_kantor||'').toUpperCase().includes('TOTAL')) || null;
+      // Pisahkan Baris Total & Data Cabang
+      const totalRow = data.find(d => (d.nama_kantor||'').toUpperCase().includes('TOTAL')) || null;
       recoveryDataRaw = data.filter(d => !(d.nama_kantor||'').toUpperCase().includes('TOTAL'));
 
       recoveryDataRaw.sort((a,b)=> kodeNum(a.kode_cabang) - kodeNum(b.kode_cabang));
-      renderAll(recoveryDataRaw);
-    }catch(err){
-      if(err.name!=='AbortError')
-        recoveryTotalRow.innerHTML = `<tr><td colspan="8" class="px-4 py-3 text-red-600">Gagal memuat data</td></tr>`;
-    }finally{
-      loadingRecovery.classList.add('hidden');
+
+      renderTotal(totalRow);
+      renderRows(recoveryDataRaw);
+
+    } catch(err) {
+      if(err.name !== 'AbortError') {
+         ttotal.innerHTML = `<tr><td colspan="8" class="p-4 text-center text-red-500 font-bold">Gagal memuat data.</td></tr>`;
+      }
+    } finally {
+      loading.classList.add('hidden');
+      loadingMini.classList.add('hidden');
     }
   }
 
-  function renderAll(rows){
-    const tot = recoveryTotal;
-    const totNoa  = num(tot?.noa_lunas) + num(tot?.noa_backflow);
-    const totBaki = num(tot?.baki_debet_lunas) + num(tot?.baki_debet_backflow);
+  function renderTotal(tot) {
+     const el = document.getElementById('recoveryTotalRow');
+     if(!tot) { el.innerHTML = ''; return; }
+     
+     const tNoa = num(tot.noa_lunas) + num(tot.noa_backflow);
+     const tBak = num(tot.baki_debet_lunas) + num(tot.baki_debet_backflow);
 
-    recoveryTotalRow.innerHTML = tot ? `
-      <tr class="sticky-total font-semibold text-sm">
-        <td class="px-4 py-2 freeze-1 col1 col-kode"></td>
-        <td class="px-4 py-2 freeze-2 col2 col-nama"><span class="ttl-mobile">TOTAL</span></td>
-        <td class="px-4 py-2 text-right text-blue-800">${fmt(tot.noa_lunas)}</td>
-        <td class="px-4 py-2 text-right text-blue-800">${fmt(tot.baki_debet_lunas)}</td>
-        <td class="px-4 py-2 text-right text-blue-800">${fmt(tot.noa_backflow)}</td>
-        <td class="px-4 py-2 text-right text-blue-800">${fmt(tot.baki_debet_backflow)}</td>
-        <td class="px-4 py-2 text-right text-blue-800">${fmt(totNoa)}</td>
-        <td class="px-4 py-2 text-right text-blue-800">${fmt(totBaki)}</td>
-      </tr>` : '';
-
-    recoveryBody.innerHTML = rows.map(r=>{
-      const total_noa  = num(r.noa_lunas) + num(r.noa_backflow);
-      const total_baki = num(r.baki_debet_lunas) + num(r.baki_debet_backflow);
-      const kode = r.kode_cabang || '-';
-      const nama = r.nama_kantor || '-';
-      return `
-        <tr class="border-b hover:bg-gray-50">
-          <td class="px-4 py-3 text-center freeze-1 col1 col-kode">${String(kode).padStart(3,'0')}</td>
-          <td class="px-4 py-3 freeze-2 col2 col-nama">${nama}</td>
-          <td class="px-4 py-3 text-right">
-            <a href="#" data-type="lunas" data-kode="${kode}" class="text-blue-600 hover:underline">${fmt(r.noa_lunas)}</a>
-          </td>
-          <td class="px-4 py-3 text-right">${fmt(r.baki_debet_lunas)}</td>
-          <td class="px-4 py-3 text-right">
-            <a href="#" data-type="backflow" data-kode="${kode}" class="text-blue-600 hover:underline">${fmt(r.noa_backflow)}</a>
-          </td>
-          <td class="px-4 py-3 text-right">${fmt(r.baki_debet_backflow)}</td>
-          <td class="px-4 py-3 text-right">${fmt(total_noa)}</td>
-          <td class="px-4 py-3 text-right">${fmt(total_baki)}</td>
-        </tr>`;
-    }).join('');
-
-    setRecSticky(); sizeRecScroller();
-    setTimeout(()=>{ setRecSticky(); sizeRecScroller(); }, 50);
-  }
-
-  function sortRowsByState(rows){
-    if(!sortState.column)
-      return [...rows].sort((a,b)=> kodeNum(a.kode_cabang) - kodeNum(b.kode_cabang));
-    return [...rows].sort((a,b)=>{
-      const aNoa = num(a.noa_lunas)+num(a.noa_backflow);
-      const bNoa = num(b.noa_lunas)+num(b.noa_backflow);
-      const aBk  = num(a.baki_debet_lunas)+num(a.baki_debet_backflow);
-      const bBk  = num(b.baki_debet_lunas)+num(b.baki_debet_backflow);
-      return sortState.column==='total_noa'
-        ? sortState.direction*(aNoa-bNoa)
-        : sortState.direction*(aBk-bBk);
-    });
-  }
-
-  sortTotalNoa.addEventListener('click', ()=>{
-    sortState = { column:'total_noa', direction: sortState.column==='total_noa' ? -sortState.direction : -1 };
-    renderAll(sortRowsByState(recoveryDataRaw));
-  });
-  sortTotalBaki.addEventListener('click', ()=>{
-    sortState = { column:'total_baki', direction: sortState.column==='total_baki' ? -sortState.direction : -1 };
-    renderAll(sortRowsByState(recoveryDataRaw));
-  });
-
-  /* ===== Modal ===== */
-  tabelRecovery.addEventListener('click', e=>{
-    const a = e.target.closest('a[data-type]');
-    if(!a) return;
-    e.preventDefault();
-    loadDebiturRecovery(a.getAttribute('data-type'), a.getAttribute('data-kode'),
-                        currentFilter.closing, currentFilter.harian);
-  });
-
-  btnCloseRecovery.onclick = ()=> closeRecModal();
-  function closeRecModal(){
-    modalDebiturRecovery.classList.add('hidden');
-    modalDebiturRecovery.classList.remove('flex');
-  }
-
-function loadDebiturRecovery(type, kodeKantor, closingDate, harianDate){
-    const overlay = document.getElementById('modalDebiturRecovery');
-    const title   = document.getElementById('modalTitleRecovery');
-    const body    = document.getElementById('modalBodyRecovery');
-
-    overlay.classList.remove('hidden'); overlay.classList.add('flex');
-    title.textContent = `Debitur ${type==='lunas'?'Lunas':'Backflow'} — Kode Kantor ${String(kodeKantor).padStart(3,'0')}`;
-    body.innerHTML = `<p class="text-sm text-gray-500">Memuat data debitur...</p>`;
-
-    fetch('./api/npl/', {
-      method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({ type, kode_kantor:kodeKantor, closing_date:closingDate, harian_date:harianDate })
-    })
-    .then(r=>r.json())
-    .then(res=>{
-      const list = Array.isArray(res.data) ? res.data : [];
-      if(!list.length){ body.innerHTML = `<p class="text-red-600 font-semibold">Tidak ada data debitur.</p>`; return; }
-
-      const rows = list.map(d=>`
-        <tr>
-          <td class="px-3 py-2">${d.no_rekening ?? '-'}</td>
-          <td class="px-3 py-2">${d.nama_nasabah ?? '-'}</td>
-          <td class="px-3 py-2 text-right">${new Intl.NumberFormat('id-ID').format(+d.baki_debet||0)}</td>
-          <td class="px-3 py-2 text-center">${d.kolek ?? '-'}</td>
-          <td class="px-3 py-2 text-center">${d.kolek_update ?? '-'}</td>
-          <td class="px-3 py-2 text-right">${d.angsuran_pokok ? new Intl.NumberFormat('id-ID').format(+d.angsuran_pokok) : '-'}</td>
-          <td class="px-3 py-2 text-right">${d.angsuran_bunga ? new Intl.NumberFormat('id-ID').format(+d.angsuran_bunga) : '-'}</td>
-          <td class="px-3 py-2 text-right">${d.angsuran_denda ? new Intl.NumberFormat('id-ID').format(+d.angsuran_denda) : '-'}</td>
-          <td class="px-3 py-2 text-center">${d.tgl_trans ? formatTanggal(d.tgl_trans) : '-'}</td>
+     el.innerHTML = `
+        <tr class="row-total">
+            <td class="sticky-left-1"></td>
+            <td class="sticky-left-2 text-center md:text-left text-xs md:text-sm">TOTAL KONSOLIDASI</td>
+            <td class="text-right">${fmt(tot.noa_lunas)}</td>
+            <td class="text-right">${fmt(tot.baki_debet_lunas)}</td>
+            <td class="text-right">${fmt(tot.noa_backflow)}</td>
+            <td class="text-right">${fmt(tot.baki_debet_backflow)}</td>
+            <td class="text-right">${fmt(tNoa)}</td>
+            <td class="text-right">${fmt(tBak)}</td>
         </tr>
-      `).join('');
+     `;
+  }
 
-      body.innerHTML = `
-        <table class="rmodal-table w-full text-sm text-left text-gray-800 bg-white rounded shadow min-w-[720px]">
-          <colgroup>
-            <col class="c-rek"><col class="c-nama"><col class="c-rp"><col class="c-kol"><col class="c-date">
-            <col class="c-rp"><col class="c-rp"><col class="c-rp"><col class="c-date">
-          </colgroup>
-          <thead>
-            <tr>
-              <th>No Rekening</th>
-              <th>Nama Nasabah</th>
-              <th>Baki Debet</th>
-              <th>Kolek</th>
-              <th>Kolek Update</th>
-              <th>Angs. Pokok</th>
-              <th>Angs. Bunga</th>
-              <th>Angs. Denda</th>
-              <th>Tgl Bayar</th>
+  function renderRows(rows) {
+     const tbody = document.getElementById('recoveryBody');
+     if(rows.length === 0) {
+         tbody.innerHTML = `<tr><td colspan="8" class="p-8 text-center text-slate-400">Tidak ada data recovery.</td></tr>`;
+         return;
+     }
+
+     tbody.innerHTML = rows.map(r => {
+        const tNoa = num(r.noa_lunas) + num(r.noa_backflow);
+        const tBak = num(r.baki_debet_lunas) + num(r.baki_debet_backflow);
+        const kode = String(r.kode_cabang||'').padStart(3,'0');
+
+        return `
+            <tr class="border-b transition">
+                <td class="sticky-left-1 font-mono font-bold text-slate-500 text-xs">${kode}</td>
+                <td class="sticky-left-2 font-semibold text-slate-700 text-xs md:text-sm">
+                    <div class="truncate">${r.nama_kantor}</div>
+                </td>
+                
+                <td class="text-right">
+                    ${ num(r.noa_lunas) > 0 
+                       ? `<a href="#" class="text-blue-600 font-bold hover:bg-blue-100 px-1 rounded transition" data-act="view" data-type="lunas" data-kode="${kode}">${fmt(r.noa_lunas)}</a>` 
+                       : `<span class="text-slate-300">-</span>` 
+                    }
+                </td>
+                <td class="text-right text-slate-600 text-xs">${num(r.baki_debet_lunas)>0 ? fmt(r.baki_debet_lunas) : '-'}</td>
+                
+                <td class="text-right">
+                    ${ num(r.noa_backflow) > 0 
+                       ? `<a href="#" class="text-orange-600 font-bold hover:bg-orange-100 px-1 rounded transition" data-act="view" data-type="backflow" data-kode="${kode}">${fmt(r.noa_backflow)}</a>` 
+                       : `<span class="text-slate-300">-</span>` 
+                    }
+                </td>
+                <td class="text-right text-slate-600 text-xs">${num(r.baki_debet_backflow)>0 ? fmt(r.baki_debet_backflow) : '-'}</td>
+                
+                <td class="text-right font-medium bg-slate-50">${fmt(tNoa)}</td>
+                <td class="text-right font-medium bg-slate-50">${fmt(tBak)}</td>
             </tr>
-          </thead>
-          <tbody>${rows}</tbody>
-        </table>`;
-    })
-    .catch(()=> body.innerHTML = `<p class="text-red-600">Gagal mengambil data debitur.</p>`);
-
-    // Tutup
-    const close = ()=>{ overlay.classList.add('hidden'); overlay.classList.remove('flex'); };
-    document.getElementById('btnCloseRecovery').onclick = close;
-    overlay.onclick = (e)=>{ if(!e.target.closest('#modalCardREC')) close(); };
-    const onEsc = (e)=>{ if(e.key==='Escape'){ close(); document.removeEventListener('keydown', onEsc); } };
-    document.addEventListener('keydown', onEsc);
+        `;
+     }).join('');
   }
 
-  function formatTanggal(tgl){
-    const d = new Date(tgl); if(isNaN(d)) return '-';
-    return `${String(d.getDate()).padStart(2,'0')}-${String(d.getMonth()+1).padStart(2,'0')}-${d.getFullYear()}`;
+  // --- SORTING ---
+  const doSort = (colKey) => {
+    sortState = { column: colKey, direction: sortState.column === colKey ? -sortState.direction : 1 };
+    
+    const sorted = [...recoveryDataRaw].sort((a,b) => {
+        let valA, valB;
+        if(colKey === 'total_noa') {
+            valA = num(a.noa_lunas) + num(a.noa_backflow);
+            valB = num(b.noa_lunas) + num(b.noa_backflow);
+        } else {
+            valA = num(a.baki_debet_lunas) + num(a.baki_debet_backflow);
+            valB = num(b.baki_debet_lunas) + num(b.baki_debet_backflow);
+        }
+        return (valA - valB) * sortState.direction;
+    });
+    
+    document.getElementById('sortTotalNoa').innerText = `Tot NOA ${colKey==='total_noa' ? (sortState.direction>0?'⬆':'⬇') : '⬍'}`;
+    document.getElementById('sortTotalBaki').innerText = `Tot Baki ${colKey==='total_baki' ? (sortState.direction>0?'⬆':'⬇') : '⬍'}`;
+
+    renderRows(sorted);
+  };
+
+  document.getElementById('sortTotalNoa').onclick = () => doSort('total_noa');
+  document.getElementById('sortTotalBaki').onclick = () => doSort('total_baki');
+
+  // --- MODAL & AUTH LOGIC ---
+  document.getElementById('tabelRecovery').addEventListener('click', e => {
+      const link = e.target.closest('a[data-act="view"]');
+      if(!link) return;
+      e.preventDefault();
+
+      const targetKode = String(link.dataset.kode).padStart(3,'0');
+      const userKode   = window.currentUserKode; 
+
+      // 🔐 HAK AKSES CHECK
+      if (userKode !== '000' && userKode !== targetKode) {
+          alert(`⛔ AKSES DITOLAK\n\nAnda login sebagai Cabang ${userKode}.\nAnda tidak diizinkan melihat detail Cabang ${targetKode}.`);
+          return;
+      }
+
+      openModalDebitur(link.dataset.type, targetKode);
+  });
+
+  async function openModalDebitur(type, kode){
+      const modal = document.getElementById('modalDebiturRecovery');
+      const title = document.getElementById('modalTitleRecovery');
+      const sub   = document.getElementById('modalSubtitleRecovery');
+      const body  = document.getElementById('modalBodyRecovery');
+
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+      
+      const labelType = type === 'lunas' ? 'Lunas' : 'Backflow';
+      title.innerHTML = `${labelType} <span class="ml-2 px-2 py-0.5 bg-blue-100 text-blue-800 text-xs rounded font-mono">${kode}</span>`;
+      sub.innerText = `Posisi: ${formatDate(currentFilter.closing)} vs ${formatDate(currentFilter.harian)}`;
+      
+      body.innerHTML = `<div class="p-10 text-center"><div class="animate-spin h-8 w-8 border-4 border-slate-200 border-t-blue-600 rounded-full mx-auto mb-2"></div>Memuat detail...</div>`;
+
+      try {
+          const res = await fetch('./api/npl/', {
+            method:'POST', headers:{'Content-Type':'application/json'},
+            body: JSON.stringify({ 
+                type: type, 
+                kode_kantor: kode, 
+                closing_date: currentFilter.closing, 
+                harian_date: currentFilter.harian 
+            })
+          });
+          const json = await res.json();
+          const list = Array.isArray(json.data) ? json.data : [];
+
+          if(list.length === 0) {
+              body.innerHTML = `<div class="p-10 text-center text-slate-400 text-sm">Data detail tidak ditemukan.</div>`;
+              return;
+          }
+
+          let tableHtml = `
+            <table class="modal-table min-w-[800px]">
+                <thead>
+                    <tr>
+                        <th class="w-[120px]">No Rek</th>
+                        <th class="w-[200px]">Nama Nasabah</th>
+                        <th class="text-right">Baki Debet</th>
+                        <th class="text-center w-[50px]">Kol</th>
+                        <th class="text-center w-[50px]">Upd</th>
+                        <th class="text-center">Tgl Bayar</th>
+                        <th class="text-right">Pokok</th>
+                        <th class="text-right">Bunga</th>
+                    </tr>
+                </thead>
+                <tbody>
+          `;
+          
+          list.forEach(item => {
+              tableHtml += `
+                <tr class="hover:bg-slate-50">
+                    <td class="font-mono text-slate-600 text-xs">${item.no_rekening}</td>
+                    <td class="font-medium text-xs md:text-sm">
+                        <div class="truncate max-w-[180px]" title="${item.nama_nasabah}">${item.nama_nasabah}</div>
+                    </td>
+                    <td class="text-right text-xs">${fmt(item.baki_debet)}</td>
+                    <td class="text-center text-[10px] bg-red-50 text-red-700 rounded">${item.kolek||'-'}</td>
+                    <td class="text-center text-[10px] bg-green-50 text-green-700 rounded font-bold">${item.kolek_update||'-'}</td>
+                    <td class="text-center text-xs">${formatDate(item.tgl_trans)}</td>
+                    <td class="text-right text-slate-500 text-xs">${fmt(item.angsuran_pokok)}</td>
+                    <td class="text-right text-slate-500 text-xs">${fmt(item.angsuran_bunga)}</td>
+                </tr>
+              `;
+          });
+          
+          tableHtml += `</tbody></table>`;
+          body.innerHTML = tableHtml;
+
+      } catch(e) {
+          body.innerHTML = `<div class="p-10 text-center text-red-500 text-sm">Gagal mengambil detail.<br><small>${e.message}</small></div>`;
+      }
   }
+
+  const closeModal = () => {
+      document.getElementById('modalDebiturRecovery').classList.add('hidden');
+      document.getElementById('modalDebiturRecovery').classList.remove('flex');
+  };
+  document.getElementById('btnCloseRecovery').onclick = closeModal;
+  document.getElementById('modalDebiturRecovery').onclick = (e) => {
+      if(e.target.id === 'modalDebiturRecovery') closeModal();
+  };
+  document.addEventListener('keydown', e => { if(e.key === 'Escape') closeModal(); });
+
 </script>

@@ -7,10 +7,13 @@
   .inp:disabled { background-color: #f1f5f9; color: #64748b; font-weight: 600; cursor: not-allowed; border-color: #e2e8f0; }
   .lbl { font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; margin-bottom: 4px; display: block; }
   
-  /* DATEPICKER FIX */
+  /* === DATEPICKER FIX (Icon Hilang TAPI BISA DIKLIK) === */
+  input[type="date"] { position: relative; cursor: pointer; }
   input[type="date"]::-webkit-inner-spin-button,
-  input[type="date"]::-webkit-calendar-picker-indicator { display: none; -webkit-appearance: none; }
-  input[type="date"] { -moz-appearance: textfield; }
+  input[type="date"]::-webkit-calendar-picker-indicator {
+      position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+      width: 100%; height: 100%; opacity: 0; cursor: pointer;
+  }
 
   .btn-icon { width: 38px; height: 38px; border-radius: 8px; background: var(--primary); color: white; border: none; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; transition: 0.2s; }
   .btn-icon:hover { background: #1d4ed8; }
@@ -23,7 +26,6 @@
       border: 1px solid #e2e8f0; 
       background: white; 
       position: relative;
-      padding-bottom: 0; /* Reset padding */
   }
   
   table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 12px; }
@@ -33,38 +35,36 @@
   td { padding: 8px 10px; border-bottom: 1px solid #f1f5f9; color: #334155; vertical-align: middle; }
   
   /* Sticky Kolom Kiri */
-  .sticky-col { position: sticky; left: 0; z-index: 30; background: white; border-right: 1px solid #e2e8f0; }
+  .sticky-col { position: sticky; left: 0; z-index: 45; background: white; border-right: 1px solid #e2e8f0; }
   th.sticky-col { z-index: 50; background: #d9ead3; }
   
-  /* FOOTER STICKY (Floating Grand Total) */
+  /* === FOOTER STICKY (Nempel Bawah) === */
+  tfoot { position: sticky; bottom: 0; z-index: 60; }
+  
   tfoot td { 
-      position: sticky; 
-      bottom: 0; 
-      z-index: 60; 
       background: #eff6ff; 
       font-weight: 700; 
-      border-top: 2px solid #60a5fa; /* Border lebih tegas */
+      border-top: 2px solid #bfdbfe; 
       color: #1e3a8a;
-      box-shadow: 0 -4px 10px -2px rgba(0,0,0,0.15); /* Shadow ke atas */
-      padding-top: 15px; 
-      padding-bottom: 15px;
+      box-shadow: 0 -4px 6px -1px rgba(0,0,0,0.1); 
+      padding-top: 12px; padding-bottom: 12px;
   }
   
-  /* Merged Cell Sticky Kiri di Footer */
+  /* Merged Cell Sticky Kiri */
   tfoot td.merged-total {
       position: sticky; left: 0; z-index: 65;
-      text-align: center; border-right: 1px solid #93c5fd; background: #eff6ff; 
+      text-align: center; border-right: 1px solid #bfdbfe; background: #eff6ff; 
   }
 
   tr:hover td { background-color: #f8fafc; }
   .hidden { display: none !important; }
+  .cell-action { cursor: pointer; color: var(--primary); font-weight: 600; text-decoration: none; }
+  .cell-action:hover { text-decoration: underline; }
 </style>
 
 <script>
-    // --- SIMULASI USER LOGIN ---
-    // Ganti ini sesuai sistem loginmu nanti
     const user = (window.getUser && window.getUser()) || null;
-    const userKode = (user?.kode ? String(user.kode).padStart(3,'0') : '000'); 
+    const userKode = (user?.kode ? String(user.kode).padStart(3,'0') : '000');
     window.currentUser = { kode: userKode };
     console.log("Login User:", userKode);
 </script>
@@ -83,11 +83,11 @@
     <form id="formFilterNpl" class="flex flex-wrap items-end gap-2 bg-white p-2 rounded-lg border border-slate-200 shadow-sm">
       <div style="width: 110px;">
         <label class="lbl">Closing</label>
-        <input type="date" id="closing_date_npl" class="inp" required onclick="try{this.showPicker()}catch(e){}">
+        <input type="date" id="closing_date_npl" class="inp" required>
       </div>
       <div style="width: 110px;">
         <label class="lbl">Harian</label>
-        <input type="date" id="harian_date_npl" class="inp" required onclick="try{this.showPicker()}catch(e){}">
+        <input type="date" id="harian_date_npl" class="inp" required>
       </div>
       <div style="min-width: 180px;">
         <label class="lbl">Kantor</label>
@@ -127,6 +127,34 @@
 
 </div>
 
+<div id="modalDetailNpl" class="fixed inset-0 hidden bg-slate-900/60 backdrop-blur-sm z-[6000] items-center justify-center flex">
+  <div class="bg-white rounded-xl shadow-2xl w-[95%] max-w-5xl max-h-[90vh] flex flex-col overflow-hidden animate-scale-up">
+    <div class="flex justify-between items-center p-4 border-b bg-white">
+      <h3 id="modalTitleRealisasi" class="font-bold text-lg text-slate-800">Detail Realisasi</h3>
+      <button onclick="closeModalRealisasi()" class="text-slate-400 hover:text-red-500 text-2xl">&times;</button>
+    </div>
+    <div class="flex-1 overflow-auto bg-slate-50 p-0 relative">
+        <div id="loadingModal" class="hidden absolute inset-0 bg-white/90 z-20 flex items-center justify-center text-blue-600 font-bold">Loading Detail...</div>
+        <table class="w-full text-xs text-left text-slate-700">
+            <thead class="bg-slate-100 font-bold uppercase text-slate-600 sticky top-0 shadow-sm">
+                <tr>
+                    <th class="px-4 py-3">Rekening</th>
+                    <th class="px-4 py-3">Nasabah</th>
+                    <th class="px-4 py-3 text-right">Plafond</th>
+                    <th class="px-4 py-3 text-center">Tgl Realisasi</th>
+                    <th class="px-4 py-3">Kankas</th>
+                    <th class="px-4 py-3 text-blue-700">AO</th>
+                </tr>
+            </thead>
+            <tbody id="modalBodyRealisasi" class="divide-y divide-slate-200 bg-white"></tbody>
+        </table>
+    </div>
+    <div class="p-3 border-t bg-white flex justify-end">
+        <button onclick="closeModalRealisasi()" class="px-4 py-2 bg-slate-800 text-white rounded hover:bg-slate-900 text-xs font-bold">Tutup</button>
+    </div>
+  </div>
+</div>
+
 <script>
   // --- CONFIG ---
   const API_NPL  = './api/npl/'; 
@@ -145,13 +173,11 @@
 
   // --- INIT ---
   window.addEventListener('DOMContentLoaded', async () => {
-      // Ambil kode user yang login
-      const uKode = window.currentUser.kode;
-      
-      // Load Dropdown dulu (Sesuai User)
-      await populateKantorOptionsNpl(uKode);
+      const user = (window.getUser && window.getUser()) || null;
+      // const userKode = 
+      const uKode = (user?.kode ? String(user.kode).padStart(3,'0') : null);
+      await populateKantorOptionsNpl(uKode); // Pake function kamu
 
-      // Load Tanggal Default
       const d = await getLastHarianData(); 
       if (d) {
           document.getElementById('closing_date_npl').value = d.last_closing;
@@ -160,7 +186,6 @@
           document.getElementById('harian_date_npl').value = new Date().toISOString().split('T')[0];
       }
 
-      // Fetch Data
       fetchNplData();
   });
 
@@ -168,12 +193,20 @@
     try { const r = await apiCall(API_DATE); const j = await r.json(); return j.data || null; } catch{ return null; }
   }
 
-  // --- POPULATE DROPDOWN (LOGIC USER LOGIN & LOCK) ---
+  // --- POPULATE DROPDOWN (LOGIC ASLI PUNYA KAMU) ---
   async function populateKantorOptionsNpl(userKode){
     const optKantor = document.getElementById('opt_kantor_npl');
-    
+
+    // JIKA USER CABANG (BUKAN 000) -> LOCK
+    if(userKode !== '000'){
+        optKantor.innerHTML = `<option value="${userKode}">CABANG ${userKode}</option>`;
+        optKantor.value = userKode;
+        optKantor.disabled = true;
+        return; 
+    }
+
+    // JIKA USER PUSAT (000) -> OPEN
     try {
-        // Ambil Data Kode Kantor dari API
         const res = await apiCall(API_KODE, { 
             method:'POST', 
             headers:{'Content-Type':'application/json'}, 
@@ -181,40 +214,19 @@
         });
         const json = await res.json();
         const list = Array.isArray(json.data) ? json.data : [];
-
-        let html = '';
-
-        // KONDISI 1: JIKA USER PUSAT (000) -> LOAD SEMUA
-        if(userKode === '000'){
-            html += `<option value="">KONSOLIDASI (SEMUA)</option>`;
-            list.filter(x => x.kode_kantor && x.kode_kantor !== '000')
-                .sort((a,b) => String(a.kode_kantor).localeCompare(b.kode_kantor))
-                .forEach(it => {
-                   html += `<option value="${String(it.kode_kantor).padStart(3,'0')}">${String(it.kode_kantor).padStart(3,'0')} - ${it.nama_kantor}</option>`;
-                });
-            
-            optKantor.innerHTML = html;
-            optKantor.disabled = false; // Buka akses
-        } 
-        // KONDISI 2: JIKA USER CABANG (MISAL 002) -> LOCK
-        else {
-            // Cari nama cabang user tersebut
-            const myBranch = list.find(k => k.kode_kantor === userKode);
-            const branchName = myBranch ? myBranch.nama_kantor : `CABANG ${userKode}`;
-            
-            // Set opsi tunggal
-            html = `<option value="${userKode}" selected>${userKode} - ${branchName}</option>`;
-            optKantor.innerHTML = html;
-            optKantor.value = userKode; // Paksa value
-            optKantor.disabled = true;  // Kunci dropdown
-        }
-
+        
+        let html = `<option value="">KONSOLIDASI (SEMUA)</option>`;
+        
+        list.filter(x => x.kode_kantor && x.kode_kantor !== '000')
+            .sort((a,b) => String(a.kode_kantor).localeCompare(b.kode_kantor))
+            .forEach(it => {
+               html += `<option value="${String(it.kode_kantor).padStart(3,'0')}">${String(it.kode_kantor).padStart(3,'0')} - ${it.nama_kantor}</option>`;
+            });
+        
+        optKantor.innerHTML = html;
+        optKantor.disabled = false;
     } catch(e){
-        console.error("Gagal load kantor:", e);
-        // Fallback aman jika API error
-        optKantor.innerHTML = `<option value="${userKode}">${userKode}</option>`;
-        optKantor.value = userKode;
-        if(userKode !== '000') optKantor.disabled = true;
+        optKantor.innerHTML = `<option value="">Error Load</option>`;
     }
   }
 
@@ -268,7 +280,7 @@
               `;
           });
           
-          // === SPACER ROW (Agar Data Bawah Tidak Ketutup Footer Sticky) ===
+          // === SPACER ROW (Biar data terakhir gak ketutup Footer) ===
           html += `<tr style="height: 60px;"><td colspan="8" class="border-none bg-transparent"></td></tr>`;
           
           tbody.innerHTML = html;
