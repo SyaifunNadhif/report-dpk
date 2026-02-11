@@ -1,15 +1,13 @@
 <style>
   :root { --primary: #2563eb; --bg: #f8fafc; --text: #334155; }
   
-  /* Input & Controls */
+  /* === INPUT & CONTROLS === */
   .inp { 
     border: 1px solid #cbd5e1; border-radius: 0.5rem; padding: 0 0.5rem; 
-    font-size: 13px; background: #fff; width: 100%; height: 38px;
-    /* Agar di HP text tanggal tidak kepotong */
+    font-size: 12px; background: #fff; width: 100%; height: 38px;
     min-width: 0; 
   }
   
-  /* Label kecil di atas input */
   .lbl { 
     font-size: 10px; font-weight: 700; color: #64748b; text-transform: uppercase; 
     margin-bottom: 2px; display: block; white-space: nowrap;
@@ -19,80 +17,108 @@
     width: 100%; height: 38px; border-radius: 8px; 
     background: var(--primary); color: white; border: none; cursor: pointer; 
     display: inline-flex; align-items: center; justify-content: center; 
-    transition: 0.2s; 
+    transition: 0.2s; flex-shrink: 0;
   }
   .btn-icon:hover { background: #1d4ed8; }
 
-  /* === TABLE SCROLLER & STICKY CONFIG === */
+  /* === TABLE SCROLLER === */
   #recScroller {
-      --rec_col1: 50px;  /* Lebar Kolom Kode */
-      --rec_col2: 160px; /* Lebar Kolom Nama */
+      --rec_col1: 50px;   /* Lebar Kolom Kode */
+      --rec_col2: 160px;  /* Lebar Kolom Nama */
+      
       position: relative;
       border: 1px solid #e2e8f0; border-radius: 8px; background: white;
       height: 100%; overflow: auto;
-      -webkit-overflow-scrolling: touch;
+      -webkit-overflow-scrolling: touch; 
   }
 
   table { border-collapse: separate; border-spacing: 0; width: 100%; font-size: 12px; }
-  th, td { white-space: nowrap; padding: 8px 10px; border-bottom: 1px solid #f1f5f9; vertical-align: middle; }
+  th, td { white-space: nowrap; padding: 0 10px; vertical-align: middle; }
   
-  /* Header Styles */
+  /* === HEADER (Sticky Top) === */
   thead th { 
-      position: sticky; top: 0; z-index: 80; 
+      position: sticky; top: 0; z-index: 60; 
       background: #d9ead3; color: #1e293b; font-weight: 700; text-transform: uppercase; 
-      height: 40px; border-bottom: 1px solid #cbd5e1; font-size: 11px;
+      height: 40px; border-bottom: 1px solid #a3b899; font-size: 11px;
+      box-shadow: 0 1px 0 #a3b899; /* Garis bawah solid */
   }
 
-  /* Sticky Columns Logic */
-  .sticky-left-1 { position: sticky; left: 0; z-index: 85; background: #fff; border-right: 1px solid #e2e8f0; width: var(--rec_col1); text-align: center; }
-  .sticky-left-2 { position: sticky; left: var(--rec_col1); z-index: 84; background: #fff; border-right: 1px solid #e2e8f0; width: var(--rec_col2); max-width: var(--rec_col2); overflow: hidden; text-overflow: ellipsis; }
-  
-  /* Header Sticky Priority */
-  thead th.sticky-left-1 { z-index: 90; background: #d9ead3; }
-  thead th.sticky-left-2 { z-index: 89; background: #d9ead3; }
-
-  /* Total Row Sticky */
+  /* === TOTAL ROW (Sticky Top under Header) === */
   .row-total td { 
-      position: sticky; top: 40px; z-index: 75; 
+      position: sticky; top: 40px; z-index: 50; 
       background: #eff6ff; color: #1e3a8a; font-weight: bold; 
-      border-bottom: 2px solid #bfdbfe; box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+      height: 40px; border-bottom: 2px solid #bfdbfe;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
   }
-  .row-total td.sticky-left-1 { z-index: 88; background: #eff6ff; }
-  .row-total td.sticky-left-2 { z-index: 87; background: #eff6ff; }
 
-  /* Hover Effects */
-  tbody tr:hover td { background-color: #f8fafc; }
+  /* === STICKY COLUMNS LOGIC (Desktop Default) === */
+  /* Kolom 1 (Kode) */
+  .sticky-left-1 { position: sticky; left: 0; z-index: 55; background: #fff; border-right: 1px solid #e2e8f0; width: var(--rec_col1); text-align: center; }
   
-  /* === MODAL STYLES === */
+  /* Kolom 2 (Nama Kantor) */
+  .sticky-left-2 { position: sticky; left: var(--rec_col1); z-index: 54; background: #fff; border-right: 1px solid #e2e8f0; width: var(--rec_col2); max-width: var(--rec_col2); overflow: hidden; text-overflow: ellipsis; }
+
+  /* Override Z-Index Khusus untuk Header & Total agar menumpuk dengan benar */
+  thead th.sticky-left-1 { z-index: 70; background: #d9ead3; }
+  thead th.sticky-left-2 { z-index: 69; background: #d9ead3; }
+  
+  .row-total td.sticky-left-1 { z-index: 59; background: #eff6ff; }
+  .row-total td.sticky-left-2 { z-index: 58; background: #eff6ff; }
+
+  /* Body Data Background (Biar gak tembus pandang) */
+  #recoveryBody td { background-color: #fff; border-bottom: 1px solid #f1f5f9; }
+  #recoveryBody tr:hover td { background-color: #f8fafc; }
+
+  /* === RESPONSIVE FIX (MOBILE) === */
+  @media (max-width: 767px) {
+      /* PERBAIKAN BUG: Nama Kantor "tertutup" */
+      /* Kita reset 'Left' jadi auto, TAPI 'Position' tetap 'Sticky' agar nempel di atas */
+      
+      /* 1. Header Nama Kantor: Tetap Sticky Vertikal */
+      thead th.sticky-left-2 {
+          position: sticky !important; 
+          left: auto !important; /* Lepas kuncian kiri */
+          border-right: none;
+          z-index: 60; 
+      }
+
+      /* 2. Total Row Nama Kantor: Tetap Sticky Vertikal */
+      .row-total td.sticky-left-2 {
+          position: sticky !important;
+          left: auto !important;
+          border-right: none;
+          z-index: 50;
+      }
+
+      /* 3. Body Nama Kantor: Static (Ikut scroll biasa) */
+      #recoveryBody td.sticky-left-2 {
+          position: static !important;
+          border-right: none;
+      }
+      
+      /* Kolom 1 (Kode) Tetap Sticky Kiri & Atas */
+      .sticky-left-1 { border-right: 1px solid #e2e8f0; box-shadow: 1px 0 0 #e2e8f0; }
+
+      /* Lainnya */
+      .btn-icon { width: 40px; }
+      input[type="date"] { font-size: 11px; }
+  }
+  
+  @media (min-width: 768px) {
+      .btn-icon { width: 42px; }
+      .lbl { margin-bottom: 4px; }
+      .inp { font-size: 13px; padding: 0.4rem 0.75rem; }
+  }
+  
+  /* Modal Styles */
   .modal-table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 12px; }
   .modal-table th { position: sticky; top: 0; background: #f1f5f9; z-index: 10; padding: 8px; text-align: left; font-weight: 600; color: #475569; }
   .modal-table td { padding: 8px; border-bottom: 1px solid #e2e8f0; color: #334155; }
-
-  /* === RESPONSIVE === */
-  @media (min-width: 768px) {
-      .btn-icon { width: 42px; }
-      .lbl { font-size: 11px; margin-bottom: 4px; }
-      /* Kembalikan ukuran input normal di desktop */
-      .inp { padding: 0.4rem 0.75rem; }
-  }
-  
-  @media (max-width: 767px) {
-      /* Mobile: Matikan sticky kolom ke-2 (Nama) biar layar lega */
-      .sticky-left-2, thead th.sticky-left-2, .row-total td.sticky-left-2 {
-          position: static !important; border-right: none; width: auto; max-width: none;
-      }
-      /* Geser sticky kolom 1 (Kode) tetap di kiri */
-      .sticky-left-1 { border-right: 1px solid #e2e8f0; }
-      
-      /* Input Date di Mobile fontnya dikecilin dikit biar muat */
-      input[type="date"] { font-size: 11px; }
-  }
 </style>
 
 <div class="max-w-7xl mx-auto px-2 md:px-3 py-3 h-[100dvh] flex flex-col font-sans bg-slate-50">
   
   <div class="flex flex-col md:flex-row md:items-end justify-between gap-3 mb-3 shrink-0">
-    
     <div class="flex items-center justify-between">
       <div>
         <h1 class="text-lg md:text-2xl font-bold flex items-center gap-2 text-slate-800">
@@ -104,20 +130,18 @@
       <div id="loadingMini" class="hidden md:hidden animate-spin h-5 w-5 border-2 border-blue-600 border-t-transparent rounded-full"></div>
     </div>
 
-    <form id="formFilterRecovery" class="grid grid-cols-[1fr_1fr_40px] md:flex md:items-end gap-2 bg-white p-2 rounded-lg border border-slate-200 shadow-sm w-full md:w-auto">
-      
-      <div class="md:w-[130px] min-w-0">
-        <label class="lbl">Closing</label>
+    <form id="formFilterRecovery" class="flex flex-row items-end gap-2 w-full md:w-auto">
+      <div class="flex-1 min-w-0 md:w-[130px] md:flex-none">
+        <label class="lbl hidden md:block">Closing</label>
         <input type="date" id="closing_date_recovery" class="inp" required>
       </div>
-      
-      <div class="md:w-[130px] min-w-0">
-        <label class="lbl">Harian</label>
+      <div class="flex-1 min-w-0 md:w-[130px] md:flex-none">
+        <label class="lbl hidden md:block">Harian</label>
         <input type="date" id="harian_date_recovery" class="inp" required>
       </div>
-
-      <div class="md:w-auto flex items-end">
-        <label class="lbl md:invisible hidden md:block">Act</label> <button type="submit" class="btn-icon" title="Terapkan Filter">
+      <div class="shrink-0 md:w-auto">
+        <label class="lbl hidden md:block opacity-0">Act</label>
+        <button type="submit" class="btn-icon" title="Terapkan Filter">
           <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="7"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
         </button>
       </div>
@@ -125,8 +149,7 @@
   </div>
 
   <div class="flex-1 min-h-0 relative flex flex-col">
-    
-    <div id="loadingRecovery" class="hidden absolute inset-0 bg-white/80 z-[60] flex flex-col items-center justify-center text-blue-600 font-bold backdrop-blur-sm rounded-lg">
+    <div id="loadingRecovery" class="hidden absolute inset-0 bg-white/80 z-[80] flex flex-col items-center justify-center text-blue-600 font-bold backdrop-blur-sm rounded-lg">
        <div class="animate-spin h-8 w-8 border-4 border-blue-200 border-t-blue-600 rounded-full mb-2"></div>
        <span>Memuat Data...</span>
     </div>
@@ -135,8 +158,9 @@
       <table id="tabelRecovery">
         <thead>
           <tr>
-            <th class="sticky-left-1">Kode</th>
+            <th class="sticky-left-1 text-center">Kode</th>
             <th class="sticky-left-2 text-left">NAMA KANTOR</th>
+            
             <th class="text-right">NOA Lunas</th>
             <th class="text-right">Baki Lunas</th>
             <th class="text-right">NOA Backflow</th>
@@ -152,12 +176,10 @@
       </table>
     </div>
   </div>
-
 </div>
 
 <div id="modalDebiturRecovery" class="fixed inset-0 hidden bg-slate-900/60 backdrop-blur-sm items-center justify-center z-[9999] px-2 md:px-4">
   <div id="modalCardREC" class="bg-white rounded-xl shadow-2xl flex flex-col w-full max-w-[1100px] h-[85vh] md:max-h-[85vh] overflow-hidden">
-    
     <div class="flex items-center justify-between p-3 md:p-4 border-b border-slate-100 bg-slate-50 shrink-0">
       <div>
         <h3 class="font-bold text-slate-800 text-base md:text-xl flex items-center gap-2">
@@ -167,10 +189,8 @@
       </div>
       <button id="btnCloseRecovery" class="w-8 h-8 flex items-center justify-center rounded-full bg-slate-200 hover:bg-red-100 hover:text-red-600 transition">✕</button>
     </div>
-
     <div class="flex-1 overflow-auto bg-white relative">
-        <div id="modalBodyRecovery" class="min-w-full inline-block align-middle p-2 md:p-4">
-            </div>
+        <div id="modalBodyRecovery" class="min-w-full inline-block align-middle p-2 md:p-4"></div>
     </div>
   </div>
 </div>
@@ -189,20 +209,16 @@
   let currentFilter = { closing:'', harian:'' };
   let abortCtrl;
 
-  // --- MAIN INIT ---
+  // --- INIT ---
   window.addEventListener('DOMContentLoaded', async () => {
-    // 1. Ambil User Login
     const user = (window.getUser && window.getUser()) || JSON.parse(localStorage.getItem('app_user')) || { kode: '000' };
     window.currentUserKode = String(user.kode || '000').padStart(3, '0');
     
-    // 2. Load Tanggal Default
     const d = await getLastHarianData();
     if(d) {
         document.getElementById('closing_date_recovery').value = d.last_closing;
         document.getElementById('harian_date_recovery').value  = d.last_created;
         currentFilter = { closing:d.last_closing, harian:d.last_created };
-        
-        // 3. Fetch Data Awal
         fetchRecoveryData(d.last_closing, d.last_created);
     }
   });
@@ -211,7 +227,7 @@
     try { const r = await fetch('./api/date/'); const j = await r.json(); return j.data||null; } catch { return null; }
   }
 
-  // --- FILTER HANDLER ---
+  // --- FILTER ---
   document.getElementById('formFilterRecovery').addEventListener('submit', e => {
     e.preventDefault();
     const closing = document.getElementById('closing_date_recovery').value;
@@ -221,13 +237,13 @@
     fetchRecoveryData(closing, harian);
   });
 
-  // --- FETCH DATA ---
+  // --- FETCH ---
   async function fetchRecoveryData(closing_date, harian_date){
     const loading = document.getElementById('loadingRecovery');
     const loadingMini = document.getElementById('loadingMini');
     
     loading.classList.remove('hidden');
-    loadingMini.classList.remove('hidden'); // Munculkan loading mini di mobile header
+    loadingMini.classList.remove('hidden'); 
     
     if(abortCtrl) abortCtrl.abort();
     abortCtrl = new AbortController();
@@ -247,7 +263,6 @@
       const json = await res.json();
       const data = Array.isArray(json.data) ? json.data : [];
 
-      // Pisahkan Baris Total & Data Cabang
       const totalRow = data.find(d => (d.nama_kantor||'').toUpperCase().includes('TOTAL')) || null;
       recoveryDataRaw = data.filter(d => !(d.nama_kantor||'').toUpperCase().includes('TOTAL'));
 
@@ -275,8 +290,8 @@
 
      el.innerHTML = `
         <tr class="row-total">
-            <td class="sticky-left-1"></td>
-            <td class="sticky-left-2 text-center md:text-left text-xs md:text-sm">TOTAL KONSOLIDASI</td>
+            <td class="sticky-left-1 font-mono font-bold text-slate-600 text-xs">TOTAL</td>
+            <td class="sticky-left-2 font-bold text-slate-800 text-xs md:text-sm">KONSOLIDASI</td>
             <td class="text-right">${fmt(tot.noa_lunas)}</td>
             <td class="text-right">${fmt(tot.baki_debet_lunas)}</td>
             <td class="text-right">${fmt(tot.noa_backflow)}</td>
@@ -329,10 +344,9 @@
      }).join('');
   }
 
-  // --- SORTING ---
+  // --- SORT ---
   const doSort = (colKey) => {
     sortState = { column: colKey, direction: sortState.column === colKey ? -sortState.direction : 1 };
-    
     const sorted = [...recoveryDataRaw].sort((a,b) => {
         let valA, valB;
         if(colKey === 'total_noa') {
@@ -344,17 +358,14 @@
         }
         return (valA - valB) * sortState.direction;
     });
-    
     document.getElementById('sortTotalNoa').innerText = `Tot NOA ${colKey==='total_noa' ? (sortState.direction>0?'⬆':'⬇') : '⬍'}`;
     document.getElementById('sortTotalBaki').innerText = `Tot Baki ${colKey==='total_baki' ? (sortState.direction>0?'⬆':'⬇') : '⬍'}`;
-
     renderRows(sorted);
   };
-
   document.getElementById('sortTotalNoa').onclick = () => doSort('total_noa');
   document.getElementById('sortTotalBaki').onclick = () => doSort('total_baki');
 
-  // --- MODAL & AUTH LOGIC ---
+  // --- MODAL ---
   document.getElementById('tabelRecovery').addEventListener('click', e => {
       const link = e.target.closest('a[data-act="view"]');
       if(!link) return;
@@ -363,12 +374,10 @@
       const targetKode = String(link.dataset.kode).padStart(3,'0');
       const userKode   = window.currentUserKode; 
 
-      // 🔐 HAK AKSES CHECK
       if (userKode !== '000' && userKode !== targetKode) {
-          alert(`⛔ AKSES DITOLAK\n\nAnda login sebagai Cabang ${userKode}.\nAnda tidak diizinkan melihat detail Cabang ${targetKode}.`);
+          alert(`⛔ AKSES DITOLAK\n\nAnda login sebagai Unit ${userKode}.\nAnda tidak diizinkan melihat detail Unit ${targetKode}.`);
           return;
       }
-
       openModalDebitur(link.dataset.type, targetKode);
   });
 
@@ -390,12 +399,7 @@
       try {
           const res = await fetch('./api/npl/', {
             method:'POST', headers:{'Content-Type':'application/json'},
-            body: JSON.stringify({ 
-                type: type, 
-                kode_kantor: kode, 
-                closing_date: currentFilter.closing, 
-                harian_date: currentFilter.harian 
-            })
+            body: JSON.stringify({ type, kode_kantor: kode, closing_date: currentFilter.closing, harian_date: currentFilter.harian })
           });
           const json = await res.json();
           const list = Array.isArray(json.data) ? json.data : [];
@@ -419,9 +423,7 @@
                         <th class="text-right">Bunga</th>
                     </tr>
                 </thead>
-                <tbody>
-          `;
-          
+                <tbody>`;
           list.forEach(item => {
               tableHtml += `
                 <tr class="hover:bg-slate-50">
@@ -435,13 +437,10 @@
                     <td class="text-center text-xs">${formatDate(item.tgl_trans)}</td>
                     <td class="text-right text-slate-500 text-xs">${fmt(item.angsuran_pokok)}</td>
                     <td class="text-right text-slate-500 text-xs">${fmt(item.angsuran_bunga)}</td>
-                </tr>
-              `;
+                </tr>`;
           });
-          
           tableHtml += `</tbody></table>`;
           body.innerHTML = tableHtml;
-
       } catch(e) {
           body.innerHTML = `<div class="p-10 text-center text-red-500 text-sm">Gagal mengambil detail.<br><small>${e.message}</small></div>`;
       }
@@ -456,5 +455,4 @@
       if(e.target.id === 'modalDebiturRecovery') closeModal();
   };
   document.addEventListener('keydown', e => { if(e.key === 'Escape') closeModal(); });
-
 </script>

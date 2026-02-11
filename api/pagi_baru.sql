@@ -26,7 +26,7 @@ FROM
 WHERE
 	tabung.no_rekening = tabung_history.no_rekening 
 	AND tabung.nasabah_id = nasabah.nasabah_id 
-	AND tabung_history.tanggal = "20260205"
+	AND tabung_history.tanggal = "20260210"
 	AND tabung_history.saldo_akhir >0
 	AND tabung.kode_produk=212
 
@@ -81,7 +81,7 @@ SELECT
       SELECT MAX(t.tgl_trans)
       FROM kretrans t
       WHERE t.no_rekening = k.no_rekening
-        AND t.tgl_trans <= '20260201'
+        AND t.tgl_trans <= '20251231'
         AND FLOOR(t.my_kode_trans/100) = 3
         AND t.pokok > 0
     )
@@ -98,7 +98,7 @@ SELECT
           SELECT MAX(t2.tgl_trans)
           FROM kretrans t2
           WHERE t2.no_rekening = k.no_rekening
-            AND t2.tgl_trans <= '20260201'
+            AND t2.tgl_trans <= '20251231'
             AND FLOOR(t2.my_kode_trans/100)=3
             AND t2.pokok > 0
         )
@@ -144,7 +144,7 @@ FROM kredit k
 JOIN nasabah n ON n.nasabah_id = k.nasabah_id
 JOIN kredit_history kh
   ON kh.no_rekening = k.no_rekening
- AND kh.tanggal = '20260201'
+ AND kh.tanggal = '20251231'
 LEFT JOIN css_kode_dati kd
   ON kd.kode_provinsi = n.propinsi
  AND kd.kode_dati     = n.kota_kab

@@ -5,11 +5,12 @@
   
   /* Input & Button */
   .inp { 
-      border: 1px solid #cbd5e1; border-radius: 0.5rem; padding: 0.4rem 0.75rem; 
+      border: 1px solid #cbd5e1; border-radius: 0.5rem; padding: 0 0.5rem; 
       font-size: 13px; background: #fff; width: 100%; height: 38px; cursor: pointer; 
+      min-width: 0; /* Penting buat layout flex */
   }
   .inp:disabled { background-color: #f1f5f9; color: #64748b; font-weight: 600; cursor: not-allowed; border-color: #e2e8f0; }
-  .lbl { font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; margin-bottom: 4px; display: block; }
+  .lbl { font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; margin-bottom: 2px; display: block; }
   
   /* === DATEPICKER FIX === */
   input[type="date"] { position: relative; cursor: pointer; }
@@ -19,7 +20,7 @@
       width: 100%; height: 100%; opacity: 0; cursor: pointer;
   }
 
-  .btn-icon { width: 100%; height: 38px; border-radius: 8px; background: var(--primary); color: white; border: none; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; transition: 0.2s; }
+  .btn-icon { width: 100%; height: 38px; border-radius: 8px; background: var(--primary); color: white; border: none; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; transition: 0.2s; flex-shrink: 0; }
   .btn-icon:hover { background: #1d4ed8; }
 
   /* Table Wrapper */
@@ -38,53 +39,73 @@
   /* PENTING: Agar angka tidak turun baris */
   th, td { white-space: nowrap; }
 
-  /* Header Sticky */
-  th { position: sticky; top: 0; z-index: 40; background: #d9ead3; color: #1e293b; font-weight: 700; padding: 10px; border-bottom: 1px solid #cbd5e1; text-transform: uppercase; }
+  /* === HEADER STICKY === */
+  /* Default Sticky Top untuk SEMUA Header */
+  th { 
+      position: sticky; top: 0; z-index: 60; 
+      background: #d9ead3; color: #1e293b; font-weight: 700; 
+      padding: 10px; border-bottom: 1px solid #cbd5e1; 
+      text-transform: uppercase;
+      box-shadow: 0 1px 0 rgba(0,0,0,0.1); 
+  }
   td { padding: 8px 10px; border-bottom: 1px solid #f1f5f9; color: #334155; vertical-align: middle; }
   
-  /* Sticky Kolom Kiri (Kode) */
-  .sticky-col { position: sticky; left: 0; z-index: 45; background: white; border-right: 1px solid #e2e8f0; }
-  th.sticky-col { z-index: 50; background: #d9ead3; }
+  /* === STICKY COLUMNS (DESKTOP) === */
   
-  /* Sticky Kolom Kedua (Nama Kantor) - Default Desktop */
-  .sticky-col-2 { position: sticky; left: 60px; z-index: 45; background: white; border-right: 1px solid #e2e8f0; }
-  th.sticky-col-2 { z-index: 50; background: #d9ead3; }
+  /* Kolom 1: KODE (Selalu Sticky Kiri & Atas) */
+  .sticky-col { position: sticky; left: 0; z-index: 65; background: white; border-right: 1px solid #e2e8f0; }
+  th.sticky-col { z-index: 70; background: #d9ead3; }
+  
+  /* Kolom 2: NAMA KANTOR (Sticky Kiri & Atas di Desktop) */
+  .sticky-col-2 { position: sticky; left: 60px; z-index: 64; background: white; border-right: 1px solid #e2e8f0; }
+  th.sticky-col-2 { z-index: 69; background: #d9ead3; }
 
-  /* === FOOTER STICKY (Nempel Bawah) === */
-  tfoot { position: sticky; bottom: 0; z-index: 60; }
-  
+  /* === FOOTER STICKY === */
+  tfoot { position: sticky; bottom: 0; z-index: 70; }
   tfoot td { 
-      background: #eff6ff; 
-      font-weight: 700; 
-      border-top: 2px solid #bfdbfe; 
-      color: #1e3a8a;
-      box-shadow: 0 -4px 6px -1px rgba(0,0,0,0.1); 
+      background: #eff6ff; font-weight: 700; border-top: 2px solid #bfdbfe; 
+      color: #1e3a8a; box-shadow: 0 -4px 6px -1px rgba(0,0,0,0.1); 
       padding-top: 12px; padding-bottom: 12px;
   }
-  
   /* Merged Cell Sticky Kiri */
   tfoot td.merged-total {
-      position: sticky; left: 0; z-index: 65;
+      position: sticky; left: 0; z-index: 75;
       text-align: center; border-right: 1px solid #bfdbfe; background: #eff6ff; 
   }
 
   tr:hover td { background-color: #f8fafc; }
   .hidden { display: none !important; }
 
-  /* === RESPONSIVE MEDIA QUERIES === */
+  /* === RESPONSIVE FIX (MOBILE) === */
   @media (min-width: 768px) {
-    .btn-icon { width: 38px; } /* Balikin ukuran tombol di desktop */
+    .btn-icon { width: 38px; }
+    .lbl { margin-bottom: 4px; }
   }
 
   @media (max-width: 767px) {
-    /* Di HP, kolom Nama Kantor JANGAN sticky biar lega */
-    .sticky-col-2, th.sticky-col-2 { position: static; border-right: none; }
+    /* --- FIX UTAMA BUG HEADER TERTUTUP --- */
     
-    /* Font size tabel agak gede dikit di HP */
+    /* 1. Header (TH) Nama Kantor: Tetap Sticky ke ATAS, tapi lepas KIRI */
+    th.sticky-col-2 { 
+        position: sticky !important; /* Tetap Sticky */
+        top: 0 !important;           /* Tetap Nempel Atas */
+        left: auto !important;       /* Lepas Kiri */
+        border-right: none !important;
+        z-index: 60 !important;      /* Di atas body */
+    }
+
+    /* 2. Body (TD) Nama Kantor: Jadi Biasa (Static) */
+    td.sticky-col-2 { 
+        position: static !important; 
+        border-right: none !important; 
+        z-index: auto !important;
+    }
+    
+    /* Font size & Input adjustments */
     table { font-size: 11px; }
+    input[type="date"] { font-size: 11px; }
   }
 </style>
-
 
 <div class="max-w-7xl mx-auto px-2 md:px-4 py-4 h-[calc(100vh-80px)] md:h-[calc(100vh-120px)] flex flex-col">
   
@@ -97,20 +118,21 @@
       <p class="text-xs text-slate-500 mt-1 ml-1">*Data Posisi Harian (NOA & Baki Debet)</p>
     </div>
 
-    <form id="formFilterKolek" class="grid grid-cols-6 md:flex md:items-end gap-2 bg-white p-2 rounded-lg border border-slate-200 shadow-sm w-full md:w-auto">
+    <form id="formFilterKolek" class="flex flex-row items-end gap-2 w-full md:w-auto">
       
-      <div class="col-span-6 md:w-[180px]">
-        <label class="lbl">Kantor</label>
+      <div class="flex-1 min-w-0 md:w-[180px] md:flex-none">
+        <label class="lbl hidden md:block">Kantor</label>
         <select id="opt_kantor_kolek" class="inp"><option value="">Memuat...</option></select>
       </div>
       
-      <div class="col-span-5 md:w-[130px]">
-        <label class="lbl">Tanggal</label>
+      <div class="flex-1 min-w-0 md:w-[130px] md:flex-none">
+        <label class="lbl hidden md:block">Tanggal</label>
         <input type="date" id="harian_date_kolek" class="inp" required>
       </div>
       
-      <div class="col-span-1 md:w-auto">
-        <label class="lbl md:invisible">.</label> <button type="submit" class="btn-icon" title="Cari Data">
+      <div class="shrink-0 md:w-auto">
+        <label class="lbl hidden md:block opacity-0">Act</label> 
+        <button type="submit" class="btn-icon w-[40px] md:w-[38px]" title="Cari Data">
             <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="7"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
         </button>
       </div>
@@ -128,6 +150,7 @@
         <thead>
           <tr>
             <th class="sticky-col text-center w-[60px]">Kode</th>
+            
             <th class="sticky-col-2 text-left min-w-[180px]" id="thNamaKolek">NAMA KANTOR</th>
             
             <th class="text-right min-w-[100px]">Lancar (L)</th>
@@ -170,7 +193,7 @@
     const user = (window.getUser && window.getUser()) || null;
     const uKode = (user?.kode ? String(user.kode).padStart(3,'0') : null);
       
-      // 1. Load Dropdown (Logic User)
+      // 1. Load Dropdown
       await populateKantorKolek(uKode);
 
       // 2. Load Date
@@ -181,7 +204,7 @@
           document.getElementById('harian_date_kolek').value = new Date().toISOString().split('T')[0];
       }
 
-      // 3. Fetch Initial Data
+      // 3. Fetch Data
       fetchKolektibilitas();
   });
 
@@ -189,19 +212,17 @@
     try { const r = await apiCall(API_DATE); const j = await r.json(); return j.data || null; } catch{ return null; }
   }
 
-  // --- POPULATE DROPDOWN (BY USER) ---
+  // --- POPULATE DROPDOWN ---
   async function populateKantorKolek(userKode){
     const optKantor = document.getElementById('opt_kantor_kolek');
 
-    // JIKA USER CABANG (001, dll) -> LOCK
     if(userKode !== '000' && userKode){
         optKantor.innerHTML = `<option value="${userKode}">CABANG ${userKode}</option>`;
         optKantor.value = userKode;
-        optKantor.disabled = true; // Kunci
+        optKantor.disabled = true;
         return; 
     }
 
-    // JIKA USER PUSAT (000) -> OPEN
     try {
         const res = await apiCall(API_KODE, { 
             method:'POST', 
@@ -260,7 +281,6 @@
 
           let html = '';
           rows.forEach(r => {
-              // Note: Class sticky-col-2 ditambahkan di kolom kedua
               html += `
                 <tr class="hover:bg-blue-50 transition border-b group">
                     <td class="sticky-col text-center font-mono font-bold text-slate-500 bg-white group-hover:bg-blue-50">${r.kode_unit}</td>
@@ -286,9 +306,7 @@
           tbody.innerHTML = html;
 
           if(gt) {
-              // Cek mobile untuk colspan footer
               const isMobile = window.innerWidth < 768;
-              
               tfoot.innerHTML = `
                 <tr>
                     <td class="merged-total text-center uppercase tracking-wide bg-blue-100 text-blue-900" colspan="${isMobile ? 2 : 1}">TOTAL</td>
