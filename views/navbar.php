@@ -93,7 +93,7 @@
           <div id="dropdownPenagihan" class="dropdown-panel">
             <ul class="nb-list">
               <!-- <li><a href="maping_bucket" class="nb-item nb-tap">Maping Backet</a></li> -->
-              <li><a href="actual_kredit" class="nb-item nb-tap">Actual Kredit</a></li>
+              <li><a href="actual_kredit" class="nb-item nb-tap">Bucket DPD and Kolek</a></li>
               <li><a href="migrasi_bucket" class="nb-item nb-tap">Migrasi Bucket</a></li>
               <li><a href="search_debitur" class="nb-item nb-tap">Seach Debitur Kredit</a></li>
               <!-- <li><a href="monitoring_ao" class="nb-item nb-tap">Monitoring Ao Remedial</a></li> -->
