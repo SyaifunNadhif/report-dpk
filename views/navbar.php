@@ -53,11 +53,11 @@
           </button>
           <div id="dropdownNPL" class="dropdown-panel">
             <ul class="nb-list">
-              <li><a href="npl" class="nb-item nb-tap">NPL Konsolidasi</a></li>
+              <li><a href="npl" class="nb-item nb-tap">NPL</a></li>
               <li><a href="perbandingan_npl" class="nb-item nb-tap">Perbandingan NPL</a></li>
               <li><a href="recovery_npl" class="nb-item nb-tap">Recovery NPL</a></li>
               <li><a href="flow_par" class="nb-item nb-tap">Flow Par</a></li>
-              <li><a href="flow_50_besar" class="nb-item nb-tap">50 Besar Flow Par</a></li>
+              <!-- <li><a href="flow_50_besar" class="nb-item nb-tap">50 Besar Flow Par</a></li> -->
               <li><a href="npl_25_besar" class="nb-item nb-tap">25 NPL Besar</a></li>
               <li><a href="potensi_npl" class="nb-item nb-tap">Potensi NPL</a></li>
             </ul>
@@ -75,8 +75,9 @@
           <div id="dropdownPH" class="dropdown-panel">
             <ul class="nb-list">
               <li><a href="recovery_ph" class="nb-item nb-tap">Recovery PH</a></li>
-              <li><a href="bucket_saldo_ph" class="nb-item nb-tap">Saldo PH (Bucket)</a></li>
-              <li><a href="ph_lgd" class="nb-item nb-tap">Debitur PH LGD</a></li>
+              <!-- <li><a href="bucket_saldo_ph" class="nb-item nb-tap">Saldo PH (Bucket)</a></li>
+              <li><a href="ph_lgd" class="nb-item nb-tap">Rekap Recovery (PH LGD)</a></li> -->
+              <li><a href="lgd" class="nb-item nb-tap">Rekap Recovery (PH LGD)</a></li>
             </ul>
           </div>
         </li>
@@ -92,10 +93,10 @@
           <div id="dropdownPenagihan" class="dropdown-panel">
             <ul class="nb-list">
               <!-- <li><a href="maping_bucket" class="nb-item nb-tap">Maping Backet</a></li> -->
+              <li><a href="actual_kredit" class="nb-item nb-tap">Actual Kredit</a></li>
               <li><a href="migrasi_bucket" class="nb-item nb-tap">Migrasi Bucket</a></li>
               <li><a href="search_debitur" class="nb-item nb-tap">Seach Debitur Kredit</a></li>
-              <li><a href="monitoring_ao" class="nb-item nb-tap">Monitoring Ao Remedial</a></li>
-              <li><a href="actual_kredit" class="nb-item nb-tap">Actual Kredit</a></li>
+              <!-- <li><a href="monitoring_ao" class="nb-item nb-tap">Monitoring Ao Remedial</a></li> -->
             </ul>
           </div>
         </li>
@@ -148,13 +149,13 @@
           </button>
           <div id="dropdownProfileMobile" class="dropdown-panel">
             <ul class="nb-list">
-              <li>
+              <!-- <li>
                 <a href="account_handle" class="nb-item nb-tap flex-col items-start">
                   <span class="text-xs text-slate-500">Account handle</span>
                   <span id="accHandleMobile" class="text-sm font-semibold text-slate-800 underline decoration-dotted">—</span>
                 </a>
               </li>
-              <li><a href="#" id="linkHistoryMobile" class="nb-item nb-tap">History Kunjungan</a></li>
+              <li><a href="#" id="linkHistoryMobile" class="nb-item nb-tap">History Kunjungan</a></li> -->
               <li><a href="#" id="linkLogoutMobile" class="nb-item nb-tap">Logout</a></li>
             </ul>
           </div>
@@ -163,12 +164,12 @@
 
       <!-- DESKTOP-ONLY: Profile dropdown -->
       <div id="dropdownProfile" class="dropdown-panel dropdown-profile" role="menu" aria-labelledby="dropdownProfileButton">
-        <a href="account_handle" class="block px-4 py-3 hover:bg-slate-50 nb-tap">
+        <!-- <a href="account_handle" class="block px-4 py-3 hover:bg-slate-50 nb-tap">
           <div class="text-xs text-slate-500">Account handle</div>
           <div id="accHandle" class="text-sm font-semibold text-slate-800 underline decoration-dotted">—</div>
         </a>
         <a href="#" id="linkHistoryDesk" class="block px-4 py-2 hover:bg-slate-50 text-sm text-slate-700 nb-tap">History Kunjungan</a>
-        <hr class="my-1">
+        <hr class="my-1"> -->
         <ul class="py-1 text-sm text-slate-700">
           <li><a href="#" id="linkLogoutDesk" class="block px-4 py-2 hover:bg-slate-50 nb-tap">Logout</a></li>
         </ul>

@@ -25,7 +25,11 @@ switch ($method) {
         } elseif($input['type'] === 'detail debitur bucket'){
             $controller->getDetailPHByBucket($input);
         } elseif($input['type'] === 'detail debitur ph lgd'){
-            $controller->getListPHLGD($input);
+            $controller->getRekapLGD($input);
+        } elseif($input['type'] === 'get lgd'){
+            $controller->getRekapLGD($input);
+        } elseif($input['type'] === 'detail lgd blm lunas'){
+            $controller->getDetailLGD($input);
         } elseif ($input['type'] === 'debitur') {
             if (!isset($input['kode_kantor'])) {
                 sendResponse(400, "Parameter 'kode_kantor' wajib untuk type 'debitur'");

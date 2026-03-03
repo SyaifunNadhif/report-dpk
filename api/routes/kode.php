@@ -22,6 +22,8 @@ switch ($method) {
             $controller->getKodeKantor($input);
         }elseif ($input['type'] == 'kode_ao_kredit') { // Tambahkan kondisi ini
             $controller->getKodeAOKredit($input);
+        }elseif ($input['type'] == 'kode_kankas') { // Tambahkan kondisi ini
+            $controller->getKodeKankas($input);
 
         } else {
             sendResponse(400, "Type tidak dikenali");

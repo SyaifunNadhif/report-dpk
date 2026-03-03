@@ -33,7 +33,7 @@ switch ($method) {
         } elseif ($input['type'] === '25 NPL Terbesar') {
             $controller->getTop25NplPerCabang($input);
         } elseif ($input['type'] === 'Potensi NPL') {
-            $controller->getPotensiNpl($input);
+            $controller->getPotensiNplRekap($input);
         } elseif ($input['type'] === 'Debitur Potensi NPL') {
             $controller->getDetailPotensiNpl($input);
         } elseif ($input['type'] === 'Backet') {

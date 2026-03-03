@@ -61,4 +61,31 @@ class KodeController {
         }
     }
 
+    // --- KODE KANKAS (BARU: UNTUK DROPDOWN MODAL) ---
+    public function getKodeKankas($input = [])
+    {
+        $kode_kantor = $input['kode_kantor'] ?? null;
+
+        $sql = "SELECT kode_group1, deskripsi_group1 FROM kankas WHERE 1=1";
+
+        if (!empty($kode_kantor) && $kode_kantor !== '000') {
+            $sql .= " AND kode_kantor = :kc";
+        }
+
+        $sql .= " ORDER BY kode_group1 ASC";
+
+        try {
+            $stmt = $this->pdo->prepare($sql);
+            if (!empty($kode_kantor) && $kode_kantor !== '000') {
+                $stmt->bindValue(':kc', $kode_kantor);
+            }
+            $stmt->execute();
+            $data = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+            sendResponse(200, "Berhasil ambil daftar kankas", $data);
+        } catch (PDOException $e) {
+            sendResponse(500, "Database Error: " . $e->getMessage());
+        }
+    }
+
 }

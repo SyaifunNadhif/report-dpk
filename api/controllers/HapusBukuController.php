@@ -132,6 +132,140 @@ class HapusBukuController {
         sendResponse(200, "Daftar debitur berdasarkan kode kantor $kode_kantor", $data);
     }
 
+    public function getRekapLGD($input = []) {
+        $end_history = isset($input['end_date']) ? $input['end_date'] : date('Y-m-d');
+
+        $sql = "
+            SELECT 
+                res.*,
+                -- RR Max 100%
+                ROUND((res.total_recovery_npv / NULLIF(res.total_balance_ph, 0)) * 100, 2) AS persen_rr,
+                -- LGD Min 0%
+                GREATEST(0, ROUND(100 - ((res.total_recovery_npv / NULLIF(res.total_balance_ph, 0)) * 100), 2)) AS persen_lgd
+            FROM (
+                SELECT 
+                    kk.kode_kantor,
+                    kk.nama_kantor,
+                    COUNT(m.no_rekening) AS noa,
+                    SUM(m.balance_hapus_buku) AS total_balance_ph,
+                    -- Gunakan LEAST agar nominal recovery tidak melebihi balance nasabah (proteksi salah input)
+                    SUM(LEAST(COALESCE(rec.total_pokok_nominal, 0), m.balance_hapus_buku)) AS total_recovery_nominal,
+                    SUM(LEAST(COALESCE(rec.total_npv, 0), m.balance_hapus_buku)) AS total_recovery_npv,
+                    SUM(m.balance_hapus_buku) - SUM(LEAST(COALESCE(rec.total_pokok_nominal, 0), m.balance_hapus_buku)) AS sisa_saldo_nominal
+                FROM kode_kantor kk
+                LEFT JOIN tabel_lgd m ON kk.kode_kantor = m.kode_kantor
+                LEFT JOIN (
+                    SELECT 
+                        no_rekening, 
+                        SUM(pokok) AS total_pokok_nominal,
+                        SUM(pokok / POW(1 + ( (SELECT suku_bunga_efektif FROM tabel_lgd WHERE no_rekening = transaksi_ph.no_rekening) / 100 ), 
+                            YEAR(tanggal_transaksi) - (SELECT tahun_ph FROM tabel_lgd WHERE no_rekening = transaksi_ph.no_rekening)
+                        )) AS total_npv
+                    FROM transaksi_ph
+                    WHERE tanggal_transaksi <= :end_h1
+                    GROUP BY no_rekening
+                ) rec ON m.no_rekening = rec.no_rekening
+                WHERE kk.kode_kantor NOT IN ('000')
+                GROUP BY kk.kode_kantor, kk.nama_kantor
+                
+                UNION ALL
+                
+                SELECT 
+                    'TOTAL' AS kode_kantor,
+                    'KONSOLIDASI' AS nama_kantor,
+                    COUNT(m.no_rekening) AS noa,
+                    SUM(m.balance_hapus_buku) AS total_balance_ph,
+                    SUM(LEAST(COALESCE(rec.total_pokok_nominal, 0), m.balance_hapus_buku)) AS total_recovery_nominal,
+                    SUM(LEAST(COALESCE(rec.total_npv, 0), m.balance_hapus_buku)) AS total_recovery_npv,
+                    SUM(m.balance_hapus_buku) - SUM(LEAST(COALESCE(rec.total_pokok_nominal, 0), m.balance_hapus_buku)) AS sisa_saldo_nominal
+                FROM tabel_lgd m
+                LEFT JOIN (
+                    SELECT 
+                        no_rekening, 
+                        SUM(pokok) AS total_pokok_nominal,
+                        SUM(pokok / POW(1 + ( (SELECT suku_bunga_efektif FROM tabel_lgd WHERE no_rekening = transaksi_ph.no_rekening) / 100 ), 
+                            YEAR(tanggal_transaksi) - (SELECT tahun_ph FROM tabel_lgd WHERE no_rekening = transaksi_ph.no_rekening)
+                        )) AS total_npv
+                    FROM transaksi_ph
+                    WHERE tanggal_transaksi <= :end_h2
+                    GROUP BY no_rekening
+                ) rec ON m.no_rekening = rec.no_rekening
+            ) AS res
+            ORDER BY CASE WHEN kode_kantor = 'TOTAL' THEN 1 ELSE 0 END, kode_kantor ASC
+        ";
+
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->bindValue(':end_h1', $end_history);
+        $stmt->bindValue(':end_h2', $end_history);
+        $stmt->execute();
+        sendResponse(200, "Rekap LGD (Validated Max 100%) Posisi $end_history", $stmt->fetchAll(PDO::FETCH_ASSOC));
+    }
+
+    public function getDetailLGD($input) {
+       $end_history = isset($input['end_date']) ? $input['end_date'] : date('Y-m-d');
+        $kode_kantor = isset($input['kode_kantor']) ? str_pad($input['kode_kantor'], 3, '0', STR_PAD_LEFT) : null;
+        
+        // Range monitoring bulanan berdasarkan end_date
+        $start_berjalan = date('Y-m-01', strtotime($end_history));
+        $start_lalu     = date('Y-m-01', strtotime($end_history . ' -1 month'));
+        $end_lalu       = date('Y-m-t', strtotime($end_history . ' -1 month'));
+
+        $sql = "
+            SELECT 
+                m.kode_kantor,
+                m.no_rekening,
+                m.nama_nasabah,
+                m.balance_hapus_buku,
+                m.tahun_ph,
+                m.suku_bunga_efektif,
+                COALESCE(rec.total_pokok_nominal, 0) AS total_recovery_nominal,
+                COALESCE(rec.total_npv, 0) AS jumlah_recovery_npv,
+                ROUND((COALESCE(rec.total_npv, 0) / m.balance_hapus_buku) * 100, 2) AS recovery_rate_npv,
+                ROUND(100 - ((COALESCE(rec.total_npv, 0) / m.balance_hapus_buku) * 100), 2) AS lgd_persen,
+                (m.balance_hapus_buku - COALESCE(rec.total_pokok_nominal, 0)) AS sisa_saldo_nominal,
+                COALESCE(rec.pokok_bulan_lalu, 0) AS pokok_bulan_lalu,
+                COALESCE(rec.pokok_bulan_berjalan, 0) AS pokok_bulan_berjalan
+            FROM 
+                tabel_lgd m
+            LEFT JOIN (
+                SELECT 
+                    no_rekening, 
+                    SUM(CASE WHEN tanggal_transaksi <= :end_h1 THEN pokok ELSE 0 END) AS total_pokok_nominal,
+                    -- Hitung NPV Murni Pokok
+                    SUM(CASE WHEN tanggal_transaksi <= :end_h2 THEN 
+                        (pokok / POW(1 + ( (SELECT suku_bunga_efektif FROM tabel_lgd WHERE no_rekening = transaksi_ph.no_rekening) / 100 ), 
+                            YEAR(tanggal_transaksi) - (SELECT tahun_ph FROM tabel_lgd WHERE no_rekening = transaksi_ph.no_rekening)
+                        )) 
+                    ELSE 0 END) AS total_npv,
+                    SUM(CASE WHEN tanggal_transaksi BETWEEN :s_lalu AND :e_lalu THEN pokok ELSE 0 END) AS pokok_bulan_lalu,
+                    SUM(CASE WHEN tanggal_transaksi BETWEEN :s_berjalan AND :e_berjalan THEN pokok ELSE 0 END) AS pokok_bulan_berjalan
+                FROM transaksi_ph
+                WHERE tanggal_transaksi <= :end_h3
+                GROUP BY no_rekening
+            ) rec ON m.no_rekening = rec.no_rekening
+            WHERE 1=1
+        ";
+
+        if ($kode_kantor) { $sql .= " AND m.kode_kantor = :kode_kantor"; }
+
+        $sql .= " HAVING sisa_saldo_nominal > 0";
+        $sql .= " ORDER BY pokok_bulan_berjalan ASC, pokok_bulan_lalu ASC, sisa_saldo_nominal DESC";
+
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->bindValue(':end_h1', $end_history);
+        $stmt->bindValue(':end_h2', $end_history);
+        $stmt->bindValue(':end_h3', $end_history);
+        $stmt->bindValue(':s_lalu', $start_lalu);
+        $stmt->bindValue(':e_lalu', $end_lalu);
+        $stmt->bindValue(':s_berjalan', $start_berjalan);
+        $stmt->bindValue(':e_berjalan', $end_history); // Berjalan s/d tanggal history
+        if ($kode_kantor) { $stmt->bindValue(':kode_kantor', $kode_kantor); }
+        
+        $stmt->execute();
+        $data = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        sendResponse(200, "Detail LGD Belum Lunas Posisi $end_history", $data);
+    }
+
     public function getRekapSaldoPH($input = []) {
         // Ambil parameter created (opsional)
         $created = $input['created'] ?? null;

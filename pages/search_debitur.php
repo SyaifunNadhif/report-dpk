@@ -1,620 +1,337 @@
-<!-- search_debitur_kredit.php (modified) -->
-<div class="max-w-7xl mx-auto px-4 py-6 h-screen flex flex-col">
-  <div class="flex items-center justify-between mb-2">
-    <h1 class="text-2xl font-bold flex items-center gap-2">
-      <span>🔎</span><span>Search Debitur Kredit</span>
-    </h1>
-  </div>
-
-  <div class="toolbar-compact mb-3">
-    <div id="summaryBar" class="bar-left text-gray-700">
-      <span class="pill pill-compact">NOA: <b id="sumNoa">0</b></span>
-      <span class="pill pill-compact">BD (ACT): <b id="sumBD">0</b></span>
-      <span class="pill pill-compact">CKPN ACT: <b id="sumCK">0</b></span>
+<div class="max-w-full mx-auto px-4 py-5 h-[calc(100vh-80px)] flex flex-col bg-slate-50 font-sans" id="SD_root">
+  
+  <div class="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-4 shrink-0">
+    <div>
+      <h1 class="text-xl md:text-2xl font-bold flex items-center gap-2 text-slate-800">
+        <span class="bg-blue-600 text-white p-1.5 rounded-lg shadow-sm text-sm">🔎</span>
+        <span>Search Debitur Kredit</span>
+      </h1>
+      
+      <div class="flex items-center gap-3 mt-3">
+        <div class="px-3 py-1.5 bg-blue-50 border border-blue-200 rounded-lg shadow-sm flex items-center gap-2">
+            <span class="text-[10px] font-bold text-blue-600 uppercase tracking-wider">NOA:</span>
+            <span class="text-sm font-bold text-blue-900" id="SD_sumNoa">0</span>
+        </div>
+        <div class="px-3 py-1.5 bg-emerald-50 border border-emerald-200 rounded-lg shadow-sm flex items-center gap-2">
+            <span class="text-[10px] font-bold text-emerald-600 uppercase tracking-wider">BD (ACT):</span>
+            <span class="text-sm font-bold text-emerald-900" id="SD_sumBd">0</span>
+        </div>
+      </div>
     </div>
 
-    <form id="formFilterSearch" class="bar-right" autocomplete="off">
-      <div class="fld">
-        <label for="kode_kantor" class="lbl">Kantor:</label>
-        <select id="kode_kantor" class="f-inp min-w-[200px] mobile-kode"><option>Memuat...</option></select>
-      </div>
-
-      <div class="fld">
-        <label class="lbl" for="kolekFilter">Kolek:</label>
-        <select id="kolekFilter" class="f-inp">
+    <form id="SD_formFilter" class="bg-white p-3 rounded-xl border border-slate-200 shadow-sm flex flex-wrap items-end gap-3 shrink-0">
+      <div class="field flex flex-col gap-1">
+        <label class="text-[10px] font-bold text-slate-500 uppercase tracking-wider ml-1">Kantor</label>
+        <select id="SD_optKantor" class="inp min-w-[150px]">
           <option value="">Semua</option>
+        </select>
+      </div>
+      <div class="field flex flex-col gap-1">
+        <label class="text-[10px] font-bold text-slate-500 uppercase tracking-wider ml-1">Kolek</label>
+        <select id="SD_optKolek" class="inp min-w-[90px]">
+          <option value="Semua">Semua</option>
           <option value="L">L</option>
           <option value="DP">DP</option>
           <option value="KL">KL</option>
           <option value="D">D</option>
           <option value="M">M</option>
-          <option value="LUNAS">Lunas</option>
         </select>
       </div>
-
-      <div class="fld fld-hidden"><label class="lbl" for="closing_date">Closing:</label><input type="date" id="closing_date" class="f-inp"></div>
-      <div class="fld fld-hidden"><label class="lbl" for="harian_date">Harian:</label><input type="date" id="harian_date" class="f-inp"></div>
-
-      <div class="fld">
-        <label class="lbl" for="q">Cari:</label>
-        <input id="q" class="f-inp w-[240px] short-mobile" placeholder="No Rek / Nama / AO / Key Name">
+      <div class="field flex flex-col gap-1">
+        <label class="text-[10px] font-bold text-slate-500 uppercase tracking-wider ml-1">Cari</label>
+        <input type="text" id="SD_search" placeholder="No Rek / Nama" class="inp w-[160px]">
       </div>
-
-      <!-- Perbaikan: totung jadi number, sejajar, placeholder, ringan styling -->
-      <div class="fld">
-        <label class="lbl" for="totung">Totung:</label>
-        <input id="totung" class="f-inp w-[160px]" type="number" min="0" inputmode="numeric" placeholder="kosong = null">
+      <div class="field flex flex-col gap-1">
+        <label class="text-[10px] font-bold text-slate-500 uppercase tracking-wider ml-1">Totung</label>
+        <input type="number" id="SD_totung" placeholder="kosong = > 0" class="inp w-[130px]">
+      </div>
+      
+      <div class="flex items-center gap-2 mt-auto">
+        <button type="submit" class="btn-icon h-9 px-4 bg-blue-600 hover:bg-blue-700 text-white rounded-lg shadow-sm transition flex items-center gap-2 font-bold text-xs uppercase tracking-wide">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+          Cari
+        </button>
+        <button type="button" onclick="SD_exportExcelAll()" class="btn-icon h-9 px-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg shadow-sm transition flex items-center gap-2" title="Download Semua Data">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+        </button>
       </div>
     </form>
   </div>
 
-  <div id="loadingBar" class="hidden flex items-center gap-2 text-sm text-gray-600 mb-2">
-    <svg class="animate-spin h-5 w-5 text-blue-600" viewBox="0 0 24 24">
-      <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-      <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
-    </svg>
-    <span>Mencari data debitur...</span>
-  </div>
+  <div class="flex-1 min-h-0 relative flex flex-col bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
+    
+    <div id="SD_loading" class="hidden absolute inset-0 bg-white/80 z-50 flex flex-col items-center justify-center text-blue-600 backdrop-blur-sm">
+       <div class="animate-spin h-10 w-10 border-4 border-blue-200 border-t-blue-600 rounded-full mb-3"></div>
+       <span class="text-xs font-bold tracking-widest uppercase">Mencari Data...</span>
+    </div>
 
-  <div id="wrapTable" class="flex-1 min-h-0 overflow-hidden rounded border border-gray-200 bg-white">
-    <div class="h-full overflow-auto">
-      <table id="tabelSearch" class="min-w-full text-left text-gray-700">
-        <thead>
-          <tr id="headRow" class="uppercase">
-            <th class="px-3 py-2 th freeze-1 col-debitur" data-sort="nama_nasabah">NAMA DEBITUR</th>
-            <th class="px-3 py-2 th freeze-2 col-norek"   data-sort="no_rekening">NO REKENING</th>
-            <th class="px-3 py-2 th col-ao"               data-sort="ao_remedial">AO Remedial</th>
-            <th class="px-3 py-2 th col-plan"             data-sort="plan_bucket">Plan Bucket</th>
-            <th class="px-3 py-2 th col-prod text-center" data-sort="product_code">Kode Prod</th>
-            <th class="px-3 py-2 th col-bucketM1"         data-sort="bucket">Bucket M-1</th>
-            <th class="px-3 py-2 th col-bucket"           data-sort="bucket_update">Bucket (Act)</th>
-            <th class="px-3 py-2 th col-kolek"            data-sort="kolek_update">Kolek</th>
-
-            <!-- ADDED/REORDERED: hm, hmp, hmb, totung, saldo_tabungan -->
-            <th class="px-3 py-2 th text-right col-num"   data-sort="hari_menunggak">DPD</th> <!-- hm -->
-            <th class="px-3 py-2 th text-right col-num"   data-sort="hari_menunggak_pokok">HMP</th> <!-- hmp -->
-            <th class="px-3 py-2 th text-right col-num"   data-sort="hari_menunggak_bunga">HMB</th> <!-- hmb -->
-            <th class="px-3 py-2 th text-right col-amt"   data-sort="totung">TOTUNG</th> <!-- totung -->
-            <th class="px-3 py-2 th text-right col-amt"   data-sort="saldo_tabungan">SALDO TAB</th> <!-- saldo_tabungan -->
-
-            <th class="px-3 py-2 th text-right col-amt"   data-sort="saldo_bank">OSC (Bank)</th>
-            <th class="px-3 py-2 th text-right col-amt"   data-sort="baki_debet_update">BD (ACT)</th>
-            <th class="px-3 py-2 th text-right col-num"   data-sort="pd_percent">PD%</th>
-            <th class="px-3 py-2 th text-right col-amt"   data-sort="ckpn_m1">CKPN M-1</th>
-            <th class="px-3 py-2 th text-right col-amt"   data-sort="ckpn_actual">CKPN ACT</th>
-            <th class="px-3 py-2 th text-right col-amt"   data-sort="inc_ckpn">Δ CKPN</th>
-            <th class="px-3 py-2 th text-right col-amt"   data-sort="angsuran_pokok">ANGS POKOK</th>
-            <th class="px-3 py-2 th text-right col-amt"   data-sort="angsuran_bunga">ANGS BUNGA</th>
-            <th class="px-3 py-2 th col-date"             data-sort="tgl_trans_last_angsuran">TGL ANGS</th>
+    <div class="flex-1 overflow-auto relative">
+      <table id="SD_table" class="min-w-full text-left text-xs table-fixed">
+        <thead class="bg-slate-100 text-slate-600 uppercase text-[10px] tracking-wider sticky top-0 z-10 shadow-sm">
+          <tr>
+            <th class="px-4 py-3 border-b border-r border-slate-200 w-48">Nama Debitur</th>
+            <th class="px-4 py-3 border-b border-r border-slate-200 w-32 text-center">No Rekening</th>
+            <th class="px-4 py-3 border-b border-r border-slate-200 w-24 text-center">Produk</th>
+            <th class="px-4 py-3 border-b border-r border-slate-200 w-24 text-center">Plan Bucket</th>
+            <th class="px-4 py-3 border-b border-r border-slate-200 w-24 text-center">Bucket Act</th>
+            <th class="px-4 py-3 border-b border-r border-slate-200 w-16 text-center">Kolek</th>
+            <th class="px-4 py-3 border-b border-r border-slate-200 w-16 text-center">DPD</th>
+            <th class="px-4 py-3 border-b border-r border-slate-200 w-16 text-center">HMP</th>
+            <th class="px-4 py-3 border-b border-r border-slate-200 w-16 text-center">HMB</th>
+            <th class="px-4 py-3 border-b border-r border-slate-200 w-24 text-center">Jatuh Tempo</th>
+            <th class="px-4 py-3 border-b border-r border-slate-200 w-32 text-right bg-emerald-50">Baki Debet</th>
+            <th class="px-4 py-3 border-b border-r border-slate-200 w-28 text-right bg-red-50">Totung</th>
+            <th class="px-4 py-3 border-b border-slate-200 w-32 text-right">Saldo Tabungan</th>
           </tr>
         </thead>
-        <!-- ADJUSTED: colspan values to 22 (dari sebelumnya 18) -->
-        <tbody id="bodyTotal"></tbody>
-        <tbody id="bodyRows"></tbody>
+        <tbody id="SD_tbody" class="text-slate-700 divide-y divide-slate-100">
+          <tr><td colspan="13" class="px-4 py-12 text-center text-slate-400">Silakan masukkan filter dan klik Cari.</td></tr>
+        </tbody>
       </table>
     </div>
+
+    <div class="bg-slate-50 border-t border-slate-200 p-3 flex items-center justify-between shrink-0">
+        <span class="text-xs text-slate-500 font-medium" id="SD_pageInfo">Menampilkan 0 data</span>
+        <div class="flex items-center gap-2">
+            <button onclick="SD_changePage(-1)" id="SD_btnPrev" class="px-3 py-1.5 bg-white border border-slate-300 rounded hover:bg-slate-100 text-slate-600 disabled:opacity-50 disabled:cursor-not-allowed transition text-xs font-bold shadow-sm">« Prev</button>
+            <span class="text-xs font-bold text-slate-700 px-2" id="SD_pageCurrent">Hal 1 dari 1</span>
+            <button onclick="SD_changePage(1)" id="SD_btnNext" class="px-3 py-1.5 bg-white border border-slate-300 rounded hover:bg-slate-100 text-slate-600 disabled:opacity-50 disabled:cursor-not-allowed transition text-xs font-bold shadow-sm">Next »</button>
+        </div>
+    </div>
+
   </div>
 </div>
 
 <style>
-  /* ===== Toolbar & form helpers (UPDATED) ===== */
-  .toolbar-compact{
-    display:flex;
-    align-items:center;
-    justify-content:space-between;
-    gap:.6rem;
-    flex-wrap:nowrap;
-  }
-
-  /* kiri (summary) */
-  .bar-left{
-    display:flex;
-    align-items:center;
-    gap:.35rem;
-    flex:1 1 auto;
-    min-width:0;
-    flex-wrap:wrap;
-  }
-
-  /*
-    kanan (filter) - diperbaiki:
-    - pakai flex + wrap supaya elemen tidak turun ke baris aneh
-    - min-width:0 di .fld untuk mencegah child overflow
-  */
-  .bar-right{
-    display:flex;
-    align-items:center;
-    gap:.5rem;
-    margin-left:auto;
-    flex-wrap:wrap;       /* ALLOWED to wrap on small widths */
-    justify-content:flex-end;
-  }
-  .bar-right .fld{
-    display:flex;
-    align-items:center;
-    gap:.35rem;
-    min-width:0;          /* penting agar child flex bisa shrink */
-  }
-
-  .lbl{
-    font-size:12px;
-    color:#334155;
-    white-space:nowrap;
-  }
-
-  .pill{
-    display:inline-flex;
-    align-items:center;
-    gap:.25rem;
-    background:#f1f5f9;
-    border:1px solid #e2e8f0;
-    border-radius:.6rem;
-    padding:.2rem .45rem;
-  }
-  .pill-compact{ font-size:clamp(9px,1.7vw,12px); line-height:1; }
-
-  .f-inp{
-    border:1px solid #cbd5e1;
-    border-radius:.6rem;
-    padding:.4rem .6rem;
-    font-size:13.5px;
-    background:#fff;
-    height:36px;
-    min-width:0;
-  }
-  .fld-hidden{ display:none !important; }
-
-  /* utility widths (simple, predictable) */
-  .w-240{ width:240px; max-width:40vw; }
-  .w-160{ width:160px; max-width:30vw; }
-
-  /* ===== Table vars & layout (unchanged, but kept here) ===== */
-  #wrapTable{ --colDeb: 12rem; --colNorek: 9rem; --theadH: 38px; --totalH: 32px; --safeB: 32px; }
-  @supports(padding:max(0px)){ #wrapTable{ --safeB:max(32px, env(safe-area-inset-bottom)); } }
-
-  #tabelSearch{ table-layout: fixed; border-collapse:separate; border-spacing:0; font-size:13.1px; }
-  #tabelSearch thead .th{ position:sticky; top:0; background:#e0f2fe; font-size:11.5px; z-index:80; cursor:pointer; user-select:none; }
-  #tabelSearch thead .th.sorting:after{ content:""; margin-left:.3rem; }
-  #tabelSearch thead .th.asc:after { content:"▲"; }
-  #tabelSearch thead .th.desc:after{ content:"▼"; }
-  #tabelSearch thead .freeze-1{ left:0; z-index:120; }
-  #tabelSearch thead .freeze-2{ left:var(--colDeb); z-index:119; }
-  #tabelSearch th, #tabelSearch td{ border-bottom:1px solid #eef2f7; }
-  #tabelSearch tbody tr:hover td{ background:#f9fafb; }
-
-  .col-debitur{ width:var(--colDeb); min-width:var(--colDeb); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-  .col-norek{ width:var(--colNorek); min-width:var(--colNorek); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-  #tabelSearch td.freeze-1{ position:sticky; left:0; z-index:100; background:#fff; box-shadow:1px 0 0 rgba(0,0,0,.06); }
-  #tabelSearch td.freeze-2{ position:sticky; left:var(--colDeb); z-index:99;  background:#fff; box-shadow:1px 0 0 rgba(0,0,0,.06); }
-
-  .col-ao{ width:10rem; min-width:8.5rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-  .col-plan{ width:8.2rem; min-width:7.6rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-  .col-prod{ width:6rem; min-width:5.4rem; text-align:center; }
-  .col-bucketM1,.col-bucket{ width:7.6rem; min-width:7rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-  .col-kolek{ width:3.8rem; min-width:3.4rem; text-align:center; }
-  .col-num{ width:4rem; min-width:3.4rem; text-align:right; }
-  .col-amt{ width:8rem; min-width:7.2rem; text-align:right; }
-  .col-date{ width:10ch; min-width:8.5ch; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; font-variant-numeric: tabular-nums; }
-
-  #tabelSearch tbody tr.sticky-total td{ position:sticky; top:var(--theadH); background:#eaf2ff; color:#1e40af; z-index:110; border-bottom:1px solid #c7d2fe; font-size:12px; }
-  #tabelSearch tbody tr.sticky-total td.freeze-1{ z-index:130; }
-  #tabelSearch tbody tr.sticky-total td.freeze-2{ z-index:129; }
-  #bodyRows::after{ content:""; display:block; height: calc(var(--theadH) + var(--totalH) + var(--safeB)); }
-
-  /* ===== Number input polish ===== */
-  /* Hide spinner in Firefox */
-  .f-inp[type="number"] { -moz-appearance:textfield; }
-  /* Hide spinner in Chrome */
-  input[type=number]::-webkit-outer-spin-button,
-  input[type=number]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
-
-  /* ===== Mobile ===== */
-  @media (max-width:640px){
-    .toolbar-compact{ align-items:start; }
-    /* more robust mobile layout: grid-like but flexible */
-    .bar-right{
-      display:flex;
-      flex-wrap:wrap;
-      gap:.4rem;
-      width:auto;
-      justify-content:flex-end;
-      align-items:center;
-    }
-    .lbl{ display:none !important; }
-    .f-inp{ height:34px; font-size:12.1px; padding:.34rem .5rem; }
-    .short-mobile{ width:100% !important; }
-
-    /* potong tampilan kode_kantor agar hemat ruang */
-    .mobile-kode{ width:5.2ch !important; min-width:5.2ch !important; padding-left:.45rem; padding-right:.45rem; text-align:center; }
-
-    /* responsive widths */
-    .w-240{ width:100% !important; max-width:100%; }
-    .w-160{ width:9.5rem !important; max-width:45vw; }
-
-    #tabelSearch{ font-size:11.1px; }
-    #tabelSearch thead .th{ font-size:10.1px; }
-
-    #tabelSearch thead .col-debitur{ left:0 !important; width:9rem !important; min-width:9rem !important; }
-    #tabelSearch td.col-debitur{ width:9rem !important; min-width:9rem !important; max-width:9rem !important; }
-    .col-amt{ width:7rem; min-width:6.5rem; }
-    .col-num{ width:3.3rem; min-width:3.1rem; }
-    .col-plan,.col-bucketM1,.col-bucket{ width:6.8rem; min-width:6.4rem; }
-    .col-ao{ width:8rem; min-width:7.5rem; }
-    .col-prod{ width:5rem; min-width:4.8rem; }
-    .col-date{ width:9ch; min-width:8ch; }
-
-    #tabelSearch .col-norek{ display:none !important; }
-  }
-
-  /* ===== Print & spacing fix (unchanged) ===== */
-  @page { size: legal landscape; margin: 10mm; }
-  @media print{
-    :root{ color-scheme: light; } *{ -webkit-print-color-adjust:exact; print-color-adjust:exact; }
-    body *{ visibility:hidden !important; }
-    #tabelSearch, #tabelSearch *{ visibility:visible !important; }
-    #wrapTable{ overflow:visible !important; height:auto !important; border:none !important; }
-    #tabelSearch{ position:absolute !important; left:0; top:0; width:100% !important; font-size:11px; }
-    #tabelSearch thead{ display:table-header-group; }
-    #tabelSearch tbody tr.sticky-total td,
-    #tabelSearch td.freeze-1, #tabelSearch td.freeze-2,
-    #tabelSearch thead .th{ position:static !important; left:auto !important; z-index:auto !important; box-shadow:none !important; }
-    #bodyRows::after{ display:none !important; }
-  }
-  #tabelSearch thead .th{ border-bottom:0 !important; }
-  #tabelSearch tbody tr.sticky-total td{ top: calc(var(--theadH) - 1px) !important; }
-  #bodyRows::after{ height: calc(var(--theadH) + var(--totalH) + var(--safeB) - 1px) !important; }
+  .inp { border: 1px solid #cbd5e1; border-radius: 0.5rem; padding: 0 0.6rem; font-size: 12px; background: #fff; height: 36px; outline: none; transition: 0.2s; }
+  .inp:focus { border-color: #2563eb; box-shadow: 0 0 0 2px rgba(37,99,235,0.1); }
+  .inp:disabled { background-color: #f1f5f9; color: #64748b; font-weight: bold; cursor: not-allowed; }
+  .btn-icon:hover { transform: translateY(-1px); }
+  
+  #SD_tbody tr:hover { background-color: #f8fafc; }
 </style>
 
-
 <script>
-  /* ===== Helpers ===== */
-  const nfID = new Intl.NumberFormat('id-ID');
-  const rp   = n => nfID.format(Number(n||0));
-  const pct2 = x => (x==null?'0%':`${(+x).toFixed(2)}%`);
-  const isMobile = () => window.matchMedia('(max-width:640px)').matches;
-  const apiCall  = (url,opt={}) => (window.apiFetch?window.apiFetch(url,opt):fetch(url,opt));
-  const midEllipsis = (s,n=16)=>{ s=String(s??''); if(s.length<=n) return s; const keep=n-1,f=Math.ceil(keep/2),b=Math.floor(keep/2); return s.slice(0,f)+'…'+s.slice(-b); };
-  const fmtDate = v => { if(!v) return '-'; const d=new Date(v); if(isNaN(d)) return v; return `${String(d.getDate()).padStart(2,'0')}-${String(d.getMonth()+1).padStart(2,'0')}-${d.getFullYear()}`; };
+  const nf = new Intl.NumberFormat('id-ID');
+  
+  // STATE
+  let SD_currentPage = 1;
+  const SD_limit = 50;
+  let SD_totalPage = 1;
 
-  /* ===== State ===== */
-  let ALL_ROWS=[], VIEW_ROWS=[];
-  // ADDED: include totung in BASE (default null)
-  let BASE={ kode_kantor:'001', closing_date:'', harian_date:'', q:'', totung: null };
-  let lastReqId=0, aborter=null, debounceTimer;
+  // INIT
+  window.addEventListener('DOMContentLoaded', async () => {
+      await populateKantorSD();
 
-  // Sorting state
-  const SORT = { key:'', asc:true }; // isi key default kalau perlu, contoh: 'hari_menunggak'
-
-  const kodeEl=document.getElementById('kode_kantor');
-  const kolekEl=document.getElementById('kolekFilter');
-  const closingEl=document.getElementById('closing_date');
-  const harianEl=document.getElementById('harian_date');
-  const qEl=document.getElementById('q');
-  // ADDED: totung element
-  const totungEl=document.getElementById('totung');
-  const bodyRows=document.getElementById('bodyRows');
-  const bodyTotal=document.getElementById('bodyTotal');
-  const loadingBar=document.getElementById('loadingBar');
-  const headRow = document.getElementById('headRow');
-
-  function sizeScroller(){
-    const wrap=document.getElementById('wrapTable'); if(!wrap) return;
-    const top=wrap.getBoundingClientRect().top;
-    wrap.style.height=Math.max(260, window.innerHeight-top-10)+'px';
-  }
-  function syncSticky(){
-    const h=headRow?.offsetHeight||38;
-    document.getElementById('wrapTable').style.setProperty('--theadH', h+'px');
-  }
-  window.addEventListener('resize', ()=>{ sizeScroller(); syncSticky(); applyMobileKantorText(); });
-
-  // === NEW: Ambil closing_date dari account_handle (POST), harian_date dari kalender (GET)
-  async function getLastDate(){
-    try{
-      const [rAH, rCal] = await Promise.all([
-        apiCall('./api/date/', {
-          method:'POST',
-          headers:{'Content-Type':'application/json'},
-          body: JSON.stringify({ type:'account_handle' }) // sumber closing_date
-        }),
-        apiCall('./api/date/', { method:'GET' }) // sumber harian_date (kalender)
-      ]);
-
-      const jAH  = await rAH.json().catch(()=>({}));
-      const jCal = await rCal.json().catch(()=>({}));
-
-      // Prefer field yang biasa kita kirim; siapkan fallback agar robust
-      const closing_date =
-        jAH?.data?.account_handle_date ||
-        jAH?.data?.closing_date ||
-        jAH?.data?.last_created || // kalau controller mengembalikan MAX(created)
-        null;
-
-      const harian_date =
-        jCal?.data?.today ||
-        jCal?.data?.current_date ||
-        jCal?.data?.last_created ||
-        new Date().toISOString().slice(0,10);
-
-      return { closing_date, harian_date };
-    }catch{
-      return null;
-    }
-  }
-
-  function applyMobileKantorText(){
-    const mobile=isMobile();
-    [...kodeEl.options].forEach(o=>{
-      const code=o.value?.toString().padStart(3,'0'); if(!code) return;
-      if(mobile){ o.textContent=code; }
-      else if(o.dataset.full){ o.textContent=o.dataset.full; }
-    });
-  }
-  async function loadKantorOptions(){
-    const USER=(window.getUser&&window.getUser())||null;
-    const kodeLogin=USER?.kode?String(USER.kode).padStart(3,'0'):'000';
-    const isHQ=kodeLogin==='000';
-    if(!isHQ){
-      kodeEl.innerHTML=`<option value="${kodeLogin}">${kodeLogin}</option>`;
-      kodeEl.value=kodeLogin; kodeEl.disabled=true; BASE.kode_kantor=kodeLogin; applyMobileKantorText(); return;
-    }
-    try{
-      const r=await apiCall('./api/kode/',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({type:'kode_kantor'})});
-      const j=await r.json();
-      const list=(Array.isArray(j.data)?j.data:[])
-        .filter(x=>x.kode_kantor&&x.kode_kantor!=='000')
-        .sort((a,b)=>String(a.kode_kantor).localeCompare(String(b.kode_kantor)));
-      let html='';
-      list.forEach(it=>{
-        const code=String(it.kode_kantor).padStart(3,'0');
-        const name=it.nama_kantor||it.nama_cabang||'';
-        const full=`${code} — ${name}`;
-        html+=`<option value="${code}" data-full="${full}">${full}</option>`;
-      });
-      if(!html) html=`<option value="001" data-full="001">001</option>`;
-      kodeEl.innerHTML=html; kodeEl.value='001'; BASE.kode_kantor='001'; kodeEl.disabled=false;
-      applyMobileKantorText();
-    }catch{
-      kodeEl.innerHTML=`<option value="001">001</option>`; kodeEl.value='001'; BASE.kode_kantor='001'; kodeEl.disabled=false; applyMobileKantorText();
-    }
-  }
-
-  function filterByKolek(rows){
-    const opt=String(kolekEl.value||'').toUpperCase();
-    if(!opt) return rows;
-    if(opt==='LUNAS'){ return rows.filter(r => String(r.kolek_update||'').toUpperCase()==='LUNAS'); }
-    return rows.filter(r => String(r.kolek_update||'').toUpperCase()===opt);
-  }
-
-  // ===== Sorting =====
-  function compare(a,b,key){
-    // tanggal
-    if(key==='tgl_trans_last_angsuran'){
-      const A=a[key]?new Date(a[key]).getTime():0;
-      const B=b[key]?new Date(b[key]).getTime():0;
-      return A-B;
-    }
-    // string
-    if(['nama_nasabah','no_rekening','ao_remedial','plan_bucket','product_code','bucket','bucket_m1','bucket_update','kolek_update'].includes(key)){
-      const A=String(a[key] ?? '').toUpperCase();
-      const B=String(b[key] ?? '').toUpperCase();
-      return A.localeCompare(B);
-    }
-    // numeric
-    const A=Number(a[key] ?? 0), B=Number(b[key] ?? 0);
-    return A-B;
-  }
-  function sortRows(rows){
-    if(!SORT.key) return rows;
-    const arr=[...rows].sort((a,b)=> compare(a,b,SORT.key));
-    return SORT.asc ? arr : arr.reverse();
-  }
-  function setSortIndicator(){
-    // reset
-    headRow.querySelectorAll('.th').forEach(th=> th.classList.remove('asc','desc','sorting'));
-    if(!SORT.key) return;
-    const th=[...headRow.children].find(t => t.dataset.sort===SORT.key);
-    if(th){ th.classList.add('sorting'); th.classList.add(SORT.asc?'asc':'desc'); }
-  }
-  headRow.addEventListener('click', (e)=>{
-    const key=e.target?.dataset?.sort; if(!key) return;
-    if(SORT.key===key){ SORT.asc=!SORT.asc; }
-    else { SORT.key=key; SORT.asc=true; }
-    setSortIndicator();
-    applyFiltersAndRender();
+      const user = (window.getUser && window.getUser()) || {};
+      const kodeLogin = String(user?.kode||'').padStart(3,'0');
+      
+      const optKantor = document.getElementById('SD_optKantor');
+      if (kodeLogin && kodeLogin !== '000') {
+          optKantor.value = kodeLogin; 
+          optKantor.disabled = true;
+      }
+      
+      // Auto fetch pertama kali
+      fetchDataSD(1);
   });
 
-  // ===== Fetch =====
-  async function fetchSearch(){
-    if(aborter) try{aborter.abort();}catch{}
-    aborter=new AbortController(); const reqId=++lastReqId;
-
-    // ADDED: sertakan totung di payload (true null jika kosong)
-    const payload={ kode_kantor:BASE.kode_kantor, type:'search_detail_handle', closing_date:BASE.closing_date, harian_date:BASE.harian_date, q:BASE.q||'', totung: BASE.totung };
-
-    loadingBar.classList.remove('hidden');
-    // ADJUSTED colspan -> 22
-    bodyRows.innerHTML=`<tr><td colspan="22" class="px-4 py-3 text-gray-500">Memuat data...</td></tr>`;
-    bodyTotal.innerHTML='';
-
-    try{
-      const res=await apiCall('./api/kunjungan/',{method:'POST',headers:{'Content-Type':'application/json','Cache-Control':'no-cache'},body:JSON.stringify(payload),signal:aborter.signal});
-      const json=await res.json();
-      if(reqId!==lastReqId) return;
-
-      ALL_ROWS=(json?.status===200)?(json?.data?.rows||[]):[];
-      applyFiltersAndRender();
-    }catch(e){
-      if(e.name==='AbortError') return;
-      bodyRows.innerHTML=`<tr><td colspan="22" class="px-4 py-3 text-red-600">Gagal memuat data.</td></tr>`;
-      setPills(0,0,0);
-    }finally{
-      if(reqId===lastReqId) loadingBar.classList.add('hidden');
-    }
-  }
-
-  function applyFiltersAndRender(){
-    const filtered=filterByKolek(ALL_ROWS);
-    VIEW_ROWS=sortRows(filtered);
-    renderRows(VIEW_ROWS);
-  }
-
-  function setPills(noa, bd, ck){
-    document.getElementById('sumNoa').textContent=nfID.format(noa);
-    document.getElementById('sumBD').textContent =rp(bd);
-    document.getElementById('sumCK').textContent =rp(ck);
-  }
-  function isDeviasi(d){
-    const ck0=Number(d.ckpn_actual||0)===0;
-    const k=String(d.kolek_update||'').toUpperCase();
-    return ck0 && k!=='L' && k!=='LUNAS';
-  }
-
-  function renderRows(list){
-    if(!Array.isArray(list)||!list.length){
-      // adjusted colspan -> 22
-      bodyRows.innerHTML=`<tr><td colspan="22" class="px-4 py-3 text-gray-500">Tidak ada data.</td></tr>`;
-      setPills(0,0,0); syncSticky(); sizeScroller(); return;
-    }
-    const sum = key => list.reduce((s,r)=> s + Number(r[key]||0), 0);
-    const totalBD = sum('baki_debet_update');
-    const totalCK = sum('ckpn_actual');
-    setPills(list.length, totalBD, totalCK);
-
-    const tOSC = sum('saldo_bank');
-    const tC1  = sum('ckpn_m1');
-    const tCA  = totalCK;
-    const tINC = sum('inc_ckpn');
-    const tAP  = sum('angsuran_pokok');
-    const tAB  = sum('angsuran_bunga');
-    // ADDED totals
-    const tTOTUNG = sum('totung');
-    const tSALDO_TAB = sum('saldo_tabungan');
-
-    bodyTotal.innerHTML=`
-      <tr class="sticky-total font-semibold">
-        <td class="px-3 py-2 freeze-1 col-debitur">TOTAL</td>
-        <td class="px-3 py-2 freeze-2 col-norek"></td>
-        <td class="px-3 py-2 col-ao"></td>
-        <td class="px-3 py-2 col-plan"></td>
-        <td class="px-3 py-2 col-prod text-center"></td>
-        <td class="px-3 py-2 col-bucketM1"></td>
-        <td class="px-3 py-2 col-bucket"></td>
-        <td class="px-3 py-2 col-kolek text-center"></td>
-
-        <td class="px-3 py-2 text-right col-num"></td> <!-- DPD total not shown -->
-        <td class="px-3 py-2 text-right col-num"></td> <!-- HMP total not shown -->
-        <td class="px-3 py-2 text-right col-num"></td> <!-- HMB total not shown -->
-        <td class="px-3 py-2 text-right col-amt">${rp(tTOTUNG)}</td> <!-- TOTUNG total -->
-        <td class="px-3 py-2 text-right col-amt">${rp(tSALDO_TAB)}</td> <!-- SALDO TAB total -->
-
-        <td class="px-3 py-2 text-right col-amt">${rp(tOSC)}</td>
-        <td class="px-3 py-2 text-right col-amt">${rp(totalBD)}</td>
-        <td class="px-3 py-2 text-right col-num"></td>
-        <td class="px-3 py-2 text-right col-amt">${rp(tC1)}</td>
-        <td class="px-3 py-2 text-right col-amt">${rp(tCA)}</td>
-        <td class="px-3 py-2 text-right col-amt">${rp(tINC)}</td>
-        <td class="px-3 py-2 text-right col-amt">${rp(tAP)}</td>
-        <td class="px-3 py-2 text-right col-amt">${rp(tAB)}</td>
-        <td class="px-3 py-2 col-date"></td>
-      </tr>`;
-
-    let html='';
-    for(const d of list){
-      const deb=d.nama_nasabah||'-';
-      const norek=d.no_rekening||'-';
-      const ao=d.ao_remedial||(d.key_name||'-');
-      const plan=d.plan_bucket||'-';
-      const prodCode=(d.product_code==null?'-':d.product_code);
-      const buckM1=d.bucket||d.bucket_m1||'-';
-      const buck=d.bucket_update||d.bucket||'-';
-      const kol=d.kolek_update||'-';
-      const dpd=(d.hari_menunggak===0||d.hari_menunggak)?d.hari_menunggak:'-';
-      // ADDED individual fields
-      const hmp=(d.hari_menunggak_pokok===0||d.hari_menunggak_pokok)?d.hari_menunggak_pokok:'-';
-      const hmb=(d.hari_menunggak_bunga===0||d.hari_menunggak_bunga)?d.hari_menunggak_bunga:'-';
-      const totungVal=Number(d.totung||0);
-      const saldoTabVal=Number(d.saldo_tabungan||0);
-
-      const osc=Number(d.saldo_bank||0);
-      const bd=Number(d.baki_debet_update||0);
-      const pd=d.pd_percent==null?null:Number(d.pd_percent);
-      const ckM1=Number(d.ckpn_m1||0);
-      const ckA=Number(d.ckpn_actual||0);
-      const inc=Number(d.inc_ckpn||0);
-      const aP=Number(d.angsuran_pokok||0);
-      const aB=Number(d.angsuran_bunga||0);
-      const tAng=d.tgl_trans_last_angsuran?fmtDate(d.tgl_trans_last_angsuran):'-';
-      const dev=isDeviasi(d);
-
-      html+=`
-        <tr class="border-b hover:bg-gray-50">
-          <td class="px-3 py-2 freeze-1 col-debitur" title="${deb}">${midEllipsis(deb, isMobile()?18:26)}</td>
-          <td class="px-3 py-2 freeze-2 col-norek"   title="${norek}">${isMobile()?midEllipsis(norek,12):norek}</td>
-          <td class="px-3 py-2 col-ao" title="${ao}">${midEllipsis(ao, isMobile()?18:26)}</td>
-          <td class="px-3 py-2 col-plan">${plan}</td>
-          <td class="px-3 py-2 col-prod text-center">${prodCode}</td>
-          <td class="px-3 py-2 col-bucketM1">${buckM1}</td>
-          <td class="px-3 py-2 col-bucket">${buck}</td>
-          <td class="px-3 py-2 col-kolek text-center">${kol}</td>
-
-          <!-- new columns -->
-          <td class="px-3 py-2 text-right col-num">${dpd}</td>
-          <td class="px-3 py-2 text-right col-num">${hmp}</td>
-          <td class="px-3 py-2 text-right col-num">${hmb}</td>
-          <td class="px-3 py-2 text-right col-amt">${totungVal?rp(totungVal):'-'}</td>
-          <td class="px-3 py-2 text-right col-amt">${saldoTabVal?rp(saldoTabVal):'-'}</td>
-
-          <td class="px-3 py-2 text-right col-amt">${rp(osc)}</td>
-          <td class="px-3 py-2 text-right col-amt">${rp(bd)}</td>
-          <td class="px-3 py-2 text-right col-num">${pd==null?'-':pct2(pd)}</td>
-          <td class="px-3 py-2 text-right col-amt">${ckM1?rp(ckM1):'-'}</td>
-          <td class="px-3 py-2 text-right col-amt">
-            ${ckA?rp(ckA):'-'}${dev?` <span class="badge-dev" title="CKPN ACT=0 & Kolek≠L → indikasi deviasi">Deviasi</span>`:''}
-          </td>
-          <td class="px-3 py-2 text-right col-amt">${(ckA||ckM1)?rp(inc):'-'}</td>
-          <td class="px-3 py-2 text-right col-amt">${aP?rp(aP):'-'}</td>
-          <td class="px-3 py-2 text-right col-amt">${aB?rp(aB):'-'}</td>
-          <td class="px-3 py-2 col-date">${tAng}</td>
-        </tr>`;
-    }
-    bodyRows.innerHTML=html;
-
-    syncSticky(); sizeScroller();
-    setTimeout(()=>{ syncSticky(); sizeScroller(); }, 60);
-  }
-
-  // Events
-  kodeEl.addEventListener('change', ()=>{ if(kodeEl.disabled) return; BASE.kode_kantor=kodeEl.value||'001'; fetchSearch(); });
-  kolekEl.addEventListener('change', applyFiltersAndRender);
-  // totung: perubahan akan update BASE.totung dan refetch
-  totungEl.addEventListener('change', ()=>{
-    const v = (totungEl.value||'').trim();
-    // treat empty as null
-    BASE.totung = v === '' ? null : (isNaN(Number(v)) ? v : Number(v));
-    fetchSearch();
+  document.getElementById('SD_formFilter').addEventListener('submit', (e) => {
+      e.preventDefault();
+      fetchDataSD(1); // Kembali ke halaman 1 saat search baru
   });
-  qEl.addEventListener('input', ()=>{ clearTimeout(debounceTimer); debounceTimer=setTimeout(()=>{ BASE.q=qEl.value.trim(); fetchSearch(); }, 260); });
 
-  // === NEW: Init pakai hasil getLastDate() (closing_date dari account_handle, harian_date dari kalender)
-  window.addEventListener('DOMContentLoaded', async ()=>{
-    await loadKantorOptions();
+  async function populateKantorSD() {
+      try {
+          const r = await fetch('./api/kode/', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({type:'kode_kantor'})});
+          const j = await r.json();
+          const list = Array.isArray(j.data) ? j.data : [];
+          let html = `<option value="">Semua</option>`;
+          list.filter(x => x.kode_kantor && x.kode_kantor !== '000')
+              .sort((a,b) => String(a.kode_kantor).localeCompare(String(b.kode_kantor)))
+              .forEach(it => {
+                  const code = String(it.kode_kantor).padStart(3,'0');
+                  html += `<option value="${code}">${code} — ${it.nama_kantor||''}</option>`;
+              });
+          document.getElementById('SD_optKantor').innerHTML = html;
+      } catch(e) {}
+  }
 
-    const d=await getLastDate();
-    if(d){
-      BASE.closing_date = d.closing_date || BASE.closing_date;
-      BASE.harian_date  = d.harian_date  || BASE.harian_date;
-      closingEl.value   = BASE.closing_date;
-      harianEl.value    = BASE.harian_date;
-    }
+  function getFilterPayloadSD(page, limit) {
+      const optKantor = document.getElementById('SD_optKantor');
+      return {
+          type: "cari debitur",
+          kode_kantor: optKantor.disabled ? optKantor.value : (optKantor.value || ""),
+          kolek: document.getElementById('SD_optKolek').value,
+          search: document.getElementById('SD_search').value,
+          totung: document.getElementById('SD_totung').value,
+          page: page,
+          limit: limit
+      };
+  }
 
-    try{
-      const u=new URL(location.href); const q0=u.searchParams.get('q');
-      if(q0){ qEl.value=q0; BASE.q=q0; }
-    }catch{}
+  async function fetchDataSD(pageTarget) {
+      SD_currentPage = pageTarget;
+      
+      const loading = document.getElementById('SD_loading');
+      loading.classList.remove('hidden');
 
-    setSortIndicator(); // tampilkan panah jika SORT.key di-set
-    fetchSearch();
-  });
+      const payload = getFilterPayloadSD(SD_currentPage, SD_limit);
+
+      try {
+          const res = await fetch('./api/flow_par/', { // ENDPOINT SESUAI REQUEST
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(payload)
+          });
+          const json = await res.json();
+          
+          if (json.status === 200 && json.data) {
+              renderTableSD(json.data.data);
+              updateSummarySD(json.data.summary);
+              updatePaginationSD(json.data.pagination);
+          } else {
+              throw new Error(json.message || "Gagal memuat data");
+          }
+      } catch(e) {
+          document.getElementById('SD_tbody').innerHTML = `<tr><td colspan="13" class="px-4 py-12 text-center text-red-500 font-bold">${e.message}</td></tr>`;
+      } finally {
+          loading.classList.add('hidden');
+      }
+  }
+
+  function renderTableSD(list) {
+      const tbody = document.getElementById('SD_tbody');
+      if (!list || list.length === 0) {
+          tbody.innerHTML = `<tr><td colspan="13" class="px-4 py-12 text-center text-slate-400">Tidak ada debitur ditemukan.</td></tr>`;
+          return;
+      }
+
+      tbody.innerHTML = list.map(d => {
+          return `
+            <tr class="transition">
+              <td class="px-4 py-2 border-b border-r border-slate-100 font-semibold truncate" title="${d.nama_nasabah||''}">${d.nama_nasabah||'-'}</td>
+              <td class="px-4 py-2 border-b border-r border-slate-100 text-center font-mono text-slate-500">${d.no_rekening||'-'}</td>
+              <td class="px-4 py-2 border-b border-r border-slate-100 text-center">${d.kode_produk||'-'}</td>
+              <td class="px-4 py-2 border-b border-r border-slate-100 text-center">${d.plan_bucket||'-'}</td>
+              <td class="px-4 py-2 border-b border-r border-slate-100 text-center text-blue-600 font-bold">${d.bucket_actual||'-'}</td>
+              <td class="px-4 py-2 border-b border-r border-slate-100 text-center">${d.kolek||'-'}</td>
+              <td class="px-4 py-2 border-b border-r border-slate-100 text-center">${d.dpd||'0'}</td>
+              <td class="px-4 py-2 border-b border-r border-slate-100 text-center">${d.hmp||'0'}</td>
+              <td class="px-4 py-2 border-b border-r border-slate-100 text-center">${d.hmb||'0'}</td>
+              <td class="px-4 py-2 border-b border-r border-slate-100 text-center">${d.tgl_jatuh_tempo||'-'}</td>
+              <td class="px-4 py-2 border-b border-r border-slate-100 text-right text-emerald-700 font-bold bg-emerald-50/30">${nf.format(d.baki_debet||0)}</td>
+              <td class="px-4 py-2 border-b border-r border-slate-100 text-right text-red-600 font-bold bg-red-50/30">${nf.format(d.totung||0)}</td>
+              <td class="px-4 py-2 border-b border-slate-100 text-right text-slate-600">${nf.format(d.saldo_tabungan||0)}</td>
+            </tr>
+          `;
+      }).join('');
+  }
+
+  function updateSummarySD(summary) {
+      if(!summary) return;
+      document.getElementById('SD_sumNoa').innerText = nf.format(summary.noa || 0);
+      document.getElementById('SD_sumBd').innerText = nf.format(summary.bd_act || 0);
+  }
+
+  function updatePaginationSD(pag) {
+      if(!pag) return;
+      SD_totalPage = pag.total_page || 1;
+      SD_currentPage = pag.current_page || 1;
+      
+      const totalData = pag.total_data || 0;
+      document.getElementById('SD_pageInfo').innerText = `Total: ${nf.format(totalData)} Debitur`;
+      document.getElementById('SD_pageCurrent').innerText = `Hal ${SD_currentPage} dari ${SD_totalPage}`;
+
+      document.getElementById('SD_btnPrev').disabled = (SD_currentPage <= 1);
+      document.getElementById('SD_btnNext').disabled = (SD_currentPage >= SD_totalPage);
+  }
+
+  window.SD_changePage = function(dir) {
+      const newPage = SD_currentPage + dir;
+      if (newPage >= 1 && newPage <= SD_totalPage) {
+          fetchDataSD(newPage);
+      }
+  };
+
+  // --- DOWNLOAD EXCEL (MENGAMBIL SEMUA DATA TANPA LIMIT HALAMAN) ---
+  window.SD_exportExcelAll = async function() {
+      const btn = document.querySelector('button[title="Download Semua Data"]');
+      const originalHtml = btn.innerHTML;
+      btn.innerHTML = `<svg class="animate-spin h-4 w-4" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>`;
+      btn.disabled = true;
+
+      // Ambil payload filter, tapi tembak LIMIT sangat besar agar semua data ter-download
+      const payload = getFilterPayloadSD(1, 999999);
+
+      try {
+          const res = await fetch('./api/flow_par/', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(payload)
+          });
+          const json = await res.json();
+          
+          if (json.status === 200 && json.data && json.data.data) {
+              const list = json.data.data;
+              if(list.length === 0) {
+                  alert("Tidak ada data untuk didownload.");
+                  return;
+              }
+
+              let table = `<table border="1">
+                  <thead>
+                      <tr>
+                          <th style="background:#f1f5f9;">NAMA NASABAH</th>
+                          <th style="background:#f1f5f9;">NO REKENING</th>
+                          <th style="background:#f1f5f9;">NO TABUNGAN</th>
+                          <th style="background:#f1f5f9;">PRODUK</th>
+                          <th style="background:#f1f5f9;">PLAN BUCKET</th>
+                          <th style="background:#dbeafe;">BUCKET ACTUAL</th>
+                          <th style="background:#f1f5f9;">KOLEK</th>
+                          <th style="background:#f1f5f9;">DPD</th>
+                          <th style="background:#f1f5f9;">HMP</th>
+                          <th style="background:#f1f5f9;">HMB</th>
+                          <th style="background:#f1f5f9;">JATUH TEMPO</th>
+                          <th style="background:#dcfce7;">BAKI DEBET</th>
+                          <th style="background:#fee2e2;">TOTUNG</th>
+                          <th style="background:#f1f5f9;">SALDO TABUNGAN</th>
+                      </tr>
+                  </thead>
+                  <tbody>`;
+
+              list.forEach(d => {
+                  table += `<tr>
+                      <td>${d.nama_nasabah||''}</td>
+                      <td style="mso-number-format:'\\@'">${d.no_rekening||''}</td>
+                      <td style="mso-number-format:'\\@'">${d.norek_tabungan||''}</td>
+                      <td>${d.kode_produk||''}</td>
+                      <td>${d.plan_bucket||''}</td>
+                      <td>${d.bucket_actual||''}</td>
+                      <td>${d.kolek||''}</td>
+                      <td>${d.dpd||'0'}</td>
+                      <td>${d.hmp||'0'}</td>
+                      <td>${d.hmb||'0'}</td>
+                      <td>${d.tgl_jatuh_tempo||''}</td>
+                      <td>${Number(d.baki_debet||0)}</td>
+                      <td>${Number(d.totung||0)}</td>
+                      <td>${Number(d.saldo_tabungan||0)}</td>
+                  </tr>`;
+              });
+              table += `</tbody></table>`;
+
+              const blob = new Blob([table], { type: 'application/vnd.ms-excel' });
+              const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+              const tgl = new Date().toISOString().split('T')[0];
+              a.download = `Search_Debitur_Kredit_${tgl}.xls`; a.click();
+          } else {
+              alert("Gagal menarik data untuk Excel.");
+          }
+      } catch(e) {
+          alert("Terjadi kesalahan saat download Excel.");
+      } finally {
+          btn.innerHTML = originalHtml;
+          btn.disabled = false;
+      }
+  };
 </script>
-

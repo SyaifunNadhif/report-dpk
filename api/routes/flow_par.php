@@ -36,6 +36,8 @@ switch ($method) {
             $controller->updateKomitmenKlBaru($input);
         } elseif ($input['type'] === 'detail debitur') {
             $controller->getDetailDebitur($input);
+        } elseif ($input['type'] === 'cari debitur') {
+            $controller->searchDebiturKredit($input);
         } else {
             sendResponse(400, "Type tidak dikenali. Gunakan 'Flow Par', 'KL Baru', atau 'Last Created Nominatif'");
         }

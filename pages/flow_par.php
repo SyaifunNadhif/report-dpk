@@ -1,37 +1,181 @@
-<!-- 📊 FLOW PAR — rekap (tetap) + modal sederhana ala Recovery PH -->
-<div class="max-w-7xl mx-auto px-4 py-6 h-screen flex flex-col">
-  <div class="hdr flex flex-wrap items-start gap-2 mb-3">
-    <h1 class="title text-2xl font-bold flex items-center gap-2">
-      <span>📊</span><span>Rekap Flow PAR</span>
-    </h1>
+<style>
+  :root { --primary: #2563eb; --bg: #f8fafc; --text: #334155; }
+  
+  /* === GLOBAL === */
+  body { font-family: 'Inter', system-ui, sans-serif; background: var(--bg); color: var(--text); overflow: hidden; }
+  
+  /* === CONTROLS === */
+  .inp { 
+      border: 1px solid #cbd5e1; border-radius: 0.5rem; padding: 0 0.5rem; 
+      font-size: 13px; background: #fff; width: 100%; height: 36px; 
+      min-width: 0; transition: all 0.2s; outline: none; color: #334155;
+  }
+  .inp:focus { border-color: var(--primary); }
+  .inp:disabled { background-color: #f8fafc; color: #475569; font-weight: 600; cursor: not-allowed; border-color: #e2e8f0; }
+  
+  /* === DATEPICKER FIX === */
+  input[type="date"] { position: relative; cursor: pointer; }
+  input[type="date"]::-webkit-inner-spin-button,
+  input[type="date"]::-webkit-calendar-picker-indicator {
+      position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+      width: 100%; height: 100%; opacity: 0; cursor: pointer;
+  }
 
-    <!-- Filter -->
-    <form id="filterForm" class="ml-auto">
-      <div id="filterFP" class="flex items-center gap-2">
-        <label for="closing_date" class="lbl text-sm text-slate-700">Closing:</label>
-        <input type="date" id="closing_date" class="inp" required>
-        <label for="harian_date" class="lbl text-sm text-slate-700">Harian:</label>
-        <input type="date" id="harian_date" class="inp" required>
-        <button type="submit" id="btnFilterFP" class="btn-icon" title="Terapkan">
-          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
-            <circle cx="11" cy="11" r="7"></circle>
-            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-          </svg>
+  /* === ICON BUTTONS === */
+  .btn-icon { 
+      width: 38px; height: 36px; border-radius: 6px; 
+      background: var(--primary); color: white; border: none; cursor: pointer; 
+      display: inline-flex; align-items: center; justify-content: center; 
+      transition: 0.2s; flex-shrink: 0; box-shadow: 0 1px 2px rgba(37, 99, 235, 0.2);
+  }
+  .btn-icon:hover { background: #1d4ed8; }
+
+  /* === TABLE CONTAINER === */
+  #fpScroller {
+      --col1: 60px;   /* Lebar Kode */
+      --col2: 220px;  /* Lebar Nama Kantor */
+      --fp_headH: 40px; 
+      
+      position: relative;
+      border: 1px solid #e2e8f0; border-radius: 8px; background: white;
+      height: 100%; overflow: auto;
+      -webkit-overflow-scrolling: touch; 
+  }
+
+  table { border-collapse: separate; border-spacing: 0; width: 100%; font-size: 12px; }
+  th, td { white-space: nowrap; padding: 10px 14px; vertical-align: middle; }
+  
+  /* === HEADER STYLES === */
+  #tabelFlowPar thead th { 
+      position: sticky; top: 0; z-index: 60; 
+      background: #f1f5f9; color: #475569; 
+      font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; font-size: 11px;
+      border-bottom: 1px solid #cbd5e1; 
+  }
+  
+  /* === TOTAL ROW STICKY === */
+  #fpTotalRow td { 
+      position: sticky; top: var(--fp_headH); z-index: 50; 
+      background: #eff6ff; color: #1e40af; font-weight: 700; 
+      border-bottom: 2px solid #bfdbfe;
+      box-shadow: 0 4px 6px -2px rgba(0,0,0,0.05);
+  }
+
+  /* === STICKY COLUMNS LOGIC (Desktop) === */
+  .sticky-left-1 { 
+      position: sticky; left: 0; z-index: 45; 
+      background: #fff; border-right: 1px solid #f1f5f9; 
+      width: var(--col1); min-width: var(--col1); max-width: var(--col1); text-align: center; 
+  }
+  .sticky-left-2 { 
+      position: sticky; left: var(--col1); z-index: 44; 
+      background: #fff; border-right: 1px solid #e2e8f0; 
+      width: var(--col2); min-width: var(--col2); max-width: var(--col2); 
+      overflow: hidden; text-overflow: ellipsis; 
+  }
+
+  #tabelFlowPar thead th.sticky-left-1 { z-index: 70; background: #f1f5f9; }
+  #tabelFlowPar thead th.sticky-left-2 { z-index: 69; background: #f1f5f9; }
+  
+  #fpTotalRow td.sticky-left-1 { z-index: 59; background: #eff6ff; border-right: 1px solid #bfdbfe; }
+  #fpTotalRow td.sticky-left-2 { z-index: 58; background: #eff6ff; border-right: 1px solid #bfdbfe; }
+
+  #fpBody td { background-color: #fff; border-bottom: 1px solid #f1f5f9; color: #334155; }
+  #fpBody tr:hover td { background-color: #f8fafc; }
+
+  /* === MODAL STYLES === */
+  #modalScroll { --colRek: 130px; --colNama: 200px; }
+  #modalTableFP { width: 100%; min-width: 1700px; }
+  #modalTableFP th { position: sticky; top: 0; z-index: 30; background: #f8fafc; padding: 10px 12px; height: 40px; border-bottom: 1px solid #e2e8f0; font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; }
+  #modalTableFP td { padding: 8px 12px; border-bottom: 1px solid #f1f5f9; color: #334155; font-size: 12px; }
+  .modal-freeze-1 { position: sticky; left: 0; z-index: 35; background: #fff; border-right: 1px solid #e2e8f0; width: var(--colRek); }
+  .modal-freeze-2 { position: sticky; left: var(--colRek); z-index: 34; background: #fff; border-right: 1px solid #e2e8f0; width: var(--colNama); }
+  #modalTableFP th.modal-freeze-1 { z-index: 40; background: #f8fafc; }
+  #modalTableFP th.modal-freeze-2 { z-index: 39; background: #f8fafc; }
+  .modal-total-row td { position: sticky; top: 38px; z-index: 25; background: #f0f9ff; color: #0369a1; font-weight: bold; border-bottom: 1px solid #bae6fd; }
+  .modal-total-row td.modal-freeze-1 { z-index: 38; background: #f0f9ff; }
+  .modal-total-row td.modal-freeze-2 { z-index: 37; background: #f0f9ff; }
+  .overdue td { background-color: #fef2f2 !important; color: #991b1b; }
+  .hot90 { background-color: #fee2e2 !important; font-weight: bold; color: #7f1d1d; }
+
+  /* === RESPONSIVE FIX (MOBILE) === */
+  @media (max-width: 767px) {
+      #filterForm { flex-wrap: wrap; justify-content: flex-end; gap: 6px; }
+      .filter-box { flex: 1 1 30%; min-width: 100px; }
+      #opt_kantor_rec { font-size: 11px; padding: 0 4px; }
+      #closing_date, #harian_date { font-size: 11px; padding: 0 4px; text-align: center; width: 100%; }
+
+      table { font-size: 11px; }
+      th, td { padding: 6px 8px; }
+
+      .sticky-left-1 { display: none !important; }
+      .sticky-left-2 { left: 0 !important; z-index: 45 !important; min-width: 140px; max-width: 160px; white-space: normal; line-height: 1.2; }
+      #tabelFlowPar thead th.sticky-left-2 { z-index: 70 !important; }
+      #fpTotalRow td.sticky-left-2 { z-index: 65 !important; }
+
+      #modalScroll { --colRek: 0px; --colNama: 120px; }
+      .modal-freeze-1 { display: none; }
+      .modal-freeze-2 { left: 0; }
+  }
+</style>
+
+<div class="max-w-7xl mx-auto px-3 md:px-4 py-4 h-[calc(100vh-80px)] md:h-[calc(100vh-120px)] flex flex-col font-sans bg-slate-50">
+
+  <div class="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-4 shrink-0">
+    <div class="flex items-center justify-between">
+      <div>
+        <h1 class="text-xl md:text-2xl font-bold flex items-center gap-2 text-slate-800">
+            <span class="bg-blue-600 text-white p-1.5 rounded-lg text-sm md:text-base shadow-sm">📊</span> 
+            <span>Rekap Flow PAR</span>
+            <span id="badgeUnit" class="ml-2 px-2 py-0.5 bg-blue-100 text-blue-800 text-[10px] uppercase font-bold rounded tracking-wider">MEMUAT...</span>
+        </h1>
+        <p class="text-[10px] md:text-xs text-slate-500 mt-1 ml-1 font-medium">*Data Posisi Closing vs Harian</p>
+      </div>
+      <div id="loadingMini" class="hidden md:hidden animate-spin h-5 w-5 border-2 border-blue-600 border-t-transparent rounded-full"></div>
+    </div>
+
+    <form id="filterForm" class="flex flex-row flex-wrap md:flex-nowrap items-end gap-2 md:gap-3 w-full md:w-auto">
+      
+      <div class="filter-box flex flex-col md:w-[190px]">
+          <label class="text-[9px] md:text-[10px] font-bold text-slate-500 uppercase ml-1 mb-1 tracking-wider">Kantor</label>
+          <select id="opt_kantor_rec" class="inp font-medium text-slate-700 shadow-sm" title="Pilih Kantor"><option value="">Memuat...</option></select>
+      </div>
+
+      <div class="filter-box flex flex-col md:w-[130px]">
+          <label class="text-[9px] md:text-[10px] font-bold text-slate-500 uppercase ml-1 mb-1 tracking-wider">Closing Date</label>
+          <input type="date" id="closing_date" class="inp shadow-sm" required>
+      </div>
+      
+      <div class="filter-box flex flex-col md:w-[130px]">
+          <label class="text-[9px] md:text-[10px] font-bold text-slate-500 uppercase ml-1 mb-1 tracking-wider">Actual Date</label>
+          <input type="date" id="harian_date" class="inp shadow-sm" required>
+      </div>
+      
+      <div class="filter-actions flex items-center gap-2">
+        <button type="submit" class="btn-icon bg-blue-600 hover:bg-blue-700" title="Cari Data">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+        </button>
+        <button type="button" onclick="exportFlowParExcel()" class="btn-icon bg-blue-600 hover:bg-blue-700" title="Download Excel">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
         </button>
       </div>
     </form>
   </div>
 
-  <!-- SCROLLER TABEL REKAP -->
-  <div id="fpScroller" class="flex-1 min-h-0 overflow-hidden rounded border border-gray-200 bg-white">
-    <div class="h-full overflow-auto">
-      <table id="tabelFlowPar" class="min-w-full text-sm text-left text-gray-700">
-        <thead class="uppercase">
-          <tr id="fpHead1" class="text-xs">
-            <th class="px-4 py-2 sticky-fp freeze-1 col1 col-kode sortable" data-key="kode_cabang" data-type="text">Kode Kantor</th>
-            <th class="px-4 py-2 sticky-fp freeze-2 col2 col-nama  sortable" data-key="nama_kantor" data-type="text">Nama Kantor</th>
-            <th class="px-3 py-2 text-center sticky-fp col-noa sortable" data-key="noa_flow" data-type="num">NOA</th>
-            <th class="pl-3 pr-8 md:pr-10 py-2 text-right sticky-fp col-bd sortable" data-key="baki_debet_flow" data-type="num">Baki Debet</th>
+  <div class="flex-1 min-h-0 relative flex flex-col">
+    <div id="loadingFP" class="hidden absolute inset-0 bg-white/80 z-[100] flex flex-col items-center justify-center text-blue-600 font-bold backdrop-blur-sm rounded-lg">
+       <div class="animate-spin h-10 w-10 border-4 border-blue-200 border-t-blue-600 rounded-full mb-3"></div>
+       <span class="text-sm tracking-wide">MEMUAT DATA...</span>
+    </div>
+
+    <div id="fpScroller" class="table-wrapper">
+      <table id="tabelFlowPar">
+        <thead id="theadFP">
+          <tr>
+            <th class="sticky-left-1 text-center">KODE</th>
+            <th class="sticky-left-2 text-left" id="thNamaFP">NAMA KANTOR</th>
+            <th class="text-center w-[120px] cursor-pointer hover:bg-slate-200 transition" id="sortNoa" title="Urutkan">NOA FLOW ⬍</th>
+            <th class="text-right w-[180px] cursor-pointer hover:bg-slate-200 transition" id="sortBaki" title="Urutkan">BAKI DEBET FLOW ⬍</th>
           </tr>
         </thead>
         <tbody id="fpTotalRow"></tbody>
@@ -41,673 +185,573 @@
   </div>
 </div>
 
-<!-- =============== MODAL SEDERHANA (meniru Recovery PH) =============== -->
-<div id="modalDebiturFlowPar"
-     class="fixed inset-0 hidden bg-gray-900/55 backdrop-blur-sm items-center justify-center"
-     style="z-index:100000;">
-  <div id="modalCardFP"
-       class="bg-white rounded-lg shadow max-w-6xl w-[96vw] sm:w-[92vw] md:w-[1100px] max-h-[90vh] overflow-hidden">
-    <div class="flex items-center justify-between p-4 border-b">
-      <h3 id="modalTitleFlowPar" class="modal-title">Daftar Debitur Flow PAR</h3>
+<div id="modalDebiturFlowPar" class="fixed inset-0 hidden bg-slate-900/60 backdrop-blur-sm items-center justify-center z-[9999] px-2 md:px-4">
+  <div id="modalCardFP" class="bg-white rounded-xl shadow-2xl flex flex-col w-full max-w-[1400px] h-[90vh] overflow-hidden animate-scale-up">
+    <div class="flex flex-col md:flex-row md:items-center justify-between p-3 md:p-4 border-b border-slate-100 bg-slate-50 shrink-0 gap-3">
+      <div>
+        <h3 class="font-bold text-slate-800 text-base md:text-xl flex items-center gap-2">
+            📄 <span id="modalTitleFlowPar" class="truncate max-w-[250px] md:max-w-none">Detail Debitur</span>
+        </h3>
+        <p class="text-[10px] md:text-xs text-slate-500 mt-1" id="modalSubtitleFP">Posisi: -</p>
+      </div>
+      
       <div class="flex items-center gap-2">
-        <a href="update_flowpar"
-           onclick="storeFlowParData()"
-           class="bg-blue-600 text-white px-3 py-2 rounded text-xs sm:text-sm hover:bg-blue-700">Update Progres</a>
-        <button id="btnCloseFP" class="text-gray-500 hover:text-gray-700 text-xl" aria-label="Tutup">✕</button>
+          <select id="modalFilterKankas" class="inp !h-9 !py-0 text-xs w-[130px] md:w-[180px] font-medium text-slate-700 shadow-sm" onchange="fetchDetailFlowPar()">
+              <option value="">Semua Kankas</option>
+          </select>
+          <button onclick="exportDetailExcel()" class="h-9 px-3 bg-green-600 hover:bg-green-700 text-white rounded-lg text-xs font-bold transition shadow-sm flex items-center gap-1" title="Export Excel Detail">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+              <span class="hidden md:inline">Excel</span>
+          </button>
+          <button id="btnCloseFP" class="w-9 h-9 flex items-center justify-center rounded-lg bg-slate-200 hover:bg-red-100 hover:text-red-600 transition text-slate-600 font-bold">✕</button>
       </div>
     </div>
-
-    <!-- Body: p-4 biasa; scroll dipindah ke #modalScroll agar sticky bekerja -->
-    <div id="modalBody" class="p-4">
-      <!-- Kontainer scroll gabungan (X + Y) -->
-      <div id="modalScroll" class="overflow-auto max-h-[72vh]">
-        <table id="modalTableFP" class="w-full text-sm text-left text-gray-800 bg-white rounded">
-          <thead id="modalHeadFP" class="bg-gray-100 text-gray-700">
-            <tr>
-              <!-- Freeze 2 kolom kiri di HEADER -->
-              <th class="px-4 py-2 col-norek freeze-1 sortable" data-key="no_rekening" data-type="text">No Rekening</th>
-              <th class="px-4 py-2 col-nama  freeze-2 sortable" data-key="nama_nasabah" data-type="text">Nama Nasabah</th>
-              <th class="px-4 py-2 text-right col-bd sortable" data-key="baki_debet" data-type="num">Baki Debet</th>
-              <th class="px-4 py-2 text-right col-tp sortable" data-key="tunggakan_pokok" data-type="num">Tunggakan Pokok</th>
-              <th class="px-4 py-2 text-right col-tb sortable" data-key="tunggakan_bunga" data-type="num">Tunggakan Bunga</th>
-              <th class="px-4 py-2 text-right col-sa sortable" data-key="saldo_akhir" data-type="num">Saldo Tab.</th>
-              <th class="px-4 py-2 text-center col-jt sortable" data-key="tgl_jatuh_tempo" data-type="date">JT</th>
-              <th class="px-4 py-2 text-center col-hari sortable" data-key="hari_menunggak" data-type="num">DPD</th>
-              <!-- ✅ Kolom baru -->
-              <th class="px-4 py-2 text-center col-dpdtp sortable" data-key="hari_menunggak_pokok" data-type="num">DPD TP</th>
-              <th class="px-4 py-2 text-center col-dpdtb sortable" data-key="hari_menunggak_bunga" data-type="num">DPD TB</th>
-              <!-- ===== -->
-              <th class="px-4 py-2 text-right col-ap sortable" data-key="angsuran_pokok" data-type="num">Angs. Pokok</th>
-              <th class="px-4 py-2 text-right col-ab sortable" data-key="angsuran_bunga" data-type="num">Angs. Bunga</th>
-              <th class="px-4 py-2 col-tgl sortable" data-key="tgl_trans" data-type="date">Tgl Transaksi</th>
-              <th class="px-4 py-2 col-komit">Komitmen</th>
-            </tr>
-          </thead>
-          <!-- TOTAL sticky (biru) tepat di bawah thead -->
-          <tbody id="modalTotalRow"></tbody>
-          <!-- DATA -->
-          <tbody id="modalBodyRows">
-            <tr><td class="px-4 py-2 text-gray-500" colspan="14">Mengambil data debitur...</td></tr>
-          </tbody>
+    
+    <div class="flex-1 overflow-auto bg-white relative" id="modalScroll">
+        <table id="modalTableFP">
+            <thead>
+                <tr>
+                    <th class="modal-freeze-1 text-center">No Rekening</th>
+                    <th class="modal-freeze-2 text-left">Nama Nasabah</th>
+                    <th class="text-right w-[140px]">Baki Debet</th>
+                    <th class="text-right w-[120px]">Tungg. Pokok</th>
+                    <th class="text-right w-[120px]">Tungg. Bunga</th>
+                    <th class="text-right w-[140px] text-red-700 bg-red-50">Tot. Tunggakan</th>
+                    <th class="text-right w-[120px]">Saldo Tab</th>
+                    <th class="text-center w-[80px]">JT</th>
+                    <th class="text-center w-[60px]">DPD</th>
+                    <th class="text-center w-[60px]">DPD TP</th>
+                    <th class="text-center w-[60px]">DPD TB</th>
+                    <th class="text-right w-[120px]">Angs. Pokok</th>
+                    <th class="text-right w-[120px]">Angs. Bunga</th>
+                    <th class="text-center w-[100px]">Tgl Trans</th>
+                    <th class="text-left w-[180px]">Komitmen</th>
+                </tr>
+            </thead>
+            <tbody id="modalTotalRow"></tbody> 
+            <tbody id="modalBodyRows"></tbody> 
         </table>
-      </div>
     </div>
   </div>
 </div>
 
-<style>
-/* ===== Gutters TBODY desktop/tablet (mobile tetap) ===== */
-@media (min-width: 641px){
-
-  /* Rekap (tabel utama) */
-  #tabelFlowPar tbody#fpBody tr > td:first-child,
-  #tabelFlowPar tbody#fpTotalRow tr > td:first-child{
-    padding-left: 1rem;
-  }
-  #tabelFlowPar tbody#fpBody tr > td:last-child,
-  #tabelFlowPar tbody#fpTotalRow tr > td:last-child{
-    padding-right: 1.1rem;
-  }
-  #tabelFlowPar tbody#fpBody tr > td{
-    padding-top: 0.66rem;
-    padding-bottom: 0.66rem;
-  }
-
-  /* Modal (daftar debitur) */
-  #modalTableFP tbody#modalBodyRows tr > td:first-child,
-  #modalTableFP tbody#modalTotalRow tr > td:first-child{
-    padding-left: 1rem;
-  }
-  #modalTableFP tbody#modalBodyRows tr > td:last-child,
-  #modalTableFP tbody#modalTotalRow tr > td:last-child{
-    padding-right: 1rem;
-  }
-  #modalTableFP tbody#modalBodyRows tr > td{
-    padding-top: 0.6rem;
-    padding-bottom: 0.6rem;
-  }
-}
-
-/* Kosmetik halus */
-@media (min-width: 1024px){
-  #fpScroller .h-full{
-    box-shadow: inset 0 0 0 1px rgba(0,0,0,.03);
-    border-radius: .5rem;
-  }
-}
-
-/* ==== Lebar kolom & spacing rekap ==== */
-#fpScroller{ --col2: 14rem; --colNum: 8.5rem; }
-#tabelFlowPar .col2, #tabelFlowPar th.col-nama, #tabelFlowPar td.col-nama{
-  width: var(--col2); min-width: var(--col2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-}
-@media (min-width: 641px){
-  #tabelFlowPar .col-noa{ width: var(--colNum); min-width: var(--colNum); }
-  #tabelFlowPar .col-bd { width: var(--colNum); min-width: var(--colNum); }
-}
-@media (max-width:1024px){ #fpScroller{ --col2: 11.5rem; } }
-@media (max-width:640px){ #fpScroller{ --col2: 9.25rem; } }
-
-/* kontrol */
-.inp{ border:1px solid #cbd5e1; border-radius:.6rem; padding:.5rem .75rem; font-size:14px; }
-.btn-icon{ width:42px; height:42px; border-radius:999px; display:inline-flex; align-items:center; justify-content:center;
-           background:#2563eb; color:#fff; box-shadow:0 6px 14px rgba(37,99,235,.25); }
-.btn-icon:hover{ background:#1e40af; }
-
-.hdr{ row-gap:.5rem; }
-@media (max-width:640px){
-  .title{ font-size:1.25rem; }
-  .hdr{ flex-direction:column; align-items:flex-start; }
-  #filterFP{ width:100%; gap:.5rem; }
-  .lbl{ display:none; }
-  .inp{ flex:1 1 0; min-width:0; font-size:13px; padding:.45rem .6rem; }
-  .btn-icon{ width:40px; height:40px; }
-}
-
-/* rekap sticky left + header */
-body{ overflow:hidden; }
-#fpScroller{ --col1:6rem; --headH:40px; --totalH:36px; --safe:40px; }
-#tabelFlowPar .col1{ width:var(--col1); min-width:var(--col1); }
-#tabelFlowPar .col2{ width:var(--col2); min-width:var(--col2); }
-#tabelFlowPar .freeze-1{ position:sticky; left:0; z-index:41; box-shadow:1px 0 0 rgba(0,0,0,.06); }
-#tabelFlowPar .freeze-2{ position:sticky; left:var(--col1); z-index:40; box-shadow:1px 0 0 rgba(0,0,0,.06); }
-#tabelFlowPar thead th{ position:sticky; top:0; background:#d9ead3; z-index:88; }
-#tabelFlowPar thead th.freeze-1{ left:0; z-index:91 !important; }
-#tabelFlowPar thead th.freeze-2{ left:var(--col1); z-index:90 !important; }
-
-#fpTotalRow tr.total-row td{ position:sticky; top:var(--headH); background:#eaf2ff; color:#1e40af; border-bottom:1px solid #c7d2fe; z-index:70; }
-#fpTotalRow tr.total-row td.freeze-1{ z-index:91; }
-#fpTotalRow tr.total-row td.freeze-2{ z-index:90; }
-
-#tabelFlowPar tbody tr:hover td{ background:#f9fafb; }
-#tabelFlowPar #fpBody::after{ content:""; display:block; height: calc(var(--headH) + var(--totalH) + var(--safe)); }
-
-/* Padding umum rekap */
-#tabelFlowPar th, #tabelFlowPar td{ padding: calc(.5rem - 2px) calc(.6rem - 2px); }
-@media (max-width:640px){
-  #tabelFlowPar{ font-size:12px; }
-  #tabelFlowPar thead th{ font-size:11px; }
-  #tabelFlowPar th, #tabelFlowPar td{ padding:.5rem .6rem; }
-  #tabelFlowPar th.col-kode, #tabelFlowPar td.col-kode{ display:none; }
-  #fpScroller{ --col1:0px; }
-  #tabelFlowPar .freeze-2, #tabelFlowPar thead th.freeze-2{ left:0 !important; }
-}
-
-/* ===== MODAL TABLE: STICKY HEADER & TOTAL (BIRU) + FREEZE KIRI ===== */
-#modalScroll{ --modalHeadH: 44px; --colRek: 9rem; --colNama: 12rem; }
-
-#modalTableFP{
-  border-collapse:separate;
-  border-spacing:0;
-  table-layout:fixed;
-  width:100%;
-  min-width:1590px; /* tambah 2 kolom DPD TP/TB */
-}
-#modalTableFP th, #modalTableFP td{
-  padding: calc(.55rem - 2px) calc(.7rem - 2px);
-  border-bottom:1px solid #eef2f7;
-  white-space:nowrap;
-  background:#ffffff;
-}
-#modalTableFP td.text-right, #modalTableFP th.text-right{ text-align:right; }
-
-/* Lebar per-kolom (modal) */
-#modalTableFP .col-norek { width: var(--colRek);  min-width: var(--colRek);  }
-#modalTableFP .col-nama  { width: var(--colNama); min-width: var(--colNama); overflow:hidden; text-overflow:ellipsis; }
-#modalTableFP .col-bd,
-#modalTableFP .col-tp,
-#modalTableFP .col-tb,
-#modalTableFP .col-ap,
-#modalTableFP .col-ab,
-#modalTableFP .col-sa    { width: 10rem; min-width: 10rem; }
-#modalTableFP .col-jt    { width: 6.5rem; min-width: 6.5rem; text-align:center; }
-#modalTableFP .col-hari  { width: 7rem;  min-width: 7rem;  text-align:center; }
-#modalTableFP .col-dpdtp { width: 7rem;  min-width: 7rem;  text-align:center; } /* NEW */
-#modalTableFP .col-dpdtb { width: 7rem;  min-width: 7rem;  text-align:center; } /* NEW */
-#modalTableFP .col-tgl   { width: 9rem;  min-width: 9rem;  }
-#modalTableFP .col-komit { width: 14rem; min-width: 14rem; overflow:hidden; text-overflow:ellipsis; }
-
-/* Sticky header modal */
-#modalTableFP thead th{
-  position: sticky;
-  top: 0;
-  z-index: 31;
-  background: #f1f59;
-  border-bottom: 1px solid #e2e8f0;
-}
-
-/* Sort style (rekap & modal) */
-#tabelFlowPar thead th.sortable,
-#modalTableFP thead th.sortable{ cursor:pointer; user-select:none; }
-#tabelFlowPar thead th.sortable::after,
-#modalTableFP thead th.sortable::after{
-  content:""; margin-left:.4rem; display:inline-block; width:0; height:0; border-left:4px solid transparent; border-right:4px solid transparent;
-  border-top:6px solid #64748b; opacity:.7; transform: translateY(2px);
-}
-#tabelFlowPar thead th.sortable.sorted-asc::after,
-#modalTableFP thead th.sortable.sorted-asc::after{ border-top-color:#1e40af; transform: rotate(180deg) translateY(-2px); opacity:1; }
-#tabelFlowPar thead th.sortable.sorted-desc::after,
-#modalTableFP thead th.sortable.sorted-desc::after{ border-top-color:#1e40af; opacity:1; }
-
-/* Freeze kolom 1 & 2 modal */
-#modalTableFP .freeze-1{ position: sticky; left: 0; z-index: 41; box-shadow: 1px 0 0 rgba(0,0,0,.06); }
-#modalTableFP .freeze-2{ position: sticky; left: var(--colRek); z-index: 40; box-shadow: 1px 0 0 rgba(0,0,0,.06); }
-#modalTableFP thead th.freeze-1{ z-index: 51; }
-#modalTableFP thead th.freeze-2{ z-index: 50; }
-
-/* Sticky baris TOTAL modal */
-#modalTotalRow tr.total-row td{
-  position: sticky;
-  top: var(--modalHeadH);
-  z-index: 30;
-  background: #eaf2ff;
-  color: #1e40af;
-  border-bottom: 1px solid #c7d2fe;
-  font-weight: 600;
-}
-#modalTotalRow tr.total-row td.freeze-1{ z-index: 51; }
-#modalTotalRow tr.total-row td.freeze-2{ z-index: 50; }
-
-/* Hover & overdue tint (row) */
-#modalTableFP tbody#modalBodyRows tr:hover td{ background:#f9fafb; }
-#modalTableFP tbody#modalBodyRows tr.overdue td{ background:#fee2e2; }
-
-/* Highlight per-sel untuk DPD TP/TB >= 90 */
-#modalTableFP td.hot90{ background:#fee2e2 !important; }
-
-@media (max-width:640px){
-  #modalCardFP{ width:92vw; max-height:80vh; }
-  #modalScroll{ max-height:72vh; --colRek: 0rem; --colNama: 8rem; }
-  #modalTableFP{ min-width:1180px; } /* lebih kecil tapi tetap muat kolom baru lewat scroll X */
-  #modalTableFP th, #modalTableFP td{ padding:.42rem .5rem; }
-  #modalTableFP .col-norek{ display:none; }
-  #modalTableFP .freeze-2{ left: 0 !important; }
-  #modalTableFP .col-bd,
-  #modalTableFP .col-tp,
-  #modalTableFP .col-tb,
-  #modalTableFP .col-ap,
-  #modalTableFP .col-ab,
-  #modalTableFP .col-sa { width: 7.5rem; min-width: 7.5rem; }
-  #modalTableFP .col-jt,
-  #modalTableFP .col-hari,
-  #modalTableFP .col-dpdtp,
-  #modalTableFP .col-dpdtb { width: 5.5rem; min-width: 5.5rem; }
-  #modalTableFP .col-tgl  { width: 7rem;  min-width: 7rem;  }
-  #modalTableFP .col-komit{ width: 7rem;  min-width: 7rem;  }
-}
-</style>
+<div id="modalPeringatan" class="fixed inset-0 hidden bg-slate-900/60 backdrop-blur-sm items-center justify-center z-[9999] px-4">
+  <div class="bg-white rounded-xl shadow-2xl w-full max-w-sm overflow-hidden animate-scale-up">
+    <div class="bg-red-50 p-4 border-b border-red-100 flex items-center gap-3">
+      <div class="w-10 h-10 rounded-full bg-red-100 text-red-600 flex items-center justify-center text-xl shrink-0">
+        <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg>
+      </div>
+      <h3 class="font-bold text-red-800 text-lg">Akses Ditolak</h3>
+    </div>
+    <div class="p-6 text-center text-slate-600 text-sm">
+      <p>Anda login sebagai <span class="font-bold text-blue-600 px-1 bg-blue-50 rounded" id="warnUserLvl">Cabang</span>.</p>
+      <p class="mt-2">Anda tidak memiliki izin untuk melihat detail data nasabah milik <span class="font-bold text-red-600 px-1 bg-red-50 rounded" id="warnTargetLvl">Unit</span>.</p>
+    </div>
+    <div class="p-4 bg-slate-50 border-t border-slate-100 flex justify-end">
+      <button onclick="closeModalPeringatan()" class="px-5 py-2 bg-slate-800 hover:bg-slate-900 text-white rounded text-xs font-bold transition shadow-sm">Mengerti</button>
+    </div>
+  </div>
+</div>
 
 <script>
-/* ===== Helpers ===== */
-const fmtNom = n => new Intl.NumberFormat("id-ID").format(+n||0);
-const fmtInt = n => new Intl.NumberFormat("id-ID",{maximumFractionDigits:0}).format(+n||0);
-const esc     = s => String(s??'').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;').replaceAll("'","&#39;");
-const escAttr = s => String(s??'').replaceAll('"','&quot;').replaceAll("'","&#39;");
-const num = v => Number(v||0);
+  // --- UTILS ---
+  const nfID = new Intl.NumberFormat('id-ID');
+  const fmtNom = n => nfID.format(Number(n||0));
+  const fmtInt = n => new Intl.NumberFormat("id-ID",{maximumFractionDigits:0}).format(+n||0);
+  const num = v => Number(v||0);
+  const kodeNum = v => Number(String(v??'').replace(/\D/g,'')||0);
+  const formatDate = (s) => { if(!s) return '-'; const d=new Date(s); return isNaN(d)?'-': `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()}`; };
+  
+  function startOfDay(d){ const x=new Date(d); x.setHours(0,0,0,0); return x; }
+  function endOfMonth(dateLike){ const d = new Date(dateLike); if (isNaN(d)) return null; return startOfDay(new Date(d.getFullYear(), d.getMonth()+1, 0)); }
+  function formatJTByRule(jt){ if(!jt) return '-'; const d = new Date(jt); if(isNaN(d)) return '-'; const today = startOfDay(new Date()); const due = startOfDay(d); if(due < today){ const yyyy = d.getFullYear(); const mm = String(d.getMonth()+1).padStart(2,'0'); const dd = String(d.getDate()).padStart(2,'0'); return `${yyyy}-${mm}-${dd}`; } return String(d.getDate()); }
+  function calcHariMenunggak(jt){ if(!jt) return 0; const d = new Date(jt); if(isNaN(d)) return 0; const today = startOfDay(new Date()); const due = startOfDay(d); const days = Math.floor((today - due) / 86400000); return days > 0 ? days : 0; }
 
-function startOfDay(d){ const x=new Date(d); x.setHours(0,0,0,0); return x; }
-function endOfMonth(dateLike){
-  const d = new Date(dateLike);
-  if (isNaN(d)) return null;
-  return startOfDay(new Date(d.getFullYear(), d.getMonth()+1, 0));
-}
-function isSameMonth(dateLike, refDate){
-  const d = new Date(dateLike); if(isNaN(d)) return false;
-  return d.getMonth()===refDate.getMonth() && d.getFullYear()===refDate.getFullYear();
-}
+  // --- STATE PENTING ---
+  window.fpDataRaw = [];
+  window.fpGtRaw = null;
+  let detailDataRaw = []; 
+  let sortState = { column: null, direction: 1 };
+  let currentFilter = { closing:'', harian:'' };
+  let currentDetailKode = ''; 
+  let fpAbort;
 
-/* JT display rule */
-function formatJTByRule(jt){
-  if(!jt) return '-';
-  const d = new Date(jt); if(isNaN(d)) return '-';
-  const today = startOfDay(new Date());
-  const due   = startOfDay(d);
-  if(due < today){
-    const yyyy = d.getFullYear();
-    const mm = String(d.getMonth()+1).padStart(2,'0');
-    const dd = String(d.getDate()).padStart(2,'0');
-    return `${yyyy}-${mm}-${dd}`;
+  // Header Sticky Adjuster
+  function updateFpStickyHeader() {
+      const thead = document.getElementById('theadFP');
+      const scroller = document.getElementById('fpScroller');
+      if(thead && scroller) {
+          scroller.style.setProperty('--fp_headH', (thead.offsetHeight - 1) + 'px');
+      }
   }
-  return String(d.getDate());
-}
+  window.addEventListener('resize', updateFpStickyHeader);
 
-/* Hari Menunggak (fallback bila API kosong) */
-function calcHariMenunggak(jt){
-  if(!jt) return 0;
-  const d = new Date(jt); if(isNaN(d)) return 0;
-  const today = startOfDay(new Date());
-  const due   = startOfDay(d);
-  const days = Math.floor((today - due) / 86400000);
-  return days > 0 ? days : 0;
-}
+  // --- INIT ---
+  window.addEventListener('DOMContentLoaded', async () => {
+    
+    // 1. AMBIL USER LOGIN (LOGIC SAMA PERSIS SEPERTI KOLEKTIBILITAS)
+    const user = (window.getUser && window.getUser()) || null;
+    const uKode = user?.kode ? String(user.kode).padStart(3,'0') : '000';
+    window.currentUser = { kode: uKode };
 
-/* ===== Sticky rekap ===== */
-function setFPSticky(){
-  const h = document.getElementById('fpHead1')?.offsetHeight || 40;
-  const holder = document.getElementById('fpScroller');
-  holder.style.setProperty('--headH', h + 'px');
-  const totH = document.querySelector('#fpTotalRow tr')?.offsetHeight || 36;
-  holder.style.setProperty('--totalH', totH + 'px');
-}
-function sizeFPScroller(){
-  const wrap = document.getElementById('fpScroller');
-  const rectTop = wrap.getBoundingClientRect().top;
-  wrap.style.height = Math.max(260, window.innerHeight - rectTop - 18) + 'px';
-}
-window.addEventListener('resize', ()=>{ setFPSticky(); sizeFPScroller(); });
+    document.getElementById('badgeUnit').innerText = (uKode === '000') ? 'KONSOLIDASI' : `CABANG ${uKode}`;
 
-/* ===== Default tanggal (ambil dari API) ===== */
-(async ()=>{
-  try{
-    const res = await fetch('./api/flow_par/', {
-      method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({ type:'Last Created Nominatif' })
-    });
-    const j = await res.json();
-    if(j?.data){
-      closing_date.value = j.data.last_closing;
-      harian_date.value  = j.data.last_created;
-      fetchFlowPar(j.data.last_closing, j.data.last_created);
+    // 2. Populate Dropdown Kantor (Sesuai User)
+    await populateKantorOptionsFP(uKode);
+
+    // 3. Load Tanggal Default & Tarik Data Awal
+    try { 
+        const res = await fetch('./api/date/');
+        const j = await res.json();
+        if(j?.data){
+            document.getElementById('closing_date').value = j.data.last_closing;
+            document.getElementById('harian_date').value  = j.data.last_created;
+            currentFilter = { closing: j.data.last_closing, harian: j.data.last_created };
+            fetchFlowPar();
+        }
+    } catch(e) { 
+        const today = new Date().toISOString().split('T')[0];
+        document.getElementById('closing_date').value = today;
+        document.getElementById('harian_date').value = today;
+        currentFilter = { closing: today, harian: today };
+        fetchFlowPar();
     }
-  }catch{}
-})();
+  });
 
-/* ===== Filter ===== */
-document.getElementById("filterForm").addEventListener("submit", (e)=>{
-  e.preventDefault();
-  fetchFlowPar(closing_date.value, harian_date.value);
-});
+  // --- POPULATE DROPDOWN KANTOR (UTAMA) ---
+  async function populateKantorOptionsFP(userKode){
+      const optKantor = document.getElementById('opt_kantor_rec');
 
-/* ===== State rekap (untuk sort) ===== */
-let __FP_REKAP_ROWS__ = [];
-let __FP_REKAP_TOTAL__ = null;
-let __FP_REKAP_SORT__  = null; // {key, dir:'asc'|'desc', type}
-
-/* Render body rekap (dengan sort) */
-function renderRekapBody(){
-  const tBody  = document.getElementById("fpBody");
-  const rows = [...__FP_REKAP_ROWS__];
-
-  if(__FP_REKAP_SORT__){
-    const {key, dir, type} = __FP_REKAP_SORT__;
-    const toVal = (d)=>{
-      if(type==='num')  return num(d[key]);
-      if(type==='date'){ const t=d[key]?new Date(d[key]).getTime():NaN; return isNaN(t)?-8640000000000000:t; }
-      return String(d[key] ?? '').toLowerCase();
-    };
-    rows.sort((a,b)=>{
-      const va = toVal(a), vb = toVal(b);
-      if(va<vb) return dir==='asc' ? -1 : 1;
-      if(va>vb) return dir==='asc' ? 1 : -1;
-      return 0;
-    });
-  }
-
-  tBody.innerHTML = rows.map(d=>`
-    <tr class="border-b">
-      <td class="px-4 py-3 freeze-1 col1 col-kode">${esc(String(d.kode_cabang??'').padStart(3,'0'))}</td>
-      <td class="px-4 py-3 freeze-2 col2 col-nama" title="${esc(d.nama_kantor)}">${esc(d.nama_kantor)}</td>
-      <td class="px-3 py-3 text-center col-noa">
-        <a href="#" class="text-blue-600 hover:underline"
-           onclick="event.preventDefault(); loadDebiturFlowPar('${escAttr(d.kode_cabang)}', '${escAttr(document.getElementById('closing_date')?.value||'')}', '${escAttr(document.getElementById('harian_date')?.value||'')}')">
-           ${fmtInt(d.noa_flow)}
-        </a>
-      </td>
-      <td class="pl-3 pr-8 md:pr-10 py-3 text-right col-bd">${fmtNom(d.baki_debet_flow)}</td>
-    </tr>
-  `).join('') || `<tr><td colspan="4" class="px-4 py-3 text-red-600">Tidak ada data.</td></tr>`;
-}
-
-/* Pasang handler sort rekap */
-function attachRekapSortHandlers(){
-  const ths = document.querySelectorAll('#tabelFlowPar thead th.sortable');
-  ths.forEach(th=>{
-    th.addEventListener('click', ()=>{
-      const key  = th.dataset.key;
-      const type = th.dataset.type || 'text';
-
-      // reset kelas panah
-      ths.forEach(x=>x.classList.remove('sorted-asc','sorted-desc'));
-
-      if(__FP_REKAP_SORT__ && __FP_REKAP_SORT__.key===key){
-        __FP_REKAP_SORT__.dir = (__FP_REKAP_SORT__.dir==='asc'?'desc':'asc');
-      }else{
-        __FP_REKAP_SORT__ = {key, dir:'asc', type};
+      // JIKA KODE ADA ISINYA DAN BUKAN '000' (Berarti Cabang) -> KUNCI DROPDOWN
+      if(userKode && userKode !== '000'){
+          optKantor.innerHTML = `<option value="${userKode}">CABANG ${userKode}</option>`;
+          optKantor.value = userKode;
+          optKantor.disabled = true; // KUNCI!
+          return; 
       }
 
-      th.classList.add(__FP_REKAP_SORT__.dir==='asc' ? 'sorted-asc' : 'sorted-desc');
-      renderRekapBody();
-    });
-  });
-}
-
-/* ===== Fetch data rekap ===== */
-let fpAbort=null;
-function fetchFlowPar(closing_date, harian_date){
-  if(fpAbort) fpAbort.abort();
-  fpAbort = new AbortController();
-
-  const tTotal = document.getElementById("fpTotalRow");
-  const tBody  = document.getElementById("fpBody");
-  tTotal.innerHTML = '';
-  tBody.innerHTML  = `<tr><td colspan="4" class="px-4 py-3 text-gray-500">Memuat...</td></tr>`;
-
-  fetch("./api/flow_par/", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ type: "Flow Par", closing_date, harian_date }),
-    signal: fpAbort.signal
-  })
-  .then(r=>r.json())
-  .then(res=>{
-    const data = Array.isArray(res.data) ? res.data : [];
-    const isTotal = d => (String(d.nama_kantor||'').toUpperCase().includes('TOTAL') ||
-                          String(d.kode_cabang||'').toUpperCase()==='TOTAL');
-    __FP_REKAP_TOTAL__ = data.find(isTotal) || null;
-    __FP_REKAP_ROWS__  = data.filter(d => !isTotal(d));
-
-    // render total tetap dulu
-    if(__FP_REKAP_TOTAL__){
-      tTotal.innerHTML = `
-        <tr class="total-row font-semibold text-sm">
-          <td class="px-4 py-2 freeze-1 col1 col-kode">TOTAL</td>
-          <td class="px-4 py-2 freeze-2 col2 col-nama">TOTAL</td>
-          <td class="px-3 py-2 text-center col-noa">${fmtInt(__FP_REKAP_TOTAL__.noa_flow)}</td>
-          <td class="pl-3 pr-8 md:pr-10 py-2 text-right col-bd">${fmtNom(__FP_REKAP_TOTAL__.baki_debet_flow)}</td>
-        </tr>`;
-    }else{
-      tTotal.innerHTML = '';
-    }
-
-    // render body
-    renderRekapBody();
-
-    setFPSticky(); sizeFPScroller();
-    setTimeout(()=>{ setFPSticky(); sizeFPScroller(); }, 50);
-  })
-  .catch(err=>{
-    if(err.name!=='AbortError'){
-      tTotal.innerHTML = '';
-      tBody.innerHTML  = `<tr><td colspan="4" class="px-4 py-3 text-red-600">Gagal memuat data.</td></tr>`;
-    }
-  });
-}
-
-/* ===== Modal (data + sort + merah JT<=EOM + DPD TP/TB) ===== */
-let FP_ACTIVE_KODE = null;
-let __FP_LIST__ = [];      // data mentah dari API (sudah diperkaya)
-let __FP_SORT__ = null;    // {key, dir:'asc'|'desc'}
-
-/* ► Pakai hari_menunggak dari API bila tersedia; jika kosong, fallback hitung dari JT */
-function enhanceList(raw){
-  return raw.map(d=>{
-    const hasApiHari = (d.hari_menunggak ?? d.hari_menunggak === 0);
-    let hari = hasApiHari ? Number(d.hari_menunggak) : calcHariMenunggak(d.tgl_jatuh_tempo);
-    if(!Number.isFinite(hari)) hari = 0;
-    if(hari < 0) hari = 0;
-    return {...d, hari_menunggak: hari};
-  });
-}
-
-function openModalFlowPar(){
-  const o=document.getElementById("modalDebiturFlowPar");
-  o.classList.remove("hidden");
-  o.classList.add("items-center","justify-center","flex");
-  setTimeout(setModalSticky, 0);
-}
-function closeModalFlowPar(){
-  const o=document.getElementById("modalDebiturFlowPar");
-  o.classList.add("hidden");
-  o.classList.remove("flex");
-}
-document.getElementById("btnCloseFP").onclick = closeModalFlowPar;
-document.getElementById("modalDebiturFlowPar").onclick = (e)=>{ if(!e.target.closest('#modalCardFP')) closeModalFlowPar(); };
-document.addEventListener('keydown', (e)=>{ if(e.key==='Escape' && !document.getElementById("modalDebiturFlowPar").classList.contains('hidden')) closeModalFlowPar(); });
-
-function setModalSticky(){
-  const head = document.querySelector('#modalTableFP thead tr');
-  const scroll = document.getElementById('modalScroll');
-  const h = (head?.offsetHeight || 44);
-  if(scroll) scroll.style.setProperty('--modalHeadH', h + 'px');
-}
-window.addEventListener('resize', setModalSticky);
-
-/* ==== RENDER MODAL DENGAN LOGIKA MERAH: JT <= AKHIR BULAN ACUAN + DPD TP/TB ==== */
-function renderModal(list){
-  const tbody = document.getElementById("modalBodyRows");
-  const ttot  = document.getElementById("modalTotalRow");
-
-  if(!list.length){
-    tbody.innerHTML = `<tr><td class="px-4 py-2 text-red-600" colspan="14">Tidak ada data.</td></tr>`;
-    ttot.innerHTML = '';
-    setModalSticky();
-    return;
+      // JIKA PUSAT -> BUKA SEMUA
+      try {
+          const res = await fetch('./api/kode/', { 
+              method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({type:'kode_kantor'}) 
+          });
+          const json = await res.json();
+          let list = json.data || [];
+          
+          let html = `<option value="">KONSOLIDASI (SEMUA)</option>`;
+          list.filter(x => x.kode_kantor !== '000').sort((a,b) => String(a.kode_kantor).localeCompare(b.kode_kantor)).forEach(it => {
+              html += `<option value="${String(it.kode_kantor).padStart(3,'0')}">${String(it.kode_kantor).padStart(3,'0')} - ${it.nama_kantor}</option>`;
+          });
+          optKantor.innerHTML = html;
+          optKantor.disabled = false;
+      } catch(e){
+          optKantor.innerHTML = `<option value="">Error Load</option>`;
+      }
   }
 
-  // Tentukan bulan acuan dari Harian Date (kalau kosong, pakai hari ini)
-  const harianStr = document.getElementById('harian_date')?.value;
-  const ref = harianStr ? new Date(harianStr) : new Date();
-  const eom = endOfMonth(ref) || endOfMonth(new Date());
+  // --- FILTER SUBMIT ---
+  document.getElementById('filterForm').addEventListener('submit', e => {
+    e.preventDefault();
+    currentFilter.closing = document.getElementById('closing_date').value;
+    currentFilter.harian  = document.getElementById('harian_date').value;
+    sortState = { column:null, direction:1 }; 
+    fetchFlowPar();
+  });
 
-  // Totals
-  const totals = list.reduce((a,d)=>(Object.assign(a,{
-    rows:a.rows+1,
-    bd:a.bd+num(d.baki_debet),
-    tp:a.tp+num(d.tunggakan_pokok),
-    tb:a.tb+num(d.tunggakan_bunga),
-    ap:a.ap+num(d.angsuran_pokok),
-    ab:a.ab+num(d.angsuran_bunga),
-    sa:a.sa+num(d.saldo_akhir)
-  })), {rows:0,bd:0,tp:0,tb:0,ap:0,ab:0,sa:0});
+  // --- FETCH REKAP ---
+  async function fetchFlowPar(){
+    const loading = document.getElementById('loadingFP');
+    const loadingMini = document.getElementById('loadingMini');
+    loading.classList.remove('hidden'); loadingMini.classList.remove('hidden');
 
-  // Rows
-  tbody.innerHTML = list.map(d=>{
-    const jt = d.tgl_jatuh_tempo ? startOfDay(new Date(d.tgl_jatuh_tempo)) : null;
-    const jtDisplay = formatJTByRule(d.tgl_jatuh_tempo);
-    const merahBaris = jt && (jt.getTime() <= eom.getTime());
+    if(fpAbort) fpAbort.abort();
+    fpAbort = new AbortController();
 
-    // DPD TP/TB
-    const dpdTP = Number.isFinite(+d.hari_menunggak_pokok) ? +d.hari_menunggak_pokok : 0;
-    const dpdTB = Number.isFinite(+d.hari_menunggak_bunga) ? +d.hari_menunggak_bunga : 0;
-    const hotTP = dpdTP >= 90 ? 'hot90' : '';
-    const hotTB = dpdTB >= 90 ? 'hot90' : '';
+    const tbody = document.getElementById('fpBody');
+    const ttotal = document.getElementById('fpTotalRow');
+    tbody.innerHTML = ''; ttotal.innerHTML = '';
 
-    return `
-      <tr class="${merahBaris ? 'overdue' : ''}">
-        <td class="px-4 py-2 col-norek freeze-1">${esc(d.no_rekening)}</td>
-        <td class="px-4 py-2 col-nama  freeze-2" title="${esc(d.nama_nasabah)}">${esc(d.nama_nasabah)}</td>
-        <td class="px-4 py-2 text-right col-bd">${fmtNom(d.baki_debet)}</td>
-        <td class="px-4 py-2 text-right col-tp">${fmtNom(d.tunggakan_pokok)}</td>
-        <td class="px-4 py-2 text-right col-tb">${fmtNom(d.tunggakan_bunga)}</td>
-        <td class="px-4 py-2 text-right col-sa"><strong>${fmtNom(d.saldo_akhir)}</strong></td>
-        <td class="px-4 py-2 text-center col-jt" title="${esc(d.tgl_jatuh_tempo||'-')}">${jtDisplay}</td>
-        <td class="px-4 py-2 text-center col-hari">${fmtInt(d.hari_menunggak)}</td>
-        <td class="px-4 py-2 text-center col-dpdtp ${hotTP}">${fmtInt(dpdTP)}</td>
-        <td class="px-4 py-2 text-center col-dpdtb ${hotTB}">${fmtInt(dpdTB)}</td>
-        <td class="px-4 py-2 text-right col-ap">${fmtNom(d.angsuran_pokok||0)}</td>
-        <td class="px-4 py-2 text-right col-ab">${fmtNom(d.angsuran_bunga||0)}</td>
-        <td class="px-4 py-2 col-tgl">${d.tgl_trans ? formatTanggal(d.tgl_trans) : '-'}</td>
-        <td class="px-4 py-2 col-komit" title="${esc(d.komitmen||'-')}">${esc(d.komitmen || '-')}</td>
-      </tr>`;
-  }).join('');
+    // Ambil parameter dari Dropdown Utama
+    const kantor = document.getElementById('opt_kantor_rec').value || '';
+    document.getElementById('thNamaFP').innerText = (kantor !== '') ? "NAMA KANKAS" : "NAMA KANTOR";
 
-  // Total row (sticky)
-  ttot.innerHTML = `
-    <tr class="total-row">
-      <td class="px-4 py-2 freeze-1 col-norek">TOTAL</td>
-      <td class="px-4 py-2 freeze-2 col-nama">TOTAL (${totals.rows} debitur)</td>
-      <td class="px-4 py-2 text-right col-bd">${fmtNom(totals.bd)}</td>
-      <td class="px-4 py-2 text-right col-tp">${fmtNom(totals.tp)}</td>
-      <td class="px-4 py-2 text-right col-tb">${fmtNom(totals.tb)}</td>
-      <td class="px-4 py-2 text-right col-sa">${fmtNom(totals.sa)}</td>
-      <td class="px-4 py-2 col-jt"></td>
-      <td class="px-4 py-2 col-hari"></td>
-      <td class="px-4 py-2 col-dpdtp"></td>
-      <td class="px-4 py-2 col-dpdtb"></td>
-      <td class="px-4 py-2 text-right col-ap">${fmtNom(totals.ap)}</td>
-      <td class="px-4 py-2 text-right col-ab">${fmtNom(totals.ab)}</td>
-      <td class="px-4 py-2 col-tgl"></td>
-      <td class="px-4 py-2 col-komit"></td>
-    </tr>`;
+    try {
+        const payload = { 
+            type: 'Flow Par', 
+            closing_date: currentFilter.closing, 
+            harian_date: currentFilter.harian,
+            kode_kantor: kantor
+        };
 
-  setModalSticky();
-}
+        const res = await fetch('./api/flow_par/', {
+            method: 'POST', headers: {'Content-Type':'application/json'},
+            body: JSON.stringify(payload),
+            signal: fpAbort.signal
+        });
+        const json = await res.json();
+        
+        let data = [];
+        let totalRow = null;
 
-function applySort(){
-  if(!__FP_SORT__){ renderModal(__FP_LIST__); return; }
-  const {key, dir, type} = __FP_SORT__;
-  const list = [...__FP_LIST__];
+        // PARSING JSON DATA
+        if(json.data && json.data.data && json.data.grand_total) {
+            data = json.data.data; 
+            totalRow = json.data.grand_total;
+        } else if (Array.isArray(json.data)) {
+            data = json.data;
+            totalRow = data.find(d => String(d.kode_cabang).toUpperCase() === 'TOTAL' || String(d.nama_kantor).toUpperCase().includes('TOTAL'));
+            data = data.filter(d => d !== totalRow);
+        }
 
-  const toVal = (d)=>{
-    if(type==='num') return num(d[key]);
-    if(type==='date'){
-      const v = d[key];
-      const t = v ? new Date(v).getTime() : NaN;
-      return isNaN(t) ? -8640000000000000 : t;
+        window.fpGtRaw = totalRow;
+        window.fpDataRaw = data;
+        window.fpDataRaw.sort((a,b) => kodeNum(a.kode_cabang || a.kode_unit) - kodeNum(b.kode_cabang || b.kode_unit));
+
+        renderTotal(totalRow);
+        renderRows(window.fpDataRaw);
+
+    } catch(err){
+        if(err.name !== 'AbortError') {
+            console.error(err);
+            tbody.innerHTML = `<tr><td colspan="4" class="p-8 text-center text-red-500 font-bold bg-red-50">Gagal memuat data.</td></tr>`;
+        }
+    } finally {
+        loading.classList.add('hidden'); loadingMini.classList.add('hidden');
+        setTimeout(updateFpStickyHeader, 50);
     }
-    return String(d[key] ?? '').toLowerCase();
+  }
+
+  // --- RENDER TOTAL & BISA DIKLIK ---
+  function renderTotal(tot){
+      const el = document.getElementById('fpTotalRow');
+      if(!tot) return;
+
+      // Logic: Target Modal = Value dari dropdown kantor saat ini.
+      const dropVal = document.getElementById('opt_kantor_rec').value || '';
+      const targetKode = dropVal !== '' ? dropVal : '000'; // 000 = Konsolidasi Semua
+
+      const linkClass = num(tot.noa_flow) > 0 
+          ? "text-blue-700 font-bold hover:bg-blue-100 hover:text-blue-900 px-2 py-1 rounded transition cursor-pointer underline decoration-blue-300 underline-offset-2" 
+          : "text-slate-400 pointer-events-none";
+
+      el.innerHTML = `
+        <tr class="row-total">
+            <td class="sticky-left-1 font-mono font-bold text-slate-500 text-xs">ALL</td>
+            <td class="sticky-left-2 font-bold text-slate-800 text-xs md:text-sm uppercase text-blue-900">${tot.nama_kantor || 'TOTAL KONSOLIDASI'}</td>
+            <td class="text-center font-bold text-blue-700 bg-blue-50/50">
+                <a href="#" class="${linkClass}" onclick="event.preventDefault(); checkAccessAndOpenModal('${targetKode}')">${fmtInt(tot.noa_flow)}</a>
+            </td>
+            <td class="text-right font-bold text-blue-700 bg-blue-50/50 pr-4">${fmtNom(tot.baki_debet_flow)}</td>
+        </tr>
+      `;
+  }
+
+  function renderRows(rows){
+      const tbody = document.getElementById('fpBody');
+      if(rows.length === 0){ tbody.innerHTML = `<tr><td colspan="4" class="p-8 text-center text-slate-400">Tidak ada data.</td></tr>`; return; }
+      
+      tbody.innerHTML = rows.map(r => {
+          const rawKode = r.kode_cabang || r.kode_unit || '';
+          const kode = String(rawKode).padStart(3,'0');
+          const nama = r.nama_kantor || r.nama_unit || '-';
+          
+          const linkClass = num(r.noa_flow) > 0 
+              ? "text-blue-600 font-bold hover:bg-blue-50 hover:text-blue-800 px-2 py-1 rounded transition cursor-pointer underline decoration-blue-200 underline-offset-2" 
+              : "text-slate-300 pointer-events-none";
+          
+          return `
+            <tr class="transition border-b">
+                <td class="sticky-left-1 font-mono font-bold text-slate-500 text-xs">${kode}</td>
+                <td class="sticky-left-2 font-semibold text-slate-700 text-xs md:text-sm"><div class="truncate" title="${nama}">${nama}</div></td>
+                <td class="text-center">
+                    <a href="#" class="${linkClass}" onclick="event.preventDefault(); checkAccessAndOpenModal('${kode}')">${fmtInt(r.noa_flow)}</a>
+                </td>
+                <td class="text-right text-slate-600 text-xs font-medium pr-4">${fmtNom(r.baki_debet_flow)}</td>
+            </tr>
+          `;
+      }).join('');
+
+      // Spacer
+      tbody.innerHTML += `<tr style="height: 60px;"><td colspan="4" class="border-none bg-transparent"></td></tr>`;
+  }
+
+  // --- SORTING REKAP ---
+  const doSort = (col) => {
+      sortState = { column: col, direction: sortState.column === col ? -sortState.direction : 1 };
+      const sorted = [...window.fpDataRaw].sort((a,b) => {
+          const valA = num(a[col === 'noa' ? 'noa_flow' : 'baki_debet_flow']);
+          const valB = num(b[col === 'noa' ? 'noa_flow' : 'baki_debet_flow']);
+          return (valA - valB) * sortState.direction;
+      });
+      document.getElementById('sortNoa').innerText = `NOA FLOW ${col==='noa' ? (sortState.direction>0?'⬆':'⬇') : '⬍'}`;
+      document.getElementById('sortBaki').innerText = `BAKI DEBET FLOW ${col==='baki' ? (sortState.direction>0?'⬆':'⬇') : '⬍'}`;
+      renderRows(sorted);
   };
+  document.getElementById('sortNoa').onclick = () => doSort('noa');
+  document.getElementById('sortBaki').onclick = () => doSort('baki');
 
-  list.sort((a,b)=>{
-    const va = toVal(a), vb = toVal(b);
-    if(va<vb) return dir==='asc' ? -1 : 1;
-    if(va>vb) return dir==='asc' ? 1 : -1;
-    return 0;
-  });
+  // --- EXPORT EXCEL REKAP ---
+  function exportFlowParExcel() {
+      const rows = window.fpDataRaw || [];
+      const gt = window.fpGtRaw || null;
+      if(rows.length === 0) { alert("Tidak ada data rekap untuk diexport!"); return; }
 
-  renderModal(list);
-}
-
-function attachSortHandlers(){
-  const ths = document.querySelectorAll('#modalTableFP thead th.sortable');
-  ths.forEach(th=>{
-    th.addEventListener('click', ()=>{
-      const key = th.dataset.key;
-      const type= th.dataset.type || 'text';
-      ths.forEach(x=>x.classList.remove('sorted-asc','sorted-desc'));
-      if(__FP_SORT__ && __FP_SORT__.key===key){
-        __FP_SORT__.dir = (__FP_SORT__.dir==='asc'?'desc':'asc');
-      }else{
-        __FP_SORT__ = {key, dir:'asc', type};
+      let table = `<table border="1">
+          <thead>
+              <tr>
+                  <th style="background-color:#eff6ff;">KODE</th>
+                  <th style="background-color:#eff6ff;">NAMA KANTOR</th>
+                  <th style="background-color:#eff6ff;">NOA FLOW</th>
+                  <th style="background-color:#eff6ff;">BAKI DEBET FLOW</th>
+              </tr>
+          </thead>
+          <tbody>`;
+      
+      if(gt) {
+          table += `<tr>
+              <td style="font-weight:bold;"></td>
+              <td style="font-weight:bold;">${gt.nama_kantor || 'GRAND TOTAL'}</td>
+              <td style="font-weight:bold;">${gt.noa_flow}</td>
+              <td style="font-weight:bold;">${gt.baki_debet_flow}</td>
+          </tr>`;
       }
-      th.classList.add(__FP_SORT__.dir==='asc'?'sorted-asc':'sorted-desc');
-      applySort();
-    });
-  });
-}
 
-/* ===== Load modal data ===== */
-function loadDebiturFlowPar(kodeKantor, closingDate, harianDate){
-  FP_ACTIVE_KODE = String(kodeKantor).padStart(3,'0');
-  openModalFlowPar();
+      rows.forEach(r => {
+          const kode = r.kode_cabang || r.kode_unit || '-';
+          const nama = r.nama_kantor || r.nama_unit || '-';
+          table += `<tr>
+              <td style="mso-number-format:'\\@'">${kode}</td>
+              <td>${nama}</td>
+              <td>${r.noa_flow}</td>
+              <td>${r.baki_debet_flow}</td>
+          </tr>`;
+      });
+      table += `</tbody></table>`;
 
-  document.getElementById("modalTitleFlowPar").textContent = `Daftar Debitur – Kode Kantor ${FP_ACTIVE_KODE}`;
-  const tbody = document.getElementById("modalBodyRows");
-  const ttot  = document.getElementById("modalTotalRow");
-  tbody.innerHTML = `<tr><td class="px-4 py-2 text-gray-500" colspan="14">Mengambil data debitur...</td></tr>`;
-  ttot.innerHTML = ``;
+      const tgl = document.getElementById('harian_date').value;
+      const blob = new Blob([table], { type: 'application/vnd.ms-excel' });
+      const a = document.createElement('a');
+      a.href = window.URL.createObjectURL(blob);
+      a.download = `Rekap_Flow_PAR_${tgl}.xls`;
+      document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  }
 
-  fetch("./api/flow_par/", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ type:"KL Baru", kode_kantor:kodeKantor, closing_date:closingDate, harian_date:harianDate })
-  })
-  .then(r=>r.json())
-  .then(res=>{
-    const raw = Array.isArray(res.data) ? res.data : [];
-    __FP_LIST__ = enhanceList(raw);
-    __FP_SORT__ = null; // reset sort setiap buka modal
-    attachSortHandlers();
-    applySort(); // render awal (tanpa sort)
-  })
-  .catch(()=>{
-    tbody.innerHTML = `<tr><td class="px-4 py-2 text-red-600" colspan="14">Gagal mengambil data debitur.</td></tr>`;
-    setModalSticky();
-  });
+  // --- MODAL & ACCESS LOGIC ---
+  function closeModalPeringatan() {
+      const modal = document.getElementById('modalPeringatan');
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+  }
 
-  // untuk tombol "Update Progres"
-  window.__FP_ACTIVE_DATES__ = {
-    closing: document.getElementById('closing_date')?.value || '',
-    harian : document.getElementById('harian_date')?.value || ''
+  window.checkAccessAndOpenModal = function(targetKode) {
+      const userKode = window.currentUser.kode;
+      
+      // Ambil 3 digit pertama untuk mengecek kepemilikan Cabang
+      const targetCabang = targetKode.length >= 3 ? targetKode.substring(0,3) : targetKode; 
+      
+      // PROTEKSI: Tolak akses jika user cabang buka data cabang lain
+      if (userKode !== '000' && userKode !== targetCabang) {
+          document.getElementById('warnUserLvl').innerText = `Unit ${userKode}`;
+          document.getElementById('warnTargetLvl').innerText = `Unit ${targetCabang}`;
+          const modalWarn = document.getElementById('modalPeringatan');
+          modalWarn.classList.remove('hidden');
+          modalWarn.classList.add('flex');
+          return;
+      }
+      openModalDetail(targetKode);
   };
-}
-window.loadDebiturFlowPar = loadDebiturFlowPar;
 
-function storeFlowParData(){
-  try{
-    const dates = window.__FP_ACTIVE_DATES__ || {};
-    sessionStorage.setItem('flowpar_update', JSON.stringify({
-      kode_kantor: FP_ACTIVE_KODE || '',
-      closing_date: dates.closing || '',
-      harian_date : dates.harian  || ''
-    }));
-  }catch{}
-}
-function formatTanggal(tgl){
-  const d = new Date(tgl); if(isNaN(d)) return '-';
-  return `${String(d.getDate()).padStart(2,'0')}-${String(d.getMonth()+1).padStart(2,'0')}-${d.getFullYear()}`;
-}
+  async function openModalDetail(kode){
+      // Pisahkan cabang utama (3 digit) dan kankas (6 digit)
+      const targetCabang = kode.length >= 3 ? kode.substring(0,3) : kode;
+      const targetKankas = kode.length > 3 ? kode : '';
+      
+      currentDetailKode = targetCabang; // Kirim API sebagai kode_kantor (3 digit)
+      
+      const modal = document.getElementById('modalDebiturFlowPar');
+      const title = document.getElementById('modalTitleFlowPar');
+      const sub   = document.getElementById('modalSubtitleFP');
+      
+      modal.classList.remove('hidden'); modal.classList.add('flex');
+      let titleLabel = kode === '000' ? 'KONSOLIDASI' : kode;
+      title.innerHTML = `Detail Debitur <span class="ml-2 px-2 py-0.5 bg-blue-100 text-blue-800 text-xs rounded font-mono border border-blue-200">${titleLabel}</span>`;
+      sub.innerText = `Posisi: ${formatDate(currentFilter.closing)} vs ${formatDate(currentFilter.harian)}`;
+      
+      // --- LOAD DROPDOWN KANKAS DI MODAL ---
+      const selKankas = document.getElementById('modalFilterKankas');
+      selKankas.innerHTML = '<option value="">Semua Kankas</option>';
+      
+      if(targetCabang !== '000') {
+          selKankas.classList.remove('hidden');
+          try {
+              const r = await fetch('./api/kode/', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({type:'kode_kankas', kode_kantor:targetCabang}) });
+              const j = await r.json();
+              (j.data||[]).forEach(k => { 
+                  // Jika yang diklik adalah baris kankas spesifik, dropdown otomatis pilih kankas tsb
+                  const isSelected = (targetKankas === k.kode_group1) ? 'selected' : '';
+                  selKankas.innerHTML += `<option value="${k.kode_group1}" ${isSelected}>${k.kode_group1} - ${k.deskripsi_group1}</option>`; 
+              });
+          } catch(e){}
+      } else {
+          selKankas.classList.add('hidden'); // Kalau konsolidasi, hide filter kankas
+      }
 
-/* Inisialisasi sort rekap setelah DOM siap */
-document.addEventListener('DOMContentLoaded', attachRekapSortHandlers);
+      fetchDetailFlowPar();
+  }
+
+  async function fetchDetailFlowPar() {
+      const tbody = document.getElementById('modalBodyRows');
+      const ttot  = document.getElementById('modalTotalRow');
+      const kankas = document.getElementById('modalFilterKankas').value || ''; 
+
+      tbody.innerHTML = `<tr><td colspan="15" class="p-12 text-center"><div class="animate-spin h-8 w-8 border-4 border-slate-200 border-t-blue-600 rounded-full mx-auto mb-3"></div><span class="text-slate-500 font-medium">Sedang mengambil data...</span></td></tr>`;
+      ttot.innerHTML = '';
+
+      try {
+          const payload = { 
+              type: 'KL Baru', 
+              kode_kantor: currentDetailKode === '000' ? '' : currentDetailKode, 
+              kode_kankas: kankas,             
+              closing_date: currentFilter.closing, 
+              harian_date: currentFilter.harian 
+          };
+          
+          const res = await fetch('./api/flow_par/', {
+              method:'POST', headers:{'Content-Type':'application/json'},
+              body: JSON.stringify(payload)
+          });
+          const json = await res.json();
+          const list = Array.isArray(json.data) ? json.data : [];
+          detailDataRaw = list; 
+
+          if(list.length === 0){ tbody.innerHTML = `<tr><td colspan="15" class="p-10 text-center text-slate-400">Data tidak ditemukan.</td></tr>`; return; }
+
+          const refDate = currentFilter.harian ? new Date(currentFilter.harian) : new Date();
+          const eom = endOfMonth(refDate) || endOfMonth(new Date());
+          
+          let totals = { bd:0, tp:0, tb:0, tt:0, sa:0, ap:0, ab:0 };
+
+          const rowsHtml = list.map(d => {
+              const hasApiHari = (d.hari_menunggak ?? d.hari_menunggak === 0);
+              let hari = hasApiHari ? Number(d.hari_menunggak) : calcHariMenunggak(d.tgl_jatuh_tempo);
+              const jt = d.tgl_jatuh_tempo ? startOfDay(new Date(d.tgl_jatuh_tempo)) : null;
+              const merahBaris = jt && (jt.getTime() <= eom.getTime());
+              
+              const dpdTP = Number.isFinite(+d.hari_menunggak_pokok) ? +d.hari_menunggak_pokok : 0;
+              const dpdTB = Number.isFinite(+d.hari_menunggak_bunga) ? +d.hari_menunggak_bunga : 0;
+              const hotTP = dpdTP >= 90 ? 'hot90' : '';
+              const hotTB = dpdTB >= 90 ? 'hot90' : '';
+
+              const totTunggakan = num(d.total_tunggakan) > 0 ? num(d.total_tunggakan) : (num(d.tunggakan_pokok) + num(d.tunggakan_bunga));
+
+              totals.bd += num(d.baki_debet); totals.tp += num(d.tunggakan_pokok);
+              totals.tb += num(d.tunggakan_bunga); totals.tt += totTunggakan;
+              totals.sa += num(d.saldo_akhir);
+              totals.ap += num(d.angsuran_pokok); totals.ab += num(d.angsuran_bunga);
+
+              return `
+                <tr class="${merahBaris ? 'overdue' : 'hover:bg-slate-50'} border-b">
+                    <td class="modal-freeze-1 font-mono text-slate-600 text-xs">${d.no_rekening}</td>
+                    <td class="modal-freeze-2 font-medium text-xs text-slate-700" title="${d.nama_nasabah}">${d.nama_nasabah}</td>
+                    <td class="text-right text-xs">${fmtNom(d.baki_debet)}</td>
+                    <td class="text-right text-xs">${fmtNom(d.tunggakan_pokok)}</td>
+                    <td class="text-right text-xs">${fmtNom(d.tunggakan_bunga)}</td>
+                    <td class="text-right text-xs font-bold text-red-700 bg-red-50">${fmtNom(totTunggakan)}</td>
+                    <td class="text-right text-xs font-semibold text-green-700">${fmtNom(d.saldo_akhir)}</td>
+                    <td class="text-center text-xs">${formatJTByRule(d.tgl_jatuh_tempo)}</td>
+                    <td class="text-center text-xs font-bold">${fmtInt(hari)}</td>
+                    <td class="text-center text-xs ${hotTP}">${fmtInt(dpdTP)}</td>
+                    <td class="text-center text-xs ${hotTB}">${fmtInt(dpdTB)}</td>
+                    <td class="text-right text-xs text-slate-500">${fmtNom(d.angsuran_pokok)}</td>
+                    <td class="text-right text-xs text-slate-500">${fmtNom(d.angsuran_bunga)}</td>
+                    <td class="text-center text-xs text-slate-500">${d.tgl_trans ? formatDate(d.tgl_trans) : '-'}</td>
+                    <td class="text-left text-xs text-slate-500 truncate max-w-[150px]" title="${d.komitmen}">${d.komitmen||'-'}</td>
+                </tr>
+              `;
+          }).join('');
+
+          ttot.innerHTML = `
+            <tr class="modal-total-row">
+                <td class="modal-freeze-1">TOTAL</td>
+                <td class="modal-freeze-2">${list.length} Debitur</td>
+                <td class="text-right">${fmtNom(totals.bd)}</td>
+                <td class="text-right">${fmtNom(totals.tp)}</td>
+                <td class="text-right">${fmtNom(totals.tb)}</td>
+                <td class="text-right text-red-700">${fmtNom(totals.tt)}</td>
+                <td class="text-right">${fmtNom(totals.sa)}</td>
+                <td colspan="4"></td>
+                <td class="text-right">${fmtNom(totals.ap)}</td>
+                <td class="text-right">${fmtNom(totals.ab)}</td>
+                <td colspan="2"></td>
+            </tr>
+          `;
+          tbody.innerHTML = rowsHtml;
+
+      } catch(e){
+          console.error(e); tbody.innerHTML = `<tr><td colspan="15" class="p-10 text-center text-red-500">Gagal load data.</td></tr>`;
+      }
+  }
+
+  // --- EXPORT EXCEL DETAIL ---
+  function exportDetailExcel() {
+      if(detailDataRaw.length === 0) { alert("Tidak ada detail untuk diexport!"); return; }
+
+      let table = `<table border="1">
+          <thead>
+              <tr>
+                  <th style="background-color:#f1f5f9;">NO REKENING</th>
+                  <th style="background-color:#f1f5f9;">NAMA NASABAH</th>
+                  <th style="background-color:#f1f5f9;">BAKI DEBET</th>
+                  <th style="background-color:#f1f5f9;">TUNGG. POKOK</th>
+                  <th style="background-color:#f1f5f9;">TUNGG. BUNGA</th>
+                  <th style="background-color:#fee2e2;">TOT. TUNGGAKAN</th>
+                  <th style="background-color:#f1f5f9;">SALDO TAB</th>
+                  <th style="background-color:#f1f5f9;">JT</th>
+                  <th style="background-color:#f1f5f9;">DPD</th>
+                  <th style="background-color:#f1f5f9;">DPD TP</th>
+                  <th style="background-color:#f1f5f9;">DPD TB</th>
+                  <th style="background-color:#f1f5f9;">ANGS. POKOK</th>
+                  <th style="background-color:#f1f5f9;">ANGS. BUNGA</th>
+                  <th style="background-color:#f1f5f9;">TGL TRANS</th>
+                  <th style="background-color:#f1f5f9;">KOMITMEN</th>
+              </tr>
+          </thead>
+          <tbody>`;
+
+      detailDataRaw.forEach(d => {
+          const totTunggakan = num(d.total_tunggakan) > 0 ? num(d.total_tunggakan) : (num(d.tunggakan_pokok) + num(d.tunggakan_bunga));
+          table += `<tr>
+              <td style="mso-number-format:'\\@'">${d.no_rekening}</td>
+              <td>${d.nama_nasabah}</td>
+              <td>${d.baki_debet}</td>
+              <td>${d.tunggakan_pokok}</td>
+              <td>${d.tunggakan_bunga}</td>
+              <td style="background-color:#fef2f2;">${totTunggakan}</td>
+              <td>${d.saldo_akhir}</td>
+              <td>${d.tgl_jatuh_tempo || ''}</td>
+              <td>${d.hari_menunggak || 0}</td>
+              <td>${d.hari_menunggak_pokok || 0}</td>
+              <td>${d.hari_menunggak_bunga || 0}</td>
+              <td>${d.angsuran_pokok}</td>
+              <td>${d.angsuran_bunga}</td>
+              <td>${d.tgl_trans || ''}</td>
+              <td>${d.komitmen || ''}</td>
+          </tr>`;
+      });
+      table += `</tbody></table>`;
+
+      const blob = new Blob([table], { type: 'application/vnd.ms-excel' });
+      const a = document.createElement('a');
+      a.href = window.URL.createObjectURL(blob);
+      
+      const valKankas = document.getElementById('modalFilterKankas').value;
+      const downloadName = valKankas ? valKankas : currentDetailKode;
+      
+      a.download = `Detail_FlowPAR_${downloadName}.xls`;
+      document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  }
+
+  const closeModal = () => { document.getElementById('modalDebiturFlowPar').classList.add('hidden'); document.getElementById('modalDebiturFlowPar').classList.remove('flex'); };
+  document.getElementById('btnCloseFP').onclick = closeModal;
+  document.addEventListener('keydown', e => { if(e.key === 'Escape') closeModal(); });
 </script>
