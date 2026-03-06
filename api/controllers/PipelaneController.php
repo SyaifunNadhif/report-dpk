@@ -9,9 +9,7 @@ class PipelineController {
         $this->pdo = $pdo;
     }
 
-    // Fungsi send() DIHAPUS karena sudah pakai helper sendResponse()
-
-    private function preparePipelineQuery($closing_date, $harian_date, $tahun_jt, $kc = null, $filter_ao = null, $filter_status = null) {
+    private function preparePipelineQuery($closing_date, $harian_date, $tahun_jt, $kc = null, $filter_ao = null, $filter_status = null, $filter_kankas = null) {
         $sql = "FROM nominatif t1
                 LEFT JOIN kode_kantor k ON t1.kode_cabang = k.kode_kantor
                 LEFT JOIN nominatif t2 ON t1.no_rekening = t2.no_rekening AND t2.created = :harian_1
@@ -33,6 +31,7 @@ class PipelineController {
 
         if ($kc) { $sql .= " AND t1.kode_cabang = :kc"; $bindings[':kc'] = str_pad((string)$kc, 3, '0', STR_PAD_LEFT); }
         if ($filter_ao) { $sql .= " AND t1.kode_group2 = :ao"; $bindings[':ao'] = $filter_ao; }
+        if ($filter_kankas) { $sql .= " AND t1.kode_group1 = :kankas"; $bindings[':kankas'] = $filter_kankas; } // Tambahan Filter Kankas
 
         if ($filter_status === 'sudah') $sql .= " AND t3.no_rekening IS NOT NULL"; 
         elseif ($filter_status === 'lunas') $sql .= " AND t3.no_rekening IS NULL AND (t2.no_rekening IS NULL OR t2.baki_debet <= 0)";
@@ -89,7 +88,6 @@ class PipelineController {
             $stmt->execute();
             $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-            // Ganti $this->send() dengan sendResponse()
             sendResponse(200, "Sukses Rekap", $rows);
 
         } catch (Exception $e) {
@@ -103,15 +101,19 @@ class PipelineController {
         $closing = $b['closing_date'] ?? '2025-12-31';
         $harian  = $b['harian_date'] ?? date('Y-m-d');
         $tahun   = $b['tahun_jt'] ?? date('Y');
+        
         $kc      = $b['kode_kantor'] ?? null;
+        $kankas  = $b['kode_kankas'] ?? null; // Tangkap param kankas
         $ao      = $b['kode_ao'] ?? null;
         $status  = $b['filter_status'] ?? null;
+        
         $page    = $b['page'] ?? 1;
         $limit   = $b['limit'] ?? 10;
         $offset  = ($page - 1) * $limit;
 
         try {
-            $base = $this->preparePipelineQuery($closing, $harian, $tahun, $kc, $ao, $status);
+            // Lempar filter kankas ke logic builder
+            $base = $this->preparePipelineQuery($closing, $harian, $tahun, $kc, $ao, $status, $kankas);
 
             // Statistik Header
             $sqlStats = "SELECT 
@@ -128,10 +130,13 @@ class PipelineController {
             $stmtStats->execute();
             $stats = $stmtStats->fetch(PDO::FETCH_ASSOC);
 
-            // Data List
+            // Data List (Tambahkan alamat, no_hp, kankas)
             $sql = "SELECT DISTINCT
                         t1.no_rekening, 
-                        t1.nama_nasabah, 
+                        t1.nama_nasabah,
+                        t1.alamat,
+                        t1.hp as no_hp,
+                        t1.kode_group1 as kankas,
                         t1.jml_pinjaman as plafon_awal,
                         t1.tgl_jatuh_tempo,
                         COALESCE(ao.nama_ao, t1.kode_group2) as nama_ao,
@@ -183,7 +188,6 @@ class PipelineController {
             $stmtAO->execute();
             $list_ao = $stmtAO->fetchAll(PDO::FETCH_ASSOC);
 
-            // Gunakan sendResponse()
             sendResponse(200, "Sukses Detail", [
                 'pagination' => ['total_records' => (int)$stats['total_data'], 'total_pages' => ceil($stats['total_data']/$limit), 'current_page' => (int)$page],
                 'stats' => $stats, 'list_ao' => $list_ao, 'data' => $rows

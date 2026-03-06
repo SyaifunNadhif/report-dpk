@@ -60,6 +60,10 @@ switch ($method) {
         // --- D. DETAIL PELUNASAN ---
         } elseif ($type === 'detail_lunas_rr') {
             $controller->getDetailLunasRR($input);
+        
+        // --- D. DETAIL PELUNASAN ---
+        } elseif ($type === 'rr') {
+            $controller->getRekapRr($input);
 
         // --- ERROR: TYPE TIDAK DIKENAL ---
         } else {

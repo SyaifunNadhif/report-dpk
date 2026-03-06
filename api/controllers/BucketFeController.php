@@ -26,10 +26,9 @@ class BucketFeController {
         return 'BE';
     }
 
-    // --- HELPER 3: SQL Filter Detail (FIXED) ---
-    // Perbaikan: Return 1=0 jika tidak match, biar data tidak bocor
+    // --- HELPER 3: SQL Filter Detail ---
     private function getBucketConditionSql($colName, $bucketLabel) {
-        $lbl = trim((string)$bucketLabel); // Hapus spasi bahaya
+        $lbl = trim((string)$bucketLabel); 
         
         if ($lbl === '0')     return "$colName <= 0";
         if ($lbl === '1-7')   return "$colName BETWEEN 1 AND 7";
@@ -39,8 +38,6 @@ class BucketFeController {
         if ($lbl === 'FE')    return "$colName BETWEEN 31 AND 90";
         if ($lbl === 'BE')    return "$colName > 90";
         
-        // PENTING: Jika label ngawur, jangan return 1=1 (semua data), 
-        // tapi return 1=0 (kosong) agar user tau ada error filter.
         return "1=0"; 
     }
 
@@ -62,23 +59,19 @@ class BucketFeController {
         [$s1, $e1] = $this->getDayRange($closing);
         [$s2, $e2] = $this->getDayRange($harian);
 
-        // Fetch Data Raw (Hanya kolom penting)
         $sql = "SELECT no_rekening, baki_debet, hari_menunggak 
                 FROM nominatif WHERE created BETWEEN ? AND ?";
         if ($kc) $sql .= " AND kode_cabang = ?";
 
-        // M-1
         $p1 = [$s1, $e1]; if ($kc) $p1[] = $kc;
         $stmt = $this->pdo->prepare($sql);
         $stmt->execute($p1);
         $dataM1 = $stmt->fetchAll(PDO::FETCH_UNIQUE | PDO::FETCH_ASSOC);
 
-        // Current
         $p2 = [$s2, $e2]; if ($kc) $p2[] = $kc;
         $stmt->execute($p2);
         $dataCur = $stmt->fetchAll(PDO::FETCH_UNIQUE | PDO::FETCH_ASSOC);
 
-        // Init Structure
         $summary = []; $matrix = []; $rowActiveTotals = [];
         $grandTotal = [
             'm1' => ['noa'=>0, 'os'=>0],
@@ -97,7 +90,6 @@ class BucketFeController {
             }
         }
 
-        // Logic Mapping
         foreach ($dataM1 as $norek => $rowM1) {
             $osM1  = (float)$rowM1['baki_debet'];
             $dpdM1 = (int)$rowM1['hari_menunggak'];
@@ -113,7 +105,6 @@ class BucketFeController {
                 $rowCur = $dataCur[$norek];
                 $osCur  = (float)$rowCur['baki_debet'];
                 
-                // Logic Lunas diperketat: Jika saldo <= 0, anggap lunas
                 if ($osCur > 0) {
                     $isLunas = false;
                     $dpdCur = (int)$rowCur['hari_menunggak'];
@@ -137,7 +128,6 @@ class BucketFeController {
             }
         }
 
-        // Calc Angsuran (Balancing)
         foreach ($this->visualBuckets as $f) {
             $osStart  = $summary[$f]['os_m1'];
             $osLunas  = $matrix[$f]['O']['pelunasan'];
@@ -150,7 +140,6 @@ class BucketFeController {
             $grandTotal['angsuran'] += $netAngsuran;
         }
 
-        // Realisasi
         $realisasi = ['noa' => 0, 'os' => 0];
         foreach ($dataCur as $norek => $rowCur) {
             $osR = (float)$rowCur['baki_debet'];
@@ -160,7 +149,6 @@ class BucketFeController {
             }
         }
 
-        // Final Totals
         $grandTotal['runoff_total']['os'] = $grandTotal['angsuran'] + $grandTotal['lunas']['os'];
         $grandTotal['runoff_total']['noa'] = $grandTotal['lunas']['noa'];
 
@@ -176,15 +164,16 @@ class BucketFeController {
     }
 
     /**
-     * ENDPOINT 2: DETAIL DATA (Fixed Filter & Index Usage)
+     * ENDPOINT 2: DETAIL DATA 
+     * Tambah Alamat, HP, Tabungan, Kankas (beserta filter Kankas)
      */
     public function getMigrasiDetail($input = null) {
         $b = is_array($input) ? $input : [];
         $closing = $b['closing_date'] ?? null;
         $harian  = $b['harian_date'] ?? null;
         $kc      = $b['kode_kantor'] ?? null;
+        $kankas  = $b['kode_kankas'] ?? null; // Filter Kankas
         
-        // Bersihkan Input String (Trim spasi)
         $fromLbl = isset($b['from_bucket']) ? trim((string)$b['from_bucket']) : '';
         $toLbl   = isset($b['to_bucket']) ? trim((string)$b['to_bucket']) : '';
         
@@ -197,8 +186,10 @@ class BucketFeController {
         [$s1, $e1] = $this->getDayRange($closing);
         [$s2, $e2] = $this->getDayRange($harian);
 
-        // Base Query
-        $cols = "t2.no_rekening, t2.nama_nasabah, t2.baki_debet, t2.hari_menunggak, t2.kode_produk, 
+        // Base Columns
+        $cols = "t2.no_rekening, t2.nama_nasabah, t2.alamat, t2.hp as no_hp, 
+                 t2.kode_group1 as kankas, COALESCE(tb.saldo_akhir, 0) as tabungan,
+                 t2.baki_debet, t2.hari_menunggak, t2.kode_produk, 
                  t2.kolektibilitas, t2.tunggakan_pokok, t2.tunggakan_bunga";
         
         $sqlCount = ""; $sqlData = "";
@@ -209,16 +200,17 @@ class BucketFeController {
                           AND NOT EXISTS (SELECT 1 FROM nominatif t1 WHERE t1.no_rekening = t2.no_rekening AND t1.created >= :s1 AND t1.created <= :e1)";
             
             if ($kc) $baseWhere .= " AND t2.kode_cabang = :kc";
-            // Cek string kosong (bukan isset, karena '0' itu valid)
+            if ($kankas) $baseWhere .= " AND t2.kode_group1 = :kankas";
             if ($toLbl !== '') $baseWhere .= " AND " . $this->getBucketConditionSql("t2.hari_menunggak", $toLbl);
 
             $sqlCount = "SELECT COUNT(1) FROM nominatif t2 WHERE $baseWhere";
-            $sqlData  = "SELECT $cols, 0 as os_m1, 0 as dpd_m1, 'New' as status_migrasi FROM nominatif t2 WHERE $baseWhere";
+            $sqlData  = "SELECT $cols, 0 as os_m1, 0 as dpd_m1, 'New' as status_migrasi 
+                         FROM nominatif t2 
+                         LEFT JOIN tabungan tb ON t2.norek_tabungan = tb.no_rekening
+                         WHERE $baseWhere";
 
         // 2. DETAIL LUNAS
         } elseif ($toLbl === 'O') {
-            // Kita pakai logic: Ada di M1, tapi (Tidak ada di Current OR Saldonya <= 0)
-            // Tapi untuk performa SQL, EXISTS jauh lebih cepat drpd NOT IN
             $baseWhere = "t1.created >= :s1 AND t1.created <= :e1 
                           AND NOT EXISTS (
                               SELECT 1 FROM nominatif t2 
@@ -228,29 +220,40 @@ class BucketFeController {
                           )";
             
             if ($kc) $baseWhere .= " AND t1.kode_cabang = :kc";
+            if ($kankas) $baseWhere .= " AND t1.kode_group1 = :kankas";
             if ($fromLbl !== '') $baseWhere .= " AND " . $this->getBucketConditionSql("t1.hari_menunggak", $fromLbl);
 
             $sqlCount = "SELECT COUNT(1) FROM nominatif t1 WHERE $baseWhere";
-            // Map t1 columns as snapshot
-            $sqlData  = "SELECT t1.no_rekening, t1.nama_nasabah, 0 as baki_debet, 0 as hari_menunggak, t1.kode_produk,
-                                t1.kolektibilitas, t1.tunggakan_pokok, t1.tunggakan_bunga,
-                                t1.baki_debet as os_m1, t1.hari_menunggak as dpd_m1, 'Lunas' as status_migrasi 
-                         FROM nominatif t1 WHERE $baseWhere"; 
+            
+            $colsLunas = "t1.no_rekening, t1.nama_nasabah, t1.alamat, t1.hp as no_hp, 
+                          t1.kode_group1 as kankas, COALESCE(tb.saldo_akhir, 0) as tabungan,
+                          0 as baki_debet, 0 as hari_menunggak, t1.kode_produk,
+                          t1.kolektibilitas, t1.tunggakan_pokok, t1.tunggakan_bunga";
+
+            $sqlData  = "SELECT $colsLunas, t1.baki_debet as os_m1, t1.hari_menunggak as dpd_m1, 'Lunas' as status_migrasi 
+                         FROM nominatif t1 
+                         LEFT JOIN tabungan tb ON t1.norek_tabungan = tb.no_rekening
+                         WHERE $baseWhere"; 
 
         // 3. DETAIL ACTIVE
         } else {
             $baseWhere = "t1.created >= :s1 AND t1.created <= :e1 
                           AND t2.created >= :s2 AND t2.created <= :e2 
                           AND t1.no_rekening = t2.no_rekening
-                          AND t2.baki_debet > 0"; // Pastikan masih punya saldo
+                          AND t2.baki_debet > 0"; 
             
             if ($kc) $baseWhere .= " AND t1.kode_cabang = :kc";
+            if ($kankas) $baseWhere .= " AND t1.kode_group1 = :kankas";
             if ($fromLbl !== '') $baseWhere .= " AND " . $this->getBucketConditionSql("t1.hari_menunggak", $fromLbl);
             if ($toLbl !== '')   $baseWhere .= " AND " . $this->getBucketConditionSql("t2.hari_menunggak", $toLbl);
 
             $sqlCount = "SELECT COUNT(1) FROM nominatif t1 JOIN nominatif t2 ON t1.no_rekening=t2.no_rekening WHERE $baseWhere";
+            
             $sqlData  = "SELECT $cols, t1.baki_debet as os_m1, t1.hari_menunggak as dpd_m1, 'Active' as status_migrasi 
-                         FROM nominatif t1 JOIN nominatif t2 ON t1.no_rekening=t2.no_rekening WHERE $baseWhere";
+                         FROM nominatif t1 
+                         JOIN nominatif t2 ON t1.no_rekening=t2.no_rekening 
+                         LEFT JOIN tabungan tb ON t2.norek_tabungan = tb.no_rekening
+                         WHERE $baseWhere";
         }
 
         // EXEC COUNT
@@ -258,16 +261,18 @@ class BucketFeController {
         $stmtCnt->bindValue(':s1', $s1); $stmtCnt->bindValue(':e1', $e1);
         $stmtCnt->bindValue(':s2', $s2); $stmtCnt->bindValue(':e2', $e2);
         if ($kc) $stmtCnt->bindValue(':kc', $kc);
+        if ($kankas) $stmtCnt->bindValue(':kankas', $kankas);
         $stmtCnt->execute();
         $total = $stmtCnt->fetchColumn();
 
-        // EXEC DATA (Sorted by OS Current Descending)
+        // EXEC DATA
         $sqlData .= " ORDER BY " . ($toLbl === 'O' ? "t1.baki_debet" : "t2.baki_debet") . " DESC LIMIT :lim OFFSET :off";
         
         $stmt = $this->pdo->prepare($sqlData);
         $stmt->bindValue(':s1', $s1); $stmt->bindValue(':e1', $e1);
         $stmt->bindValue(':s2', $s2); $stmt->bindValue(':e2', $e2);
         if ($kc) $stmt->bindValue(':kc', $kc);
+        if ($kankas) $stmt->bindValue(':kankas', $kankas);
         $stmt->bindValue(':lim', $limit, PDO::PARAM_INT);
         $stmt->bindValue(':off', $offset, PDO::PARAM_INT);
         $stmt->execute();
@@ -284,6 +289,15 @@ class BucketFeController {
             $r['os_m1'] = (float)$r['os_m1'];
             $r['tunggakan_pokok'] = (float)($r['tunggakan_pokok'] ?? 0);
             $r['tunggakan_bunga'] = (float)($r['tunggakan_bunga'] ?? 0);
+            $r['totung'] = $r['tunggakan_pokok'] + $r['tunggakan_bunga'];
+            $r['tabungan'] = (float)$r['tabungan'];
+
+            // Logika Status Tabungan
+            if (($r['tabungan'] * 0.015) > $r['totung']) {
+                $r['status_tabungan'] = 'Aman';
+            } else {
+                $r['status_tabungan'] = 'Belum Aman';
+            }
         }
 
         $this->send(200, "Detail Data", [
@@ -298,3 +312,4 @@ class BucketFeController {
         exit;
     }
 }
+?>

@@ -1,331 +1,384 @@
 <style>
-  /* Base Setup */
-  :root { --primary: #2563eb; --bg: #f8fafc; --text: #334155; }
-  .pipe-container { font-family: 'Inter', ui-sans-serif, system-ui, sans-serif; color: var(--text); padding: 20px; background-color: var(--bg); min-height: 100vh; display: flex; flex-direction: column; }
+  /* Custom Scrollbar */
+  .custom-scrollbar::-webkit-scrollbar { height: 6px; width: 6px; }
+  .custom-scrollbar::-webkit-scrollbar-track { background: #f8fafc; border-radius: 4px; }
+  .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
   
-  /* Inputs & Buttons */
-  .inp { border: 1px solid #cbd5e1; border-radius: 6px; padding: 0 10px; height: 36px; font-size: 13px; width: 100%; outline: none; background: white; transition: 0.2s; color: #1e293b; }
-  .inp:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(37,99,235,0.1); }
-  .inp:disabled { background-color: #f1f5f9; color: #64748b; cursor: not-allowed; font-weight: 600; border-color: #e2e8f0; }
-  .lbl { font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; margin-bottom: 4px; display: block; }
-  
-  .btn { height: 36px; padding: 0 16px; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; border: none; display: inline-flex; align-items: center; justify-content: center; gap: 6px; color: white; transition: 0.2s; }
-  .btn-primary { background: var(--primary); } .btn-primary:hover { background: #1d4ed8; }
-  .btn-success { background: #16a34a; } .btn-success:hover { background: #15803d; }
-  
-  /* Pills Summary */
-  .pill-group { display: flex; flex-wrap: wrap; gap: 8px; }
-  .pill { display: flex; flex-direction: column; padding: 8px 14px; border-radius: 8px; border: 1px solid; background: white; min-width: 130px; box-shadow: 0 1px 2px rgba(0,0,0,0.03); flex: 1; }
-  .pill-label { font-size: 10px; font-weight: 700; text-transform: uppercase; opacity: 0.8; margin-bottom: 2px; }
-  .pill-val { font-size: 16px; font-weight: 800; color: #1e293b; line-height: 1.2; }
-  .pill-nom { font-size: 11px; font-family: monospace; font-weight: 600; color: #64748b; }
-  
-  /* Table Layout */
-  .card { background: white; border: 1px solid #e2e8f0; border-radius: 12px; box-shadow: 0 1px 2px rgba(0,0,0,0.05); overflow: hidden; display: flex; flex-direction: column; flex: 1; position: relative; }
-  .table-wrapper { overflow: auto; height: 100%; width: 100%; }
-  table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 12px; text-align: left; }
-  th { background: #f8fafc; color: #475569; font-weight: 700; padding: 10px 12px; border-bottom: 1px solid #e2e8f0; white-space: nowrap; position: sticky; top: 0; z-index: 20; text-transform: uppercase; font-size: 10px; }
-  td { padding: 8px 12px; border-bottom: 1px solid #f1f5f9; vertical-align: middle; color: #334155; }
-  
-  /* Sticky Columns */
-  .sticky-col { position: sticky; left: 0; z-index: 15; background: white; border-right: 1px solid #f1f5f9; }
-  th.sticky-col { z-index: 30; background: #f8fafc; border-right: 1px solid #e2e8f0; }
-  tbody tr:hover td { background-color: #eff6ff !important; cursor: pointer; }
+  /* Sembunyikan Scrollbar Filter di Mobile */
+  .no-scrollbar::-webkit-scrollbar { display: none; }
+  .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
-  /* Helpers */
-  .hidden { display: none !important; }
-  .sub-val { display: block; font-size: 10px; margin-top: 2px; font-family: monospace; font-weight: 500; color: #64748b; }
-  .badge { padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: 700; text-transform: uppercase; }
+  /* Animasi Modal */
+  @keyframes scaleUp { from { transform: scale(0.95); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+  .animate-scale-up { animation: scaleUp 0.2s ease-out forwards; }
 
-  /* Modal */
-  .modal-overlay { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.7); z-index: 9999; display: none; align-items: center; justify-content: center; backdrop-filter: blur(2px); }
-  .modal-active { display: flex; }
-  .modal-box { background: white; width: 95%; max-width: 1400px; max-height: 90vh; border-radius: 12px; display: flex; flex-direction: column; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.2); }
+  /* ========================================================
+     CSS MAGIC STICKY TABLE REKAP UTAMA
+     ======================================================== */
+  #tabelPipeline thead th { position: sticky; box-shadow: inset 0 -1px 0 #cbd5e1; }
+  
+  /* Lapis 1 (Header Utama) */
+  #tabelPipeline thead tr:nth-child(1) th { top: 0; z-index: 40; height: 44px; }
+  
+  /* Lapis 2 (Sub-Header Lunas/Topup/Retensi) */
+  #tabelPipeline thead tr:nth-child(2) th { top: 44px; z-index: 39; height: 36px; }
+  
+  /* Lapis 3 (Grand Total - Biru Soft) */
+  #tabelPipeline thead tr:nth-child(3) th { 
+      top: 80px; z-index: 38; height: 46px; 
+      background-color: #dbeafe !important; 
+      border-bottom: 2px solid #bfdbfe;
+      box-shadow: inset 0 -1px 0 #93c5fd;
+  }
+
+  /* Freeze Kolom Kiri Rekap */
+  .sticky-left-1 { position: sticky; left: 0; z-index: 20; background: white; box-shadow: inset -1px 0 0 #e2e8f0; }
+  .sticky-left-2 { position: sticky; left: 0; z-index: 20; background: white; box-shadow: inset -1px 0 0 #e2e8f0; }
+  
+  @media (min-width: 640px) { .sticky-left-2 { left: 60px; } } /* Digeser untuk PC */
+
+  /* Z-Index Header Freeze Kiri Rekap */
+  #tabelPipeline thead tr:nth-child(1) th.sticky-left-1 { z-index: 50; box-shadow: inset -1px -1px 0 #cbd5e1; background-color: #f1f5f9; }
+  #tabelPipeline thead tr:nth-child(1) th.sticky-left-2 { z-index: 49; box-shadow: inset -1px -1px 0 #cbd5e1; background-color: #f1f5f9; }
+  #tabelPipeline thead tr:nth-child(3) th.sticky-left-1 { z-index: 48; background-color: #bfdbfe !important; box-shadow: inset -1px -2px 0 #93c5fd; }
+  #tabelPipeline thead tr:nth-child(3) th.sticky-left-2 { z-index: 47; background-color: #bfdbfe !important; box-shadow: inset -1px -2px 0 #93c5fd; }
+
+  /* Hover Body Rekap */
+  #bodyRekap tr:hover td { background-color: #eff6ff !important; cursor: pointer; }
+  #bodyRekap tr:hover td.sticky-left-1, #bodyRekap tr:hover td.sticky-left-2 { background-color: #eff6ff !important; }
+
+  /* ========================================================
+     CSS MAGIC STICKY MODAL DETAIL (ANTI MLEYOT)
+     ======================================================== */
+  #tableExportModal thead th { position: sticky; box-shadow: inset 0 -1px 0 #cbd5e1; }
+  #tableExportModal thead tr:nth-child(1) th { top: 0; z-index: 40; height: 40px; background-color: #f1f5f9; }
+  #tableExportModal thead tr:nth-child(2) th { top: 40px; z-index: 39; height: 36px; background-color: #dbeafe !important; box-shadow: inset 0 -1px 0 #93c5fd; border-bottom: 2px solid #bfdbfe;}
+
+  /* Freeze Kiri Modal */
+  .mod-sticky-1 { position: sticky; left: 0; z-index: 20; background: white; box-shadow: inset -1px 0 0 #e2e8f0; }
+  .mod-sticky-2 { position: sticky; left: 90px; z-index: 20; background: white; box-shadow: inset -1px 0 0 #e2e8f0; }
+
+  #tableExportModal thead tr:nth-child(1) th.mod-sticky-1 { z-index: 50; background-color: #e2e8f0; box-shadow: inset -1px -1px 0 #cbd5e1; }
+  #tableExportModal thead tr:nth-child(1) th.mod-sticky-2 { z-index: 49; background-color: #e2e8f0; box-shadow: inset -1px -1px 0 #cbd5e1; }
+  #tableExportModal thead tr:nth-child(2) th.mod-sticky-1 { z-index: 48; background-color: #bfdbfe !important; box-shadow: inset -1px -1px 0 #93c5fd; }
+  #tableExportModal thead tr:nth-child(2) th.mod-sticky-2 { z-index: 47; background-color: #bfdbfe !important; box-shadow: inset -1px -1px 0 #93c5fd; }
+
+  #bodyDetail tr:hover td { background-color: #f8fafc !important; }
+  #bodyDetail tr:hover td.mod-sticky-1, #bodyDetail tr:hover td.mod-sticky-2 { background-color: #f8fafc !important; }
+
+  /* Badge Custom Clean */
+  .badge-clean { display: inline-flex; align-items: center; justify-content: center; padding: 2px 6px; border-radius: 4px; font-size: 9px; font-weight: 600; text-transform: uppercase; border: 1px solid; }
 </style>
 
-<script>
-    // --- AREA KONFIGURASI USER LOGIN ---
-    // Di aplikasi asli (PHP), biasanya data user dilempar ke JS.
-    // Jika tidak ada data user, kita default ke '000' (Admin Pusat).
-    // Ganti logika ini sesuai session PHP kamu.
-    
-    window.currentUser = {
-        // Contoh: Ambil dari variable global JS jika ada, atau default 000
-        kode_kantor: (typeof USER_KODE_KANTOR !== 'undefined') ? USER_KODE_KANTOR : '000' 
-    };
-    
-    // Debug: Cek di console browser
-    console.log("Login sebagai Kantor:", window.currentUser.kode_kantor);
-</script>
-
-<div class="pipe-container">
+<div class="max-w-[1920px] mx-auto px-2 md:px-4 py-3 md:py-5 h-[calc(100vh-80px)] flex flex-col bg-slate-50 font-sans text-slate-800 overflow-hidden">
   
-  <div class="mb-4 flex flex-col xl:flex-row xl:items-end justify-between gap-4">
-    <div style="flex: 1;">
-      <h1 class="text-2xl font-bold flex items-center gap-2 mb-3" style="color:#1e293b;">
-        <span style="background:#2563eb; color:white; padding:4px 8px; border-radius:6px;">📊</span>
-        <span>Rekap Jatuh Tempo & Top Up</span>
-      </h1>
+  <div class="flex-none mb-3 flex flex-col xl:flex-row justify-between xl:items-center gap-3 w-full">
       
-      <div id="summaryPills" class="pill-group hidden">
-        <div class="pill" style="border-color:#bfdbfe; background:#eff6ff; color:#1e40af;">
-            <span class="pill-label">Target JT</span>
-            <span class="pill-val" id="sum_target">0</span>
-            <span class="pill-nom" id="sum_target_nom">Rp 0</span>
-        </div>
-        <div class="pill" style="border-color:#bbf7d0; background:#f0fdf4; color:#166534;">
-            <span class="pill-label">Sudah Ambil</span>
-            <span class="pill-val" id="sum_sudah">0</span>
-            <span class="pill-nom" id="sum_sudah_nom">Rp 0</span>
-        </div>
-        <div class="pill" style="border-color:#e9d5ff; background:#faf5ff; color:#6b21a8;">
-            <span class="pill-label">Potensi (Siap)</span>
-            <span class="pill-val" id="sum_potensi">0</span>
-            <span class="pill-nom" id="sum_potensi_nom">Rp 0</span>
-        </div>
-        <div class="pill" style="border-color:#fecaca; background:#fef2f2; color:#991b1b;">
-            <span class="pill-label">Drop (Macet)</span>
-            <span class="pill-val" id="sum_drop">0</span>
-            <span class="pill-nom" id="sum_drop_nom">Rp 0</span>
-        </div>
+      <div class="flex flex-col gap-2 shrink-0">
+          <h1 class="text-xl md:text-2xl font-bold text-slate-800 flex items-center gap-2">
+              <span class="p-1.5 md:p-2 bg-blue-600 rounded-lg text-white shadow-sm">
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+              </span>
+              Rekomendasi Pipeline Kredit
+          </h1>
+          
+          <div id="summaryPills" class="hidden flex flex-wrap items-center gap-2">
+              <div class="hidden sm:flex flex-col bg-white border border-slate-200 px-3 py-1 rounded-lg shadow-sm min-w-[110px]">
+                  <span class="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Target JT</span>
+                  <div class="flex items-end gap-1.5">
+                      <span class="text-sm font-bold text-slate-800" id="sum_target">0</span>
+                      <span class="text-[10px] font-mono text-slate-400 mb-0.5" id="sum_target_nom">0</span>
+                  </div>
+              </div>
+              <div class="flex flex-col bg-emerald-50 border border-emerald-200 px-3 py-1 rounded-lg shadow-sm min-w-[110px]">
+                  <span class="text-[9px] font-bold text-emerald-700 uppercase tracking-widest">Sudah Ambil</span>
+                  <div class="flex items-end gap-1.5">
+                      <span class="text-sm font-bold text-emerald-800" id="sum_sudah">0</span>
+                      <span class="text-[10px] font-mono text-emerald-600 mb-0.5" id="sum_sudah_nom">0</span>
+                  </div>
+              </div>
+              <div class="flex flex-col bg-blue-50 border border-blue-200 px-3 py-1 rounded-lg shadow-sm min-w-[110px]">
+                  <span class="text-[9px] font-bold text-blue-700 uppercase tracking-widest">Potensi Siap</span>
+                  <div class="flex items-end gap-1.5">
+                      <span class="text-sm font-bold text-blue-800" id="sum_potensi">0</span>
+                      <span class="text-[10px] font-mono text-blue-600 mb-0.5" id="sum_potensi_nom">0</span>
+                  </div>
+              </div>
+              <div class="hidden sm:flex flex-col bg-rose-50 border border-rose-200 px-3 py-1 rounded-lg shadow-sm min-w-[110px]">
+                  <span class="text-[9px] font-bold text-rose-700 uppercase tracking-widest">Drop Macet</span>
+                  <div class="flex items-end gap-1.5">
+                      <span class="text-sm font-bold text-rose-800" id="sum_drop">0</span>
+                      <span class="text-[10px] font-mono text-rose-600 mb-0.5" id="sum_drop_nom">0</span>
+                  </div>
+              </div>
+          </div>
       </div>
-    </div>
 
-    <form id="formFilter" class="card" style="flex-direction:row; flex-wrap:wrap; align-items:flex-end; gap:10px; padding:12px; min-width:200px; flex:none;">
-      <div style="width: 110px;">
-        <label class="lbl">Closing (M-1)</label>
-        <input type="date" id="closing_date" class="inp" disabled title="Terkunci: Akhir Tahun Lalu">
-      </div>
-      <div style="width: 110px;">
-        <label class="lbl">Actual</label>
-        <input type="date" id="harian_date" class="inp" readonly>
-      </div>
-      <div style="width: 70px;">
-        <label class="lbl">Tahun</label>
-        <input type="number" id="tahun_jt" class="inp" value="2026">
-      </div>
-      <div style="flex-grow: 1; min-width: 180px;">
-        <label class="lbl">Kantor Cabang</label>
-        <select id="opt_kantor" class="inp">
-            <option value="">Memuat data...</option>
-        </select>
-      </div>
-      <button type="submit" class="btn btn-primary">Tampilkan</button>
-    </form>
+      <form id="formFilter" class="bg-white p-2 md:p-2.5 rounded-xl border border-slate-200 shadow-sm flex flex-nowrap items-center gap-1.5 md:gap-3 w-full xl:w-auto shrink-0 overflow-x-auto no-scrollbar" onsubmit="event.preventDefault(); fetchRekap();">
+          <input type="hidden" id="closing_date" disabled>
+          
+          <div class="flex flex-col w-[110px] md:w-[130px] shrink-0">
+              <label class="text-[8px] md:text-[9px] font-bold text-slate-500 uppercase tracking-widest mb-1 truncate">POSISI (ACTUAL)</label>
+              <input type="date" id="harian_date" class="border border-slate-200 rounded-md md:rounded-lg px-2 md:px-3 py-1.5 md:py-2 text-[10px] md:text-xs text-slate-700 outline-none focus:border-blue-500 transition w-full" readonly required>
+          </div>
+          
+          <div class="flex flex-col w-[80px] md:w-[100px] shrink-0">
+              <label class="text-[8px] md:text-[9px] font-bold text-slate-500 uppercase tracking-widest mb-1 truncate">TAHUN JT</label>
+              <input type="number" id="tahun_jt" class="border border-slate-200 rounded-md md:rounded-lg px-2 md:px-3 py-1.5 md:py-2 text-[10px] md:text-xs text-slate-700 outline-none focus:border-blue-500 transition w-full" value="2026" required>
+          </div>
+          
+          <div class="flex items-center gap-1 md:gap-1.5 shrink-0 h-[28px] md:h-[34px] mb-px mt-3.5">
+              <button type="submit" class="h-full w-[34px] md:w-auto md:px-4 bg-blue-600 hover:bg-blue-700 text-white rounded-md md:rounded-lg flex items-center justify-center transition shadow-sm font-bold text-[10px] md:text-xs uppercase tracking-wider" title="Cari Data">
+                  <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" class="md:mr-1.5"><circle cx="11" cy="11" r="7"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                  <span class="hidden md:inline">CARI</span>
+              </button>
+              <button type="button" onclick="exportExcelRekapPipeline()" class="h-full w-[34px] md:w-auto md:px-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-md md:rounded-lg flex items-center justify-center transition shadow-sm font-bold text-[10px] md:text-xs uppercase tracking-wider" title="Download Excel">
+                  <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                  <span class="hidden md:inline ml-1.5">EXCEL</span>
+              </button>
+          </div>
+      </form>
   </div>
 
-  <div class="card">
-    <div id="loadingRekap" class="hidden" style="position:absolute; inset:0; background:rgba(255,255,255,0.8); z-index:50; display:flex; align-items:center; justify-content:center; flex-direction:column; font-weight:600; color:#2563eb;">
-        <div style="width:32px; height:32px; border:4px solid #bfdbfe; border-top:4px solid #2563eb; border-radius:50%; animation:spin 1s linear infinite;"></div>
-        <span style="margin-top:8px;">Memuat Data...</span>
+  <div class="flex-1 overflow-hidden bg-white rounded-xl shadow-sm border border-slate-200 relative">
+    <div id="loadingRekap" class="hidden absolute inset-0 bg-white/80 z-[100] flex flex-col items-center justify-center text-blue-600 backdrop-blur-sm">
+        <div class="animate-spin rounded-full h-8 w-8 border-4 border-blue-500 border-t-transparent mb-2"></div>
+        <span class="text-xs font-bold uppercase tracking-widest">Menyiapkan Pipeline...</span>
     </div>
     
-    <div class="table-wrapper">
-      <table>
-        <thead>
-          <tr>
-            <th class="sticky-col text-center w-[50px]">Kode</th>
-            <th class="sticky-col" style="left:50px; z-index:31; width:140px;">Nama Kantor</th>
-            
-            <th class="text-right">Target JT<br><span class="sub-val" style="font-weight:400;">NOA | Plafon</span></th>
-            <th class="text-center bg-green-50 text-green-800 border-l border-green-200">Sudah Ambil<br><span class="sub-val text-green-600">NOA | Nominal</span></th>
-            <th class="text-center bg-blue-50 text-blue-800 border-l border-blue-200">Lunas<br><span class="sub-val text-blue-600">NOA | Plafon</span></th>
-            <th class="text-center bg-purple-50 text-purple-800">Top Up<br><span class="sub-val text-purple-600">NOA | Sisa OS</span></th>
-            <th class="text-center bg-orange-50 text-orange-800">Retensi<br><span class="sub-val text-orange-600">NOA | Sisa OS</span></th>
-            <th class="text-center bg-red-50 text-red-800 border-l border-red-200">Drop<br><span class="sub-val text-red-600">NOA | Sisa OS</span></th>
-          </tr>
-        </thead>
-        <tbody id="bodyRekap"></tbody>
-        <tfoot id="footRekap" style="background:#f8fafc; font-weight:700; border-top:2px solid #e2e8f0;"></tfoot>
+    <div class="h-full overflow-auto custom-scrollbar relative">
+      <table class="w-max min-w-full text-xs text-center border-separate border-spacing-0 text-slate-700" id="tabelPipeline">
+        <thead class="tracking-wider bg-slate-50" id="headPipeline">
+            </thead>
+        <tbody id="bodyRekap" class="divide-y divide-slate-100 bg-white text-[10px] md:text-[11px]"></tbody>
       </table>
     </div>
   </div>
 
 </div>
 
-<div id="modalDetail" class="modal-overlay" onclick="closeModal()">
-  <div class="modal-box" onclick="event.stopPropagation()">
-    <div style="padding:16px; border-bottom:1px solid #e2e8f0; display:flex; justify-content:space-between; align-items:center;">
-      <div>
-        <h3 style="font-size:18px; font-weight:700; color:#1e293b;">Detail Nasabah</h3>
-        <p style="font-size:12px; color:#64748b;" id="detailSubTitle">...</p>
-      </div>
-      <div style="display:flex; gap:8px;">
-        <select id="filter_status_modal" class="inp" style="width:130px;" onchange="changeFilter()">
-            <option value="">Semua Status</option>
-            <option value="sudah">✅ Sudah Ambil</option>
-            <option value="lunas">🔵 Lunas</option>
-            <option value="topup">🟣 Top Up</option>
-            <option value="retensi">🟠 Retensi</option>
-            <option value="drop">⛔ Drop</option>
-        </select>
-        <select id="filter_ao_modal" class="inp" style="width:130px;" onchange="changeFilter()">
-            <option value="">Semua AO</option>
-        </select>
-        <button onclick="downloadExcel()" class="btn btn-success">Excel</button>
-        <button onclick="closeModal()" style="font-size:24px; color:#94a3b8; background:none; border:none; margin-left:4px;">&times;</button>
-      </div>
+<div id="modalDetail" class="fixed inset-0 z-[9999] hidden items-end md:items-center justify-center sm:p-4">
+  <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity" onclick="closeModal()"></div>
+  
+  <div class="relative bg-white w-full h-[95vh] md:h-[92vh] max-w-[1600px] rounded-t-xl md:rounded-2xl shadow-2xl flex flex-col overflow-hidden animate-scale-up">
+    
+    <div class="flex justify-between items-center px-4 py-3 md:px-5 border-b bg-slate-50 shrink-0 flex-wrap gap-2">
+        <div class="flex-1 min-w-[200px]">
+            <h3 class="font-bold text-slate-800 flex items-center gap-2 text-sm md:text-base">
+                <span class="bg-blue-100 text-blue-600 p-1 md:p-1.5 rounded-lg shadow-sm text-xs">👥</span> 
+                Detail Nasabah Pipeline 
+            </h3>
+            <p class="text-[9px] md:text-[10px] text-slate-500 mt-0.5 ml-1 md:ml-8 font-mono" id="detailSubTitle">...</p>
+        </div>
+        
+        <div class="flex items-center gap-1.5 ml-auto shrink-0 w-full sm:w-auto mt-2 sm:mt-0 overflow-x-auto no-scrollbar">
+            <select id="filter_kankas_modal" class="border border-blue-200 rounded-lg px-2 h-[30px] md:h-8 w-[100px] md:w-[130px] text-[9px] md:text-[10px] font-bold text-blue-800 bg-blue-50 outline-none focus:ring-1 focus:ring-blue-400 shrink-0" onchange="changeFilter()">
+                <option value="">Semua Kankas</option>
+            </select>
+            <select id="filter_status_modal" class="border border-blue-200 rounded-lg px-2 h-[30px] md:h-8 w-[110px] md:w-[130px] text-[9px] md:text-[10px] font-bold text-blue-800 bg-blue-50 outline-none focus:ring-1 focus:ring-blue-400 shrink-0" onchange="changeFilter()">
+                <option value="">Semua Status</option>
+                <option value="sudah">✅ Sudah Ambil</option>
+                <option value="lunas">🔵 Lunas</option>
+                <option value="topup">🟣 Top Up</option>
+                <option value="retensi">🟠 Retensi</option>
+                <option value="drop">⛔ Drop</option>
+            </select>
+            <select id="filter_ao_modal" class="border border-slate-200 rounded-lg px-2 h-[30px] md:h-8 w-[100px] md:w-[130px] text-[9px] md:text-[10px] font-bold text-slate-600 bg-white outline-none focus:ring-1 focus:ring-blue-400 shrink-0" onchange="changeFilter()">
+                <option value="">Semua AO</option>
+            </select>
+
+            <button onclick="downloadExcelDetail()" class="h-[30px] md:h-8 px-2 md:px-3 border-none bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg transition shadow-sm flex items-center justify-center font-bold text-[9px] md:text-[10px] uppercase tracking-wider shrink-0">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.5" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                <span class="hidden sm:inline ml-1">Excel</span>
+            </button>
+            <button onclick="closeModal()" class="w-[30px] md:w-8 h-[30px] md:h-8 flex items-center justify-center rounded-lg bg-slate-200 hover:bg-red-500 hover:text-white text-slate-600 transition font-bold text-lg leading-none shrink-0">&times;</button>
+        </div>
     </div>
 
-    <div id="modalStats" style="background:#f8fafc; padding:10px 16px; border-bottom:1px solid #e2e8f0; font-size:11px; font-weight:600; color:#475569; display:flex; gap:16px; overflow-x:auto; white-space:nowrap;"></div>
+    <div id="modalStats" class="bg-slate-100 border-b border-slate-200 px-4 py-2 text-[9px] md:text-[10px] font-mono font-medium text-slate-500 overflow-x-auto no-scrollbar whitespace-nowrap shrink-0"></div>
 
-    <div style="flex:1; overflow:auto; position:relative;">
-      <div id="loadingDetail" class="hidden" style="position:absolute; inset:0; background:rgba(255,255,255,0.9); z-index:20; display:flex; align-items:center; justify-content:center; color:#2563eb; font-weight:bold;">Loading...</div>
-      <table style="width:100%;">
-        <thead style="position:sticky; top:0; z-index:10; background:white; box-shadow:0 1px 2px rgba(0,0,0,0.05);">
-          <tr>
-            <th class="border-b w-[100px]">Rekening</th>
-            <th class="border-b min-w-[180px]">Nasabah</th>
-            <th class="border-b text-blue-700">AO</th>
-            <th class="border-b text-right">Plafon Awal</th>
-            <th class="border-b text-center">JT</th>
-            <th class="border-b text-right text-blue-700">Sisa OS</th>
-            <th class="border-b text-center">Status</th>
-            <th class="border-b text-right bg-green-50 text-green-800 border-l border-green-100">Baru</th>
-            <th class="border-b text-center">Aksi</th>
-          </tr>
-        </thead>
-        <tbody id="bodyDetail"></tbody>
-      </table>
+    <div class="flex-1 overflow-auto bg-slate-50 relative custom-scrollbar p-0 md:p-2">
+        <div id="loadingDetail" class="hidden absolute inset-0 bg-white/90 z-40 flex flex-col items-center justify-center text-blue-600 backdrop-blur-sm">
+            <div class="animate-spin rounded-full h-8 w-8 border-4 border-blue-500 border-t-transparent mb-2"></div>
+            <span class="text-xs font-bold uppercase tracking-widest">Memuat Detail...</span>
+        </div>
+        
+        <table class="w-max min-w-full text-xs text-left text-slate-700 border border-slate-200 md:rounded-lg shadow-sm bg-white table-fixed" id="tableExportModal">
+            <thead class="text-slate-600 font-bold uppercase tracking-wider text-[9px] md:text-[10px]">
+                <tr>
+                    <th class="px-2 py-2.5 border-b border-r border-slate-300 w-[90px] mod-sticky-1">Rekening</th>
+                    <th class="px-3 py-2.5 border-b border-r border-slate-300 w-[160px] md:w-[220px] mod-sticky-2">Nama Nasabah</th>
+                    <th class="px-3 py-2.5 border-b border-r border-slate-300 w-[150px] md:w-[200px]">Alamat</th>
+                    <th class="px-2 py-2.5 border-b border-r border-slate-300 w-[90px] text-center">No HP</th>
+                    <th class="px-2 py-2.5 border-b border-r border-slate-300 w-[80px] text-center">Kankas</th>
+                    <th class="px-3 py-2.5 border-b border-r border-slate-300 w-[110px] text-blue-800">Nama AO</th>
+                    <th class="px-3 py-2.5 border-b border-r border-slate-300 w-[90px] text-right">Plafon Awal</th>
+                    <th class="px-3 py-2.5 border-b border-r border-slate-300 w-[110px] text-center">Tanggal JT</th>
+                    <th class="px-3 py-2.5 border-b border-r border-blue-300 w-[90px] text-right bg-blue-50 text-blue-900">Sisa OS</th>
+                    <th class="px-3 py-2.5 border-b border-r border-slate-300 w-[90px] text-center">Status</th>
+                    <th class="px-3 py-2.5 border-b border-r border-emerald-300 w-[90px] text-right bg-emerald-50 text-emerald-900">Nominal Baru</th>
+                    <th class="px-2 py-2.5 border-b border-slate-300 w-[70px] text-center">Aksi</th>
+                </tr>
+                <tr id="rowTotalDetailAtas"></tr>
+            </thead>
+            <tbody id="bodyDetail" class="divide-y divide-slate-100 bg-white"></tbody>
+        </table>
     </div>
 
-    <div style="padding:12px 16px; border-top:1px solid #e2e8f0; display:flex; justify-content:space-between; align-items:center;">
-      <span id="pageInfo" style="font-size:12px; font-weight:600; color:#64748b;">0 Data</span>
-      <div style="display:flex; gap:8px;">
-        <button id="btnPrev" onclick="changePage(-1)" class="btn" style="background:white; border:1px solid #cbd5e1; color:#334155;">Prev</button>
-        <button id="btnNext" onclick="changePage(1)" class="btn" style="background:white; border:1px solid #cbd5e1; color:#334155;">Next</button>
-      </div>
+    <div class="px-4 py-2 border-t bg-white flex justify-between items-center shrink-0">
+        <span id="pageInfo" class="text-[9px] md:text-[10px] font-bold text-slate-500">0 Data</span>
+        <div class="flex gap-2">
+            <button id="btnPrev" onclick="changePage(-1)" class="px-3 py-1.5 bg-white border border-slate-300 rounded-lg text-[10px] font-bold text-slate-600 hover:bg-slate-50 disabled:opacity-50 transition shadow-sm">« Prev</button>
+            <button id="btnNext" onclick="changePage(1)" class="px-3 py-1.5 bg-white border border-slate-300 rounded-lg text-[10px] font-bold text-slate-600 hover:bg-slate-50 disabled:opacity-50 transition shadow-sm">Next »</button>
+        </div>
     </div>
   </div>
 </div>
-
-<style>@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }</style>
 
 <script>
-  // --- CONFIG ---
+  // --- CONFIG & GLOBAL VARS ---
   const API_URL  = './api/pipelane/'; 
   const API_KODE = './api/kode/'; 
   const API_DATE = './api/date/';
   const nf = new Intl.NumberFormat('id-ID');
   const fmt = n => nf.format(Number(n||0));
 
-  let state = { cabang:'', ao:'', status:'', page:1, limit:10, totalPages:1 };
+  let state = { cabang:'', kankas:'', ao:'', status:'', page:1, limit:20, totalPages:1 };
+  let abortRekap;
+  let rekapDataCache = null; 
+  let userKodeGlobal = '000'; 
 
   // --- INIT ---
   window.addEventListener('DOMContentLoaded', async () => {
-      const now = new Date();
-      // 1. Closing Date (Tahun Lalu - Locked)
-      const lastYear = now.getFullYear() - 1;
-      document.getElementById('closing_date').value = `${lastYear}-12-31`;
-      
-      // 2. Fetch Actual Date
-      try {
-          const r = await fetch(API_DATE);
-          const j = await r.json();
-          document.getElementById('harian_date').value = (j && j.data && j.data.last_created) ? j.data.last_created : now.toISOString().split('T')[0];
-      } catch(e) { 
-          document.getElementById('harian_date').value = now.toISOString().split('T')[0];
-      }
+      // 1. Dapatkan Kode User Real
+      const user = (window.getUser && window.getUser()) || null;
+      userKodeGlobal = (user?.kode ? String(user.kode).padStart(3,'0') : '000');
 
-      // 3. Load Kantor sesuai Login & 4. Load Data
-      await populateKantor();
+      // 2. Setup Header Dinamis
+      setupHeaderPipeline(userKodeGlobal);
+
+      // 3. Fetch Date Setting
+      const now = new Date();
+      document.getElementById('closing_date').value = `${now.getFullYear() - 1}-12-31`;
+      try {
+          const r = await fetch(API_DATE); const j = await r.json();
+          document.getElementById('harian_date').value = (j && j.data && j.data.last_created) ? j.data.last_created : now.toISOString().split('T')[0];
+      } catch(e) { document.getElementById('harian_date').value = now.toISOString().split('T')[0]; }
+
+      // 4. Load Data Utama
       fetchRekap();
   });
 
-  async function apiCall(url, payload) {
-      // Helper untuk fetch
-      const res = await fetch(url, { 
-          method: 'POST', 
-          headers: {'Content-Type':'application/json'}, 
-          body: JSON.stringify(payload) 
-      });
+  async function apiCall(url, payload, signal = null) {
+      const opt = { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(payload) };
+      if (signal) opt.signal = signal;
+      const res = await fetch(url, opt);
       return await res.json();
   }
 
-  // --- POPULATE KANTOR (LOGIC LOGIN & LOCK) ---
-  async function populateKantor() {
-      // AMBIL USER DARI WINDOW (Global Context)
-      const user = (window.getUser && window.getUser()) || null;
-      const userKode = (user?.kode ? String(user.kode).padStart(3,'0') : '000'); // Default 000 jika null
+  // --- SETUP HEADER REKAP UTAMA (Hide/Show Kolom Kode) ---
+  function setupHeaderPipeline(userKode) {
+      const th = document.getElementById('headPipeline');
+      let thHtml = '';
 
-      try {
-          const res = await apiCall(API_KODE, { type: 'kode_kantor' });
-          const sel = document.getElementById('opt_kantor');
-          
-          let h = '';
-
-          // KONDISI 1: PUSAT (000) -> BISA PILIH SEMUA
-          if (userKode === '000') {
-              h += '<option value="">SEMUA CABANG</option>';
-              if(res.data) {
-                  res.data.filter(x => x.kode_kantor !== '000').forEach(x => {
-                      h += `<option value="${x.kode_kantor}">${x.kode_kantor} - ${x.nama_kantor}</option>`;
-                  });
-              }
-              sel.innerHTML = h;
-              sel.disabled = false; // Enable
-          } 
-          // KONDISI 2: CABANG -> KUNCI
-          else {
-              const myBranch = res.data ? res.data.find(k => k.kode_kantor === userKode) : null;
-              const branchName = myBranch ? myBranch.nama_kantor : `CABANG ${userKode}`;
-              
-              // Set opsi tunggal
-              h = `<option value="${userKode}" selected>${userKode} - ${branchName}</option>`;
-              sel.innerHTML = h;
-              sel.value = userKode; // Paksa Value
-              sel.disabled = true;  // Disable
-          }
-      } catch(e) { 
-          console.error("Gagal load kantor", e);
-          // Fallback jika API gagal
-          document.getElementById('opt_kantor').innerHTML = `<option value="${userKode}">${userKode}</option>`;
+      // Lapis 1
+      thHtml += `<tr>`;
+      if (userKode === '000') {
+          thHtml += `
+            <th rowspan="2" class="sticky-left-1 w-[60px] bg-slate-100 text-slate-800 border-r border-b border-slate-200 align-middle uppercase hidden sm:table-cell text-center">Kode</th>
+            <th rowspan="2" class="sticky-left-2 min-w-[130px] md:min-w-[160px] bg-slate-100 text-slate-800 border-r border-b border-slate-200 align-middle text-left uppercase pl-4">Nama Kantor</th>
+          `;
+      } else {
+          thHtml += `
+            <th rowspan="2" class="sticky-left-1 min-w-[130px] md:min-w-[180px] bg-slate-100 text-slate-800 border-r border-b border-slate-200 align-middle text-left uppercase pl-4">Nama Kantor</th>
+          `;
       }
+
+      thHtml += `
+            <th rowspan="2" class="px-3 border-r border-b border-slate-200 align-middle text-right bg-slate-50 text-slate-700">
+                <div class="text-[10px] md:text-[11px] font-bold">TARGET JT</div>
+                <div class="text-[8px] md:text-[9px] text-slate-400 font-normal mt-0.5 font-mono">NOA | Plafon</div>
+            </th>
+            <th rowspan="2" class="px-3 border-r border-b border-emerald-200 align-middle bg-emerald-50 text-emerald-800">
+                <div class="text-[10px] md:text-[11px] font-bold">SUDAH AMBIL</div>
+                <div class="text-[8px] md:text-[9px] text-emerald-600/80 font-normal mt-0.5 font-mono">NOA | Nominal</div>
+            </th>
+            <th colspan="3" class="text-center bg-blue-50 text-blue-900 border-r border-b border-blue-200 uppercase font-bold text-[10px] md:text-[11px]" style="padding: 6px;">Rekomendasi Pipeline AO</th>
+            <th rowspan="2" class="px-3 border-b border-rose-200 align-middle bg-rose-50 text-rose-800">
+                <div class="text-[10px] md:text-[11px] font-bold">DROP (Macet)</div>
+                <div class="text-[8px] md:text-[9px] text-rose-600/80 font-normal mt-0.5 font-mono">NOA | Sisa OS</div>
+            </th>
+          </tr>`;
+
+      // Lapis 2
+      thHtml += `
+          <tr>
+            <th class="px-3 text-center bg-blue-50 text-blue-800 border-r border-b border-blue-200">
+                <div class="text-[10px] md:text-[11px] font-bold">LUNAS</div>
+                <div class="text-[8px] md:text-[9px] text-blue-600/80 font-normal mt-0.5 font-mono">NOA | Plafon</div>
+            </th>
+            <th class="px-3 text-center bg-purple-50 text-purple-800 border-r border-b border-purple-200">
+                <div class="text-[10px] md:text-[11px] font-bold">TOP UP</div>
+                <div class="text-[8px] md:text-[9px] text-purple-600/80 font-normal mt-0.5 font-mono">NOA | Sisa OS</div>
+            </th>
+            <th class="px-3 text-center bg-orange-50 text-orange-800 border-r border-b border-orange-200">
+                <div class="text-[10px] md:text-[11px] font-bold">RETENSI</div>
+                <div class="text-[8px] md:text-[9px] text-orange-600/80 font-normal mt-0.5 font-mono">NOA | Sisa OS</div>
+            </th>
+          </tr>
+          <tr id="rowTotalPipelineAtas"></tr>
+      `;
+      th.innerHTML = thHtml;
   }
 
-  document.getElementById('formFilter').addEventListener('submit', e => { e.preventDefault(); fetchRekap(); });
-
-  // --- FETCH REKAP ---
+  // --- FETCH REKAP UTAMA ---
   async function fetchRekap() {
       const l = document.getElementById('loadingRekap');
       const tb = document.getElementById('bodyRekap');
-      const tf = document.getElementById('footRekap');
+      const trTot = document.getElementById('rowTotalPipelineAtas');
       const pills = document.getElementById('summaryPills');
       
-      l.classList.remove('hidden'); pills.classList.add('hidden');
-      tb.innerHTML = ''; tf.innerHTML = '';
+      if(abortRekap) abortRekap.abort();
+      abortRekap = new AbortController();
 
-      // Tentukan cabang request: Ambil value dari dropdown (entah itu enabled atau disabled/locked)
-      const reqCabang = document.getElementById('opt_kantor').value;
+      l.classList.remove('hidden'); pills.classList.add('hidden');
+      
+      const colSpan = userKodeGlobal === '000' ? 8 : 7;
+      tb.innerHTML = `<tr><td colspan="${colSpan}" class="text-center py-16 text-slate-400 italic">...</td></tr>`;
+      trTot.innerHTML = '';
+      rekapDataCache = null;
 
       try {
+          // Jika Pusat -> tarik NULL (Semua Cabang), Jika Cabang -> otomatis kirim kodenya.
+          const reqCabang = (userKodeGlobal === '000') ? null : userKodeGlobal;
+
           const payload = {
               type: 'rekap_pipeline',
               closing_date: document.getElementById('closing_date').value,
               harian_date: document.getElementById('harian_date').value,
               tahun_jt: document.getElementById('tahun_jt').value,
-              kode_kantor: reqCabang // Kirim kode (kosong = semua)
+              kode_kantor: reqCabang 
           };
 
-          const json = await apiCall(API_URL, payload);
-          const rows = json.data || [];
+          const json = await apiCall(API_URL, payload, abortRekap.signal);
+          let rows = json.data || [];
 
-          if(rows.length === 0) {
-              tb.innerHTML = `<tr><td colspan="8" class="text-center py-10 text-gray-400 italic">Data tidak ditemukan.</td></tr>`;
-              return;
+          // Extra security filter di frontend
+          if (userKodeGlobal !== '000') {
+              rows = rows.filter(r => String(r.kode_cabang) === userKodeGlobal);
           }
 
-          let T = { 
-              tgt_noa:0, tgt_nom:0, 
-              sdh_noa:0, sdh_nom:0, 
-              pot_noa:0, pot_nom:0,
-              drop_noa:0, drop_nom:0,
-              lun_noa:0, lun_nom:0, top_noa:0, top_nom:0, ret_noa:0, ret_nom:0
-          };
+          if(rows.length === 0) {
+              tb.innerHTML = `<tr><td colspan="${colSpan}" class="text-center py-12 text-slate-400 italic">Tidak ada data.</td></tr>`;
+              return;
+          }
+          rekapDataCache = rows; 
 
+          let T = { tgt_noa:0, tgt_nom:0, sdh_noa:0, sdh_nom:0, lun_noa:0, lun_nom:0, top_noa:0, top_nom:0, ret_noa:0, ret_nom:0, drop_noa:0, drop_nom:0 };
           let html = '';
+
           rows.forEach(r => {
-              // Accumulate
               T.tgt_noa += +r.noa_target; T.tgt_nom += +r.plafon_closing;
               T.sdh_noa += +r.noa_sudah;  T.sdh_nom += +r.nominal_sudah;
               T.lun_noa += +r.noa_lunas;  T.lun_nom += +r.nominal_lunas;
@@ -335,79 +388,67 @@
 
               const namaK = r.nama_kantor || r.kode_cabang;
 
-              html += `
-                <tr class="cell-hover bg-white hover:bg-blue-50 transition border-b group" onclick="openModal('${r.kode_cabang}', '${namaK}')">
-                    <td class="px-3 py-2 border-r font-mono text-gray-500 text-center sticky left-0 bg-white group-hover:bg-blue-50 z-20">${r.kode_cabang}</td>
-                    <td class="px-3 py-2 border-r font-medium text-gray-700 sticky left-[60px] bg-white group-hover:bg-blue-50 z-20 truncate max-w-[160px]" title="${namaK}">${namaK}</td>
+              let rowHtml = `<tr onclick="openModal('${r.kode_cabang}', '${namaK}')" class="transition h-[46px] group border-b border-slate-100">`;
+              
+              if (userKodeGlobal === '000') {
+                  rowHtml += `
+                    <td class="sticky-left-1 px-2 py-1.5 border-r border-slate-100 font-mono text-slate-500 text-center hidden sm:table-cell bg-white group-hover:bg-slate-50 shadow-[inset_-1px_0_0_#e2e8f0] z-20">${r.kode_cabang}</td>
+                    <td class="sticky-left-2 px-3 py-1.5 border-r border-slate-100 font-semibold text-slate-700 truncate bg-white group-hover:bg-slate-50 shadow-[inset_-1px_0_0_#e2e8f0] z-20" title="${namaK}">${namaK}</td>
+                  `;
+              } else {
+                  rowHtml += `
+                    <td class="sticky-left-1 px-3 py-1.5 border-r border-slate-100 font-semibold text-slate-700 truncate bg-white group-hover:bg-slate-50 shadow-[inset_-1px_0_0_#e2e8f0] z-20" title="${namaK}">${namaK}</td>
+                  `;
+              }
+
+              rowHtml += `
+                    <td class="px-3 py-1.5 border-r border-slate-100 text-right"><div class="font-bold text-slate-800">${fmt(r.noa_target)}</div><div class="text-[9px] text-slate-400 font-mono">${fmt(r.plafon_closing)}</div></td>
+                    <td class="px-3 py-1.5 border-r border-emerald-100 text-center bg-emerald-50/40"><div class="font-bold text-emerald-700">${fmt(r.noa_sudah)}</div><div class="text-[9px] text-emerald-600 font-mono font-bold">${fmt(r.nominal_sudah)}</div></td>
                     
-                    <td class="px-3 py-2 border-r text-right">
-                        <div class="font-bold text-gray-800">${fmt(r.noa_target)}</div>
-                        <div class="text-[10px] text-gray-500 font-mono">${fmt(r.plafon_closing)}</div>
-                    </td>
+                    <td class="px-3 py-1.5 border-r border-blue-100 text-center bg-blue-50/40"><div class="font-bold text-blue-700">${fmt(r.noa_lunas)}</div><div class="text-[9px] text-blue-600 font-mono">${fmt(r.nominal_lunas)}</div></td>
+                    <td class="px-3 py-1.5 border-r border-purple-100 text-center bg-purple-50/40"><div class="font-bold text-purple-700">${fmt(r.noa_topup)}</div><div class="text-[9px] text-purple-600 font-mono">${fmt(r.os_topup)}</div></td>
+                    <td class="px-3 py-1.5 border-r border-orange-100 text-center bg-orange-50/40"><div class="font-bold text-orange-700">${fmt(r.noa_retensi)}</div><div class="text-[9px] text-orange-600 font-mono">${fmt(r.os_retensi)}</div></td>
                     
-                    <td class="px-3 py-2 border-r text-center bg-green-50/50 text-green-700 border-l border-green-100">
-                        <div class="font-bold">${fmt(r.noa_sudah)}</div>
-                        <div class="text-[10px] text-green-600 font-mono font-bold">${fmt(r.nominal_sudah)}</div>
-                    </td>
-                    
-                    <td class="px-3 py-2 border-r text-center bg-blue-50/50 text-blue-700 border-l border-blue-100">
-                        <div class="font-bold">${fmt(r.noa_lunas)}</div>
-                        <div class="text-[10px] text-blue-600 font-mono">${fmt(r.nominal_lunas)}</div>
-                    </td>
-                    <td class="px-3 py-2 border-r text-center bg-purple-50/50 text-purple-700">
-                        <div class="font-bold">${fmt(r.noa_topup)}</div>
-                        <div class="text-[10px] text-purple-600 font-mono">${fmt(r.os_topup)}</div>
-                    </td>
-                    <td class="px-3 py-2 border-r text-center bg-orange-50/50 text-orange-700">
-                        <div class="font-bold">${fmt(r.noa_retensi)}</div>
-                        <div class="text-[10px] text-orange-600 font-mono">${fmt(r.os_retensi)}</div>
-                    </td>
-                    
-                    <td class="px-3 py-2 border-r text-center bg-red-50/50 text-red-700 border-l border-red-100">
-                        <div class="font-bold">${fmt(r.noa_drop)}</div>
-                        <div class="text-[10px] text-red-600 font-mono">${fmt(r.os_drop)}</div>
-                    </td>
-                </tr>
-              `;
+                    <td class="px-3 py-1.5 text-center bg-rose-50/40 border-l border-rose-100"><div class="font-bold text-rose-700">${fmt(r.noa_drop)}</div><div class="text-[9px] text-rose-600 font-mono">${fmt(r.os_drop)}</div></td>
+                </tr>`;
+              html += rowHtml;
           });
           tb.innerHTML = html;
 
-          // Footer
-          tf.innerHTML = `
-            <tr class="bg-gray-50">
-                <td class="px-3 py-3 border-r sticky left-0 bg-gray-100 z-30 text-center border-t-2 border-gray-300" colspan="2">GRAND TOTAL</td>
-                <td class="px-3 py-3 border-r text-right border-t-2 border-gray-300"><div>${fmt(T.tgt_noa)}</div><div class="text-[10px] font-mono">${fmt(T.tgt_nom)}</div></td>
-                
-                <td class="px-3 py-3 border-r text-center bg-green-100 text-green-900 border-t-2 border-green-300">
-                    <div>${fmt(T.sdh_noa)}</div><div class="text-[10px] font-mono font-bold">${fmt(T.sdh_nom)}</div>
-                </td>
-                
-                <td class="px-3 py-3 border-r text-center bg-blue-100 text-blue-900 border-t-2 border-blue-300">
-                    <div>${fmt(T.lun_noa)}</div><div class="text-[10px] font-mono font-bold">${fmt(T.lun_nom)}</div>
-                </td>
-                <td class="px-3 py-3 border-r text-center bg-purple-100 text-purple-900 border-t-2 border-purple-300">
-                    <div>${fmt(T.top_noa)}</div><div class="text-[10px] font-mono font-bold">${fmt(T.top_nom)}</div>
-                </td>
-                <td class="px-3 py-3 border-r text-center bg-orange-100 text-orange-900 border-t-2 border-orange-300">
-                    <div>${fmt(T.ret_noa)}</div><div class="text-[10px] font-mono font-bold">${fmt(T.ret_nom)}</div>
-                </td>
-                
-                <td class="px-3 py-3 border-r text-center bg-red-100 text-red-900 border-t-2 border-red-300">
-                    <div>${fmt(T.drop_noa)}</div><div class="text-[10px] font-mono font-bold">${fmt(T.drop_nom)}</div>
-                </td>
-            </tr>
+          // Kalkulasi Persentase Capaian Realisasi
+          const divisorReal = T.lun_nom + T.sdh_nom;
+          const pctReal = divisorReal > 0 ? ((T.sdh_nom / divisorReal) * 100).toFixed(1) : 0;
+
+          // Inject Grand Total ke Bawah Thead
+          if (userKodeGlobal === '000') {
+              trTot.innerHTML = `
+                  <th class="sticky-left-1 px-2 border-r border-blue-200 text-center text-blue-900 hidden sm:table-cell">-</th>
+                  <th class="sticky-left-2 px-3 border-r border-blue-200 text-left text-blue-900 uppercase tracking-widest font-bold">TOTAL KONSOLIDASI</th>
+              `;
+          } else {
+              trTot.innerHTML = `
+                  <th class="sticky-left-1 px-3 border-r border-blue-200 text-left text-blue-900 uppercase tracking-widest font-bold">TOTAL CABANG</th>
+              `;
+          }
+
+          trTot.innerHTML += `
+              <th class="px-3 border-r border-blue-200 text-right align-middle"><div class="font-bold text-blue-900 text-[11px] md:text-xs">${fmt(T.tgt_noa)}</div><div class="text-[9px] text-blue-700 font-mono mt-0.5">${fmt(T.tgt_nom)}</div></th>
+              <th class="px-3 border-r border-blue-200 text-center align-middle"><div class="font-bold text-emerald-800 text-[11px] md:text-xs">${fmt(T.sdh_noa)}</div><div class="text-[9px] text-emerald-700 font-mono mt-0.5">${fmt(T.sdh_nom)} <span class="opacity-80">(${pctReal}%)</span></div></th>
+              <th class="px-3 border-r border-blue-200 text-center align-middle"><div class="font-bold text-blue-800 text-[11px] md:text-xs">${fmt(T.lun_noa)}</div><div class="text-[9px] text-blue-700 font-mono mt-0.5">${fmt(T.lun_nom)}</div></th>
+              <th class="px-3 border-r border-blue-200 text-center align-middle"><div class="font-bold text-purple-800 text-[11px] md:text-xs">${fmt(T.top_noa)}</div><div class="text-[9px] text-purple-700 font-mono mt-0.5">${fmt(T.top_nom)}</div></th>
+              <th class="px-3 border-r border-blue-200 text-center align-middle"><div class="font-bold text-orange-800 text-[11px] md:text-xs">${fmt(T.ret_noa)}</div><div class="text-[9px] text-orange-700 font-mono mt-0.5">${fmt(T.ret_nom)}</div></th>
+              <th class="px-3 text-center align-middle"><div class="font-bold text-rose-800 text-[11px] md:text-xs">${fmt(T.drop_noa)}</div><div class="text-[9px] text-rose-700 font-mono mt-0.5">${fmt(T.drop_nom)}</div></th>
           `;
 
-          // Hitung Total Potensi
+          // Update Pills
           T.pot_noa = T.lun_noa + T.top_noa + T.ret_noa;
           T.pot_nom = T.lun_nom + T.top_nom + T.ret_nom;
 
-          // Update Pills
           document.getElementById('sum_target').innerText = fmt(T.tgt_noa);
           document.getElementById('sum_target_nom').innerText = 'Rp ' + fmt(T.tgt_nom);
           
           document.getElementById('sum_sudah').innerText = fmt(T.sdh_noa);
-          document.getElementById('sum_sudah_nom').innerText = 'Rp ' + fmt(T.sdh_nom);
+          document.getElementById('sum_sudah_nom').innerText = `Rp ${fmt(T.sdh_nom)} (${pctReal}%)`;
           
           document.getElementById('sum_potensi').innerText = fmt(T.pot_noa);
           document.getElementById('sum_potensi_nom').innerText = 'Rp ' + fmt(T.pot_nom);
@@ -417,21 +458,61 @@
 
           pills.classList.remove('hidden');
 
-      } catch(e) { console.error(e); } finally { l.classList.add('hidden'); }
+      } catch(e) { if(e.name!=='AbortError') console.error(e); } finally { l.classList.add('hidden'); }
   }
 
-  // --- DETAIL MODAL ---
+  // --- EXPORT EXCEL REKAP UTAMA ---
+  window.exportExcelRekapPipeline = function() {
+      if(!rekapDataCache || rekapDataCache.length === 0) return alert("Tidak ada data rekap untuk didownload.");
+
+      let csv = "Kode\tNama Kantor\tTarget NOA\tTarget Plafon\tSudah Ambil NOA\tSudah Ambil Nominal\tLunas NOA\tLunas Plafon\tTop Up NOA\tTop Up Sisa OS\tRetensi NOA\tRetensi Sisa OS\tDrop NOA\tDrop Sisa OS\n";
+      
+      rekapDataCache.forEach(r => {
+          csv += `'${r.kode_cabang}\t${r.nama_kantor||''}\t${r.noa_target}\t${Math.round(r.plafon_closing)}\t${r.noa_sudah}\t${Math.round(r.nominal_sudah)}\t${r.noa_lunas}\t${Math.round(r.nominal_lunas)}\t${r.noa_topup}\t${Math.round(r.os_topup)}\t${r.noa_retensi}\t${Math.round(r.os_retensi)}\t${r.noa_drop}\t${Math.round(r.os_drop)}\n`;
+      });
+
+      const blob = new Blob([csv], { type: 'application/vnd.ms-excel' });
+      const a = document.createElement('a');
+      a.href = window.URL.createObjectURL(blob);
+      a.download = `Rekap_Pipeline_JT_${document.getElementById("tahun_jt").value}.xls`; 
+      a.click();
+  }
+
+  // --- MODAL DETAIL NASABAH (DENGAN AUTHORIZATION) ---
   function openModal(cabang, nama) {
-      state.cabang = cabang; state.ao = ''; state.status = ''; state.page = 1;
-      document.getElementById('modalDetail').classList.add('modal-active');
-      document.getElementById('detailSubTitle').innerText = `${nama} | JT ${document.getElementById('tahun_jt').value}`;
+      // Keamanan Akses: Hanya bisa lihat cabangnya sendiri (kecuali Pusat)
+      if (userKodeGlobal !== '000' && String(cabang) !== userKodeGlobal) {
+          alert(`AKSES DITOLAK!\nAnda tidak memiliki izin untuk melihat detail Cabang ${cabang}.`);
+          return;
+      }
+
+      state.cabang = cabang; state.kankas = ''; state.ao = ''; state.status = ''; state.page = 1;
+      const modal = document.getElementById('modalDetail');
+      modal.classList.remove('hidden'); modal.classList.add('flex');
+      
+      document.getElementById('detailSubTitle').innerText = `${nama} • Tahun JT ${document.getElementById('tahun_jt').value}`;
       document.getElementById('filter_ao_modal').innerHTML = '<option value="">Semua AO</option>';
+      loadKankasModal(cabang);
       fetchDetail();
+  }
+
+  async function loadKankasModal(kode_cabang) {
+      const el = document.getElementById('filter_kankas_modal');
+      el.innerHTML = '<option value="">Semua Kankas</option>';
+      if(!kode_cabang) return;
+      try {
+          const r = await apiCall(API_KODE, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({type: 'kode_kankas', kode_kantor: kode_cabang}) });
+          const j = await r.json();
+          if(j.data && Array.isArray(j.data)) {
+              j.data.forEach(x => { el.add(new Option(x.deskripsi_group1 || x.kode_group1, x.kode_group1)); });
+          }
+      } catch(e) {}
   }
 
   function changeFilter() {
       state.status = document.getElementById('filter_status_modal').value;
       state.ao = document.getElementById('filter_ao_modal').value;
+      state.kankas = document.getElementById('filter_kankas_modal').value;
       state.page = 1;
       fetchDetail();
   }
@@ -443,7 +524,10 @@
 
   async function fetchDetail() {
       const l=document.getElementById('loadingDetail'), tb=document.getElementById('bodyDetail');
-      l.classList.remove('hidden'); tb.innerHTML='';
+      const trTot = document.getElementById('rowTotalDetailAtas');
+      l.classList.remove('hidden'); tb.innerHTML=''; trTot.innerHTML='';
+      
+      const actDate = new Date(document.getElementById('harian_date').value);
 
       try {
           const payload = {
@@ -451,11 +535,8 @@
               closing_date: document.getElementById('closing_date').value,
               harian_date: document.getElementById('harian_date').value,
               tahun_jt: document.getElementById('tahun_jt').value,
-              kode_kantor: state.cabang,
-              kode_ao: state.ao,
-              filter_status: state.status,
-              page: state.page,
-              limit: state.limit
+              kode_kantor: state.cabang, kode_kankas: state.kankas, kode_ao: state.ao, filter_status: state.status,
+              page: state.page, limit: state.limit
           };
 
           const json = await apiCall(API_URL, payload);
@@ -463,29 +544,46 @@
           const stats = json.data?.stats || {};
           const aoList = json.data?.list_ao || [];
 
-          // Update Stats Bar di Modal
-          document.getElementById('modalStats').innerHTML = `
-             <div class="flex gap-6">
-                 <div>Total: <span class="font-bold text-gray-800">${fmt(stats.total_data)}</span></div>
-                 <div class="text-green-700">Sudah: <span class="font-bold">${fmt(stats.cnt_sudah)}</span></div>
-                 <div class="text-blue-700">Lunas: <span class="font-bold">${fmt(stats.cnt_lunas)}</span></div>
-                 <div class="text-purple-700">TopUp: <span class="font-bold">${fmt(stats.cnt_topup)}</span></div>
-                 <div class="text-orange-700">Retensi: <span class="font-bold">${fmt(stats.cnt_retensi)}</span></div>
-                 <div class="text-red-700">Drop: <span class="font-bold">${fmt(stats.cnt_drop)}</span></div>
-             </div>
-          `;
+          // Kalkulasi Persentase Capaian Baru Detail Modal
+          let totBaru = 0, totBaseLunasSudah = 0;
+          let t_plafon_awal = 0, t_sisa_os = 0, t_nom_baru = 0; 
 
-          // Isi Filter AO jika belum ada
+          rows.forEach(r => {
+              const isClear = r.status_ket.toUpperCase().includes("SUDAH") || r.status_ket.toUpperCase() === "LUNAS" || r.status_ket.toUpperCase() === "LUNAS (POTENSI)";
+              
+              totBaru += parseFloat(r.plafon_baru || 0);
+              if (isClear) totBaseLunasSudah += parseFloat(r.plafon_awal || 0);
+
+              t_plafon_awal += parseFloat(r.plafon_awal||0);
+              if(!isClear) t_sisa_os += parseFloat(r.os_actual||0);
+              if(!isClear) t_nom_baru += parseFloat(r.plafon_baru||0);
+          });
+          const pctBaru = totBaseLunasSudah > 0 ? ((totBaru / totBaseLunasSudah) * 100).toFixed(2) : 0;
+
+          // Stats Modal Bar
+          document.getElementById('modalStats').innerHTML = `
+              <div class="flex gap-4 md:gap-8 px-2 items-center">
+                 <div>Total: <span class="font-bold text-slate-800">${fmt(stats.total_data)}</span></div>
+                 <div class="text-emerald-600">Sudah: <span class="font-bold">${fmt(stats.cnt_sudah)}</span></div>
+                 <div class="text-blue-600">Lunas: <span class="font-bold">${fmt(stats.cnt_lunas)}</span></div>
+                 <div class="text-purple-600">TopUp: <span class="font-bold">${fmt(stats.cnt_topup)}</span></div>
+                 <div class="text-orange-600">Retensi: <span class="font-bold">${fmt(stats.cnt_retensi)}</span></div>
+                 <div class="text-rose-600">Drop: <span class="font-bold">${fmt(stats.cnt_drop)}</span></div>
+                 
+                 <div class="ml-auto bg-emerald-50 text-emerald-800 px-2 py-0.5 rounded border border-emerald-200">
+                     % Realisasi Baru: <span class="font-bold font-mono">${pctBaru}%</span>
+                 </div>
+              </div>`;
+
+          // Populate AO Dropdown
           const selAO = document.getElementById('filter_ao_modal');
           if(selAO.options.length === 1 && aoList.length > 0) {
-              aoList.forEach(ao => {
-                  let opt = document.createElement('option'); opt.value = ao.kode_group2; opt.text = ao.nama_ao; selAO.add(opt);
-              });
+              aoList.forEach(ao => { selAO.add(new Option(ao.nama_ao, ao.kode_group2)); });
               selAO.value = state.ao;
           }
 
           if(rows.length === 0) {
-              tb.innerHTML = `<tr><td colspan="9" class="text-center py-10 text-gray-400 italic">Tidak ada data detail.</td></tr>`;
+              tb.innerHTML = `<tr><td colspan="12" class="text-center py-10 text-slate-400 italic">Tidak ada data nasabah.</td></tr>`;
               document.getElementById('pageInfo').innerText = '0 Data';
               return;
           }
@@ -493,80 +591,147 @@
           state.totalPages = json.data?.pagination?.total_pages || 1;
           document.getElementById('pageInfo').innerText = `Hal ${state.page} / ${state.totalPages}`;
 
+          // Sort Terdekat
+          rows.sort((a, b) => new Date(a.tgl_jatuh_tempo) - new Date(b.tgl_jatuh_tempo));
+
+          // Inject Baris Total
+          trTot.innerHTML = `
+              <th class="mod-sticky-1 px-2 border-r border-b border-blue-200 uppercase tracking-widest text-center">-</th>
+              <th class="mod-sticky-2 px-3 border-r border-b border-blue-200 uppercase tracking-widest">TOTAL HALAMAN INI</th>
+              <th class="px-3 border-r border-b border-blue-200 text-center">-</th>
+              <th class="px-2 border-r border-b border-blue-200 text-center">-</th>
+              <th class="px-2 border-r border-b border-blue-200 text-center">-</th>
+              <th class="px-3 border-r border-b border-blue-200 text-center">-</th>
+              <th class="px-3 border-r border-b border-blue-200 text-right font-mono text-blue-900">${fmt(t_plafon_awal)}</th>
+              <th class="px-3 border-r border-b border-blue-200 text-center">-</th>
+              <th class="px-3 border-r border-b border-blue-300 text-right font-mono text-blue-900 bg-blue-100/50">${fmt(t_sisa_os)}</th>
+              <th class="px-3 border-r border-b border-blue-200 text-center">-</th>
+              <th class="px-3 border-r border-b border-blue-200 text-right font-mono text-emerald-800 bg-emerald-50/50">${fmt(t_nom_baru)}</th>
+              <th class="px-2 border-b border-blue-200 text-center">-</th>
+          `;
+
           let html = '';
           rows.forEach(r => {
-              const aoName = (r.nama_ao || '-').split(' ')[0];
-              const nomBaru = r.plafon_baru > 0 
-                  ? `<div class="font-bold text-green-700 text-[11px]">${fmt(r.plafon_baru)}</div><div class="text-[9px] text-green-600">${r.tgl_baru}</div>` 
-                  : '-';
+              const aoName = (r.nama_ao || '-').split(' ').slice(0,2).join(' ');
+              const alamat = r.alamat || '-';
+              const noHp = r.no_hp || '-';
+              const kankas = r.kankas || '-';
               
-              // Badge Styles (Tailwind)
-              let badgeClass = "bg-gray-100 text-gray-600";
-              if(r.status_ket.includes("SUDAH")) badgeClass = "bg-green-100 text-green-800";
-              if(r.status_ket.includes("LUNAS")) badgeClass = "bg-blue-100 text-blue-800";
-              if(r.status_ket.includes("TOP UP")) badgeClass = "bg-purple-100 text-purple-800";
-              if(r.status_ket.includes("RETENSI")) badgeClass = "bg-orange-100 text-orange-800";
-              if(r.status_ket.includes("DROP")) badgeClass = "bg-red-100 text-red-800";
+              // LOGIKA STATUS: FIXED (Pengecekan String)
+              let statStr = (r.status_ket || '').toUpperCase();
+              let isClear = statStr.includes("SUDAH") || statStr === "LUNAS" || statStr === "LUNAS (POTENSI)";
+              let isDrop = statStr.includes("DROP");
 
-              const btn = r.enable 
-                  ? `<button class="bg-blue-600 hover:bg-blue-700 text-white h-[24px] px-2 rounded text-[10px] shadow-sm">PROSPEK</button>`
-                  : `<span class="text-[10px] font-bold text-gray-300">LOCKED</span>`;
+              let sisaOsVisual = isClear ? '-' : fmt(r.os_actual);
+              let nomBaru = '-';
+              if (!isClear && r.plafon_baru > 0) {
+                  nomBaru = `<div class="font-bold text-emerald-700 text-[10px] md:text-[11px]">${fmt(r.plafon_baru)}</div><div class="text-[8px] md:text-[9px] text-emerald-600 font-mono">${r.tgl_baru}</div>`;
+              }
+
+              // Aksi Button Logic
+              let isLocked = isClear || isDrop;
+              const btnAksi = isLocked 
+                  ? `<span class="text-[9px] md:text-[10px] font-bold text-slate-400">LOCKED</span>`
+                  : `<button class="bg-blue-600 hover:bg-blue-700 text-white px-2 py-1 rounded text-[9px] md:text-[10px] font-bold shadow-sm transition w-full">PROSPEK</button>`;
+
+              // Warna Badge Status Clean
+              let badgeClass = "text-slate-600 border-slate-300 bg-slate-50";
+              if(statStr.includes("SUDAH")) badgeClass = "text-emerald-700 border-emerald-300 bg-emerald-50/80";
+              else if(statStr === "LUNAS" || statStr === "LUNAS (POTENSI)") badgeClass = "text-blue-700 border-blue-300 bg-blue-50/80";
+              else if(statStr.includes("TOP UP")) badgeClass = "text-purple-700 border-purple-300 bg-purple-50/80";
+              else if(statStr.includes("RETENSI")) badgeClass = "text-orange-700 border-orange-300 bg-orange-50/80";
+              else if(statStr.includes("DROP")) badgeClass = "text-rose-700 border-rose-300 bg-rose-50/80";
+
+              // Kalkulasi Sisa Hari (Jatuh Tempo)
+              const jtDate = new Date(r.tgl_jatuh_tempo);
+              const diffTime = jtDate - actDate;
+              const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+              
+              let strJt = `<div class="font-mono text-slate-700">${r.tgl_jatuh_tempo}</div>`;
+              if (!isClear) {
+                  if (diffDays < 0) {
+                      strJt += `<div class="text-[8px] md:text-[9px] text-rose-600 font-bold mt-0.5 bg-rose-50 rounded inline-block px-1">Lewat ${Math.abs(diffDays)} Hari</div>`;
+                  } else if (diffDays === 0) {
+                      strJt += `<div class="text-[8px] md:text-[9px] text-orange-600 font-bold mt-0.5 bg-orange-50 rounded inline-block px-1">HARI INI!</div>`;
+                  } else if (diffDays <= 30) {
+                      strJt += `<div class="text-[8px] md:text-[9px] text-orange-500 font-bold mt-0.5">Kurang ${diffDays} Hari</div>`;
+                  } else {
+                      strJt += `<div class="text-[8px] md:text-[9px] text-slate-400 mt-0.5">${diffDays} Hari lagi</div>`;
+                  }
+              }
 
               html += `
-                <tr class="hover:bg-gray-50 border-b transition">
-                    <td class="px-4 py-2 font-mono text-[11px] text-gray-500">${r.no_rekening}</td>
-                    <td class="px-4 py-2 font-medium text-gray-700 text-xs truncate max-w-[180px]" title="${r.nama_nasabah}">${r.nama_nasabah}</td>
-                    <td class="px-4 py-2 text-xs text-blue-700 font-bold">${aoName}</td>
-                    <td class="px-4 py-2 text-right text-[11px] text-gray-500 font-mono">${fmt(r.plafon_awal)}</td>
-                    <td class="px-4 py-2 text-center font-mono text-[11px] text-gray-500">${r.tgl_jatuh_tempo}</td>
-                    <td class="px-4 py-2 text-right font-bold text-blue-700 text-[11px] font-mono">${fmt(r.os_actual)}</td>
-                    <td class="px-4 py-2 text-center"><span class="px-2 py-0.5 rounded text-[9px] font-bold uppercase ${badgeClass}">${r.status_ket}</span></td>
-                    <td class="px-4 py-2 text-right bg-green-50/30 border-l border-green-50">${nomBaru}</td>
-                    <td class="px-4 py-2 text-center">${btn}</td>
-                </tr>
-              `;
+                <tr class="transition h-[40px] group border-b border-slate-100">
+                    <td class="mod-sticky-1 px-2 py-1.5 font-mono text-[10px] text-slate-500 bg-white border-r border-slate-100 shadow-[inset_-1px_0_0_#e2e8f0]">${r.no_rekening}</td>
+                    <td class="mod-sticky-2 px-3 py-1.5 font-semibold text-[10px] text-slate-700 bg-white truncate border-r border-slate-100 max-w-[160px] md:max-w-[200px] shadow-[inset_-1px_0_0_#e2e8f0]" title="${r.nama_nasabah}">${r.nama_nasabah}</td>
+                    <td class="px-3 py-1.5 text-[9px] md:text-[10px] text-slate-500 truncate border-r border-slate-100 max-w-[140px] md:max-w-[180px]" title="${alamat}">${alamat}</td>
+                    <td class="px-2 py-1.5 text-center font-mono text-slate-600 text-[10px] border-r border-slate-100">${noHp}</td>
+                    <td class="px-2 py-1.5 text-center font-mono text-[9px] text-slate-500 border-r border-slate-100">${kankas}</td>
+                    
+                    <td class="px-3 py-1.5 text-[9px] md:text-[10px] font-bold text-blue-700 truncate border-r border-slate-100">${aoName}</td>
+                    <td class="px-3 py-1.5 text-right font-mono text-[10px] text-slate-600 border-r border-slate-100">${fmt(r.plafon_awal)}</td>
+                    <td class="px-3 py-1.5 text-center border-r border-slate-100">${strJt}</td>
+                    <td class="px-3 py-1.5 text-right font-mono font-bold text-[10px] md:text-[11px] text-blue-700 bg-blue-50/30 border-r border-blue-100">${sisaOsVisual}</td>
+                    <td class="px-2 py-1.5 text-center border-r border-slate-100"><span class="badge-clean ${badgeClass}">${r.status_ket}</span></td>
+                    <td class="px-3 py-1.5 text-right bg-emerald-50/30 border-r border-slate-100">${nomBaru}</td>
+                    <td class="px-2 py-1.5 text-center">${btnAksi}</td>
+                </tr>`;
           });
           tb.innerHTML = html;
 
-          document.getElementById('btnPrev').onclick = () => changePage(-1);
-          document.getElementById('btnNext').onclick = () => changePage(1);
+          document.getElementById('btnPrev').disabled = state.page <= 1;
+          document.getElementById('btnNext').disabled = state.page >= state.totalPages;
 
       } catch(e) { console.error(e); } finally { l.classList.add('hidden'); }
   }
 
-  // --- DOWNLOAD ---
-  async function downloadExcel() {
-      try {
-          const btn = event.target.closest('button'); 
-          const originalText = btn.innerHTML;
-          btn.innerHTML = `<span class="animate-spin inline-block h-3 w-3 border-2 border-white border-t-transparent rounded-full mr-1"></span> Loading...`;
-          btn.disabled = true;
+  // --- EXPORT EXCEL DETAIL ---
+  window.downloadExcelDetail = async function() {
+      const btn = event.target.closest('button'); const txt = btn.innerHTML;
+      btn.innerHTML = `<span class="animate-spin inline-block h-3 w-3 border-2 border-white border-t-transparent rounded-full mr-1"></span>...`;
+      btn.disabled = true;
 
+      try {
           const payload = {
               type: 'detail_pipeline',
               closing_date: document.getElementById('closing_date').value,
               harian_date: document.getElementById('harian_date').value,
               tahun_jt: document.getElementById('tahun_jt').value,
-              kode_kantor: state.cabang, kode_ao: state.ao, filter_status: state.status, page: 1, limit: 10000 
+              kode_kantor: state.cabang, kode_kankas: state.kankas, kode_ao: state.ao, filter_status: state.status, 
+              page: 1, limit: 10000 
           };
           const json = await apiCall(API_URL, payload);
-          const rows = json.data?.data || [];
+          let rows = json.data?.data || [];
           
-          if(rows.length===0) { alert('Data kosong'); btn.innerHTML=originalText; btn.disabled=false; return; }
+          if(rows.length===0) { alert('Data kosong'); btn.innerHTML=txt; btn.disabled=false; return; }
 
-          let csv = "No Rekening\tNama Nasabah\tAO\tPlafon Awal\tTgl JT\tSisa OS\tStatus\tTgl Realisasi Baru\tPlafon Baru\n";
+          rows.sort((a, b) => new Date(a.tgl_jatuh_tempo) - new Date(b.tgl_jatuh_tempo));
+
+          let csv = "No Rekening\tNama Nasabah\tAlamat\tNo HP\tKankas\tAO\tPlafon Awal\tTgl JT\tSisa OS\tStatus\tTgl Realisasi Baru\tPlafon Baru\n";
           rows.forEach(r => {
-              csv += `'${r.no_rekening}\t${r.nama_nasabah}\t${r.nama_ao}\t${r.plafon_awal}\t${r.tgl_jatuh_tempo}\t${r.os_actual}\t${r.status_ket}\t${r.tgl_baru}\t${r.plafon_baru}\n`;
+              const isClear = r.status_ket.toUpperCase().includes("SUDAH") || r.status_ket.toUpperCase() === "LUNAS" || r.status_ket.toUpperCase() === "LUNAS (POTENSI)";
+              const sisaOsEx = isClear ? 0 : Math.round(r.os_actual);
+              const alamatEx = r.alamat || '-';
+              const hpEx = r.no_hp || '-';
+              const kankasEx = r.kankas || '-';
+
+              csv += `'${r.no_rekening}\t${r.nama_nasabah}\t${alamatEx}\t'${hpEx}\t${kankasEx}\t${r.nama_ao}\t${Math.round(r.plafon_awal)}\t${r.tgl_jatuh_tempo}\t${sisaOsEx}\t${r.status_ket}\t${r.tgl_baru||'-'}\t${Math.round(r.plafon_baru||0)}\n`;
           });
 
           const blob = new Blob([csv], { type: 'application/vnd.ms-excel' });
-          const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
-          a.download = `Pipeline_JT_${state.cabang}.xls`; a.click();
-          
-          btn.innerHTML=originalText; btn.disabled=false;
-      } catch(e) { alert('Gagal export'); }
+          const url = window.URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = `Detail_Pipeline_JT_${state.cabang}.xls`;
+          document.body.appendChild(a); a.click(); document.body.removeChild(a);
+
+      } catch(e) { alert('Gagal export'); } finally { btn.innerHTML=txt; btn.disabled=false; }
   }
 
-  function closeModal() { document.getElementById('modalDetail').classList.remove('modal-active'); }
+  function closeModal() { 
+      const modal = document.getElementById('modalDetail');
+      modal.classList.add('hidden'); 
+      modal.classList.remove('flex');
+  }
   document.addEventListener('keydown', e => { if(e.key === 'Escape') closeModal(); });
 </script>

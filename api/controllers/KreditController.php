@@ -898,9 +898,7 @@ class KreditController {
         }
     }
 
-/**
-     * API 1: REKAP MATRIKS MOB (View Utama)
-     */
+
     public function getRekapMob6Bulan($input = null) {
         // 1. Setup Input & Memory
         set_time_limit(300); 
@@ -1041,6 +1039,9 @@ class KreditController {
         // Filter Cabang (Input 'kode_kantor' -> DB 'kode_cabang')
         $kc_raw = $b['kode_kantor'] ?? null;
         $kc     = ($kc_raw === null || $kc_raw === '') ? null : str_pad((string)$kc_raw, 3, '0', STR_PAD_LEFT);
+        
+        // Filter Kankas
+        $kankas = $b['kode_kankas'] ?? null;
 
         // Pagination
         $page   = isset($b['page']) ? (int)$b['page'] : 1;
@@ -1077,12 +1078,13 @@ class KreditController {
             // 4. Hitung Total Data (Untuk Pagination)
             $sqlCount = "
                 SELECT COUNT(*) 
-                FROM nominatif 
-                WHERE DATE(created) = :harian_date
-                AND tgl_realisasi BETWEEN :start AND :end
-                AND hari_menunggak BETWEEN :dpd_min AND :dpd_max
+                FROM nominatif n
+                WHERE DATE(n.created) = :harian_date
+                AND n.tgl_realisasi BETWEEN :start AND :end
+                AND n.hari_menunggak BETWEEN :dpd_min AND :dpd_max
             ";
-            if ($kc) $sqlCount .= " AND kode_cabang = :kc";
+            if ($kc) $sqlCount .= " AND n.kode_cabang = :kc";
+            if ($kankas) $sqlCount .= " AND n.kode_group1 = :kankas";
 
             $stmt = $this->pdo->prepare($sqlCount);
             $stmt->bindValue(':harian_date', $harian_date);
@@ -1091,14 +1093,20 @@ class KreditController {
             $stmt->bindValue(':dpd_min', $dpd_min);
             $stmt->bindValue(':dpd_max', $dpd_max);
             if ($kc) $stmt->bindValue(':kc', $kc);
+            if ($kankas) $stmt->bindValue(':kankas', $kankas);
+            
             $stmt->execute();
             $total_records = $stmt->fetchColumn();
 
-            // 5. Query Utama (Ambil Detail + Join Transaksi Kredit)
+            // 5. Query Utama (Ambil Detail + Join Transaksi Kredit + Tabungan)
             $sql = "
                 SELECT 
                     n.no_rekening, 
                     n.nama_nasabah, 
+                    n.alamat,
+                    n.hp as no_hp,
+                    n.kode_group1 as kankas,
+                    COALESCE(tb.saldo_akhir, 0) as tabungan,
                     n.tgl_realisasi, 
                     n.jml_pinjaman as plafond, 
                     n.baki_debet as os, 
@@ -1128,6 +1136,8 @@ class KreditController {
                       AND YEAR(tgl_trans) = YEAR(:trans_date_2)
                     GROUP BY no_rekening
                 ) t ON n.no_rekening = t.no_rekening
+                
+                LEFT JOIN tabungan tb ON n.norek_tabungan = tb.no_rekening
 
                 WHERE DATE(n.created) = :harian_date
                 AND n.tgl_realisasi BETWEEN :start AND :end
@@ -1135,6 +1145,7 @@ class KreditController {
             ";
 
             if ($kc) $sql .= " AND n.kode_cabang = :kc";
+            if ($kankas) $sql .= " AND n.kode_group1 = :kankas";
             
             $sql .= " ORDER BY n.baki_debet DESC LIMIT :limit OFFSET :offset";
 
@@ -1150,6 +1161,7 @@ class KreditController {
             $stmt->bindValue(':dpd_max', $dpd_max);
             
             if ($kc) $stmt->bindValue(':kc', $kc);
+            if ($kankas) $stmt->bindValue(':kankas', $kankas);
             
             $stmt->bindValue(':limit', (int)$limit, PDO::PARAM_INT);
             $stmt->bindValue(':offset', (int)$offset, PDO::PARAM_INT);
@@ -1163,10 +1175,19 @@ class KreditController {
                 $row['plafond']   = (float)$row['plafond'];
                 $row['os']        = (float)$row['os'];
                 $row['totung']    = (float)$row['totung'];
+                $row['tabungan']  = (float)$row['tabungan'];
                 
                 $row['hari_menunggak']       = (int)$row['hari_menunggak'];
                 $row['hari_menunggak_pokok'] = (int)$row['hari_menunggak_pokok'];
                 $row['hari_menunggak_bunga'] = (int)$row['hari_menunggak_bunga'];
+                
+                // Status Tabungan (Aman jika 1.5x - 2x dari saldo tabungan lebih besar dari total tunggakan)
+                // Sesuai request: "tabungannya harus hampir 2x yang rang 1.5 - 2 gitu baru aman yaaa" -> artinya Tabungan >= 1.5 * Totung
+                if ($row['tabungan'] >= (1.5 * $row['totung'])) {
+                    $row['status_tabungan'] = 'Aman';
+                } else {
+                    $row['status_tabungan'] = 'Belum Aman';
+                }
             }
             unset($row); 
 

@@ -20,16 +20,12 @@ class RepaymentRateController {
     }
 
     private function getMappedDay($originalDay, $month, $year) {
-        // Gunakan date('t') pengganti cal_days_in_month agar aman di Linux
         $lastDayOfMonth = (int)date('t', mktime(0, 0, 0, $month, 1, $year));
-        
         $effectiveDay = min($originalDay, $lastDayOfMonth);
         
         if ($effectiveDay == $lastDayOfMonth) {
             $dateString = "$year-$month-$effectiveDay";
-            $dayOfWeek  = date('w', strtotime($dateString)); // 0 = Minggu
-            
-            // Logika Bisnis: Jika tgl tagih jatuh hari Minggu, geser ke Sabtu
+            $dayOfWeek  = date('w', strtotime($dateString)); 
             if ($dayOfWeek == 0) { 
                 $effectiveDay = $effectiveDay - 1; 
             }
@@ -38,8 +34,7 @@ class RepaymentRateController {
     }
 
     /**
-     * 1. REKAP UTAMA (Summary)
-     * UPDATE: Menggunakan DAY(tgl_jatuh_tempo)
+     * 1. REKAP UTAMA (Summary Per Tanggal)
      */
     public function getRepaymentRate($input = null) {
         set_time_limit(300); ini_set('memory_limit', '1024M');
@@ -58,8 +53,6 @@ class RepaymentRateController {
         $curMonth = date('n', $curTime);
         $curYear  = date('Y', $curTime);
 
-        // --- A. TARGET (M-1) ---
-        // UPDATE: Ganti tgl_realisasi -> tgl_jatuh_tempo
         $sqlM1 = "SELECT no_rekening, baki_debet, DAY(tgl_jatuh_tempo) as tgl_ori 
                   FROM nominatif 
                   WHERE created BETWEEN :s1 AND :e1 
@@ -75,7 +68,6 @@ class RepaymentRateController {
         $stmt1->execute();
         $dataM1 = $stmt1->fetchAll(PDO::FETCH_UNIQUE | PDO::FETCH_ASSOC);
 
-        // --- B. ACTUAL (Current) ---
         $sqlCur = "SELECT no_rekening, baki_debet, hari_menunggak 
                    FROM nominatif 
                    WHERE created BETWEEN :s2 AND :e2";
@@ -87,7 +79,6 @@ class RepaymentRateController {
         $stmt2->execute();
         $dataCur = $stmt2->fetchAll(PDO::FETCH_UNIQUE | PDO::FETCH_ASSOC);
 
-        // --- C. MAPPING ---
         $report = [];
         for ($i = 1; $i <= 31; $i++) {
             $report[$i] = [
@@ -100,51 +91,36 @@ class RepaymentRateController {
             ];
         }
         $grandTotal = [
-            'target_noa'=>0, 'target_os'=>0, 
-            'lancar_noa'=>0, 'lancar_os'=>0, 
-            'macet_noa'=>0,  'macet_os'=>0, 
-            'lunas_noa'=>0,  'lunas_os'=>0, 
+            'target_noa'=>0, 'target_os'=>0, 'lancar_noa'=>0, 'lancar_os'=>0, 
+            'macet_noa'=>0,  'macet_os'=>0,  'lunas_noa'=>0,  'lunas_os'=>0, 
             'angsuran'=>0,   'total_bayar'=>0, 'persen'=>0
         ];
 
         foreach ($dataM1 as $norek => $row) {
-            $tglOri = (int)$row['tgl_ori']; // Ini sekarang adalah Tgl Jatuh Tempo
+            $tglOri = (int)$row['tgl_ori']; 
             if ($tglOri < 1 || $tglOri > 31) continue;
 
             $tglMap = $this->getMappedDay($tglOri, $curMonth, $curYear);
             $osTarget = (float)$row['baki_debet'];
 
-            $report[$tglMap]['target_noa']++;
-            $report[$tglMap]['target_os'] += $osTarget;
-            
-            $grandTotal['target_noa']++;
-            $grandTotal['target_os'] += $osTarget;
+            $report[$tglMap]['target_noa']++; $report[$tglMap]['target_os'] += $osTarget;
+            $grandTotal['target_noa']++; $grandTotal['target_os'] += $osTarget;
 
             if (isset($dataCur[$norek])) {
                 $osActual  = (float)$dataCur[$norek]['baki_debet'];
                 $dpdActual = (int)$dataCur[$norek]['hari_menunggak'];
 
                 if ($osActual <= 0) {
-                    // LUNAS
-                    $report[$tglMap]['lunas_noa']++;
-                    $report[$tglMap]['lunas_os'] += $osTarget;
-                    $grandTotal['lunas_noa']++; 
-                    $grandTotal['lunas_os'] += $osTarget;
+                    $report[$tglMap]['lunas_noa']++; $report[$tglMap]['lunas_os'] += $osTarget;
+                    $grandTotal['lunas_noa']++; $grandTotal['lunas_os'] += $osTarget;
                 } else {
                     if ($dpdActual == 0) {
-                        // LANCAR
-                        $report[$tglMap]['lancar_noa']++;
-                        $report[$tglMap]['lancar_os'] += $osActual;
-                        $grandTotal['lancar_noa']++;
-                        $grandTotal['lancar_os'] += $osActual;
+                        $report[$tglMap]['lancar_noa']++; $report[$tglMap]['lancar_os'] += $osActual;
+                        $grandTotal['lancar_noa']++; $grandTotal['lancar_os'] += $osActual;
                     } else {
-                        // DITAGIH (Macet)
-                        $report[$tglMap]['macet_noa']++;
-                        $report[$tglMap]['macet_os'] += $osActual;
-                        $grandTotal['macet_noa']++;
-                        $grandTotal['macet_os'] += $osActual;
+                        $report[$tglMap]['macet_noa']++; $report[$tglMap]['macet_os'] += $osActual;
+                        $grandTotal['macet_noa']++; $grandTotal['macet_os'] += $osActual;
                     }
-                    // ANGSURAN (Cicilan Pokok)
                     if ($osTarget > $osActual) {
                         $bayar = $osTarget - $osActual;
                         $report[$tglMap]['angsuran'] += $bayar;
@@ -152,28 +128,20 @@ class RepaymentRateController {
                     }
                 }
             } else {
-                // LUNAS (Data Hilang di Current = Lunas)
-                $report[$tglMap]['lunas_noa']++;
-                $report[$tglMap]['lunas_os'] += $osTarget;
-                $grandTotal['lunas_noa']++;
-                $grandTotal['lunas_os'] += $osTarget;
+                $report[$tglMap]['lunas_noa']++; $report[$tglMap]['lunas_os'] += $osTarget;
+                $grandTotal['lunas_noa']++; $grandTotal['lunas_os'] += $osTarget;
             }
         }
 
         foreach ($report as &$r) {
             $performance = $r['lancar_os'] + $r['lunas_os'] + $r['angsuran'];
             $r['total_bayar'] = $r['lunas_os'] + $r['angsuran'];
-            if ($r['target_os'] > 0) {
-                $r['persen'] = round(($performance / $r['target_os']) * 100, 2);
-            }
+            if ($r['target_os'] > 0) $r['persen'] = round(($performance / $r['target_os']) * 100, 2);
         }
 
         $gtPerformance = $grandTotal['lancar_os'] + $grandTotal['lunas_os'] + $grandTotal['angsuran'];
         $grandTotal['total_bayar'] = $grandTotal['lunas_os'] + $grandTotal['angsuran'];
-        
-        if ($grandTotal['target_os'] > 0) {
-            $grandTotal['persen'] = round(($gtPerformance / $grandTotal['target_os']) * 100, 2);
-        }
+        if ($grandTotal['target_os'] > 0) $grandTotal['persen'] = round(($gtPerformance / $grandTotal['target_os']) * 100, 2);
 
         $this->send(200, "Sukses Rekap RR", [
             'meta' => ['m1' => $closing, 'cur' => $harian],
@@ -184,13 +152,14 @@ class RepaymentRateController {
 
     /**
      * 2. DETAIL DATA
-     * UPDATE: Filter berdasarkan DAY(t1.tgl_jatuh_tempo)
+     * Menampilkan data Lancar & Menunggak
      */
     public function getDetailRepaymentRate($input = null) {
         $b = is_array($input) ? $input : [];
         $closing = $b['closing_date'] ?? null;
         $harian  = $b['harian_date'] ?? null;
         $kc      = $b['kode_kantor'] ?? null;
+        $kankas  = $b['kode_kankas'] ?? null; // Filter Kankas
         $tglMap  = isset($b['tgl_tagih']) ? (int)$b['tgl_tagih'] : null;
         $status  = $b['status'] ?? 'ALL';
         $page    = $b['page'] ?? 1;
@@ -227,30 +196,35 @@ class RepaymentRateController {
             $whereStatus = "AND t2.baki_debet > 0 AND t2.hari_menunggak > 0";
         }
 
-        // UPDATE: Ganti DAY(tgl_realisasi) -> DAY(tgl_jatuh_tempo)
+        // Base Query Dengan Relasi Tabungan
         $baseQuery = "FROM nominatif t1 
                       $joinType nominatif t2 ON t1.no_rekening = t2.no_rekening 
                           AND (t2.created BETWEEN :s2 AND :e2)
                       LEFT JOIN ao_kredit ao ON t1.kode_group2 = ao.kode_group2
+                      LEFT JOIN tabungan tb ON t1.norek_tabungan = tb.no_rekening
                       WHERE (t1.created BETWEEN :s1 AND :e1)
                       AND t1.kolektibilitas = 'L' 
                       AND t1.baki_debet > 0
                       AND t1.hari_menunggak = 0 
-                      AND DAY(t1.tgl_jatuh_tempo) IN ($daysStr) -- SUDAH DIUPDATE
+                      AND DAY(t1.tgl_jatuh_tempo) IN ($daysStr)
                       $whereStatus";
         
         if ($kc) $baseQuery .= " AND t1.kode_cabang = :kc";
+        if ($kankas) $baseQuery .= " AND t1.kode_group1 = :kankas"; 
 
         // Count
         $stmtCnt = $this->pdo->prepare("SELECT COUNT(1) $baseQuery");
         $stmtCnt->bindValue(':s1', $s1); $stmtCnt->bindValue(':e1', $e1);
         $stmtCnt->bindValue(':s2', $s2); $stmtCnt->bindValue(':e2', $e2);
         if ($kc) $stmtCnt->bindValue(':kc', $kc);
+        if ($kankas) $stmtCnt->bindValue(':kankas', $kankas); 
         $stmtCnt->execute();
         $total = $stmtCnt->fetchColumn();
 
-        // Data
+        // FIX: t1.no_hp diganti menjadi t1.hp as no_hp
         $cols = "t1.no_rekening, t1.nama_nasabah, 
+                 t1.alamat, t1.hp as no_hp, t1.kode_group1 as kankas,
+                 COALESCE(tb.saldo_akhir, 0) as tabungan,
                  COALESCE(ao.nama_ao, t1.kode_group2) as nama_ao,
                  t1.tgl_jatuh_tempo, t1.jml_pinjaman,
                  t1.baki_debet as os_m1, 
@@ -263,6 +237,7 @@ class RepaymentRateController {
         $stmt->bindValue(':s1', $s1); $stmt->bindValue(':e1', $e1);
         $stmt->bindValue(':s2', $s2); $stmt->bindValue(':e2', $e2);
         if ($kc) $stmt->bindValue(':kc', $kc);
+        if ($kankas) $stmt->bindValue(':kankas', $kankas); 
         $stmt->bindValue(':lim', $limit, PDO::PARAM_INT);
         $stmt->bindValue(':off', $offset, PDO::PARAM_INT);
         $stmt->execute();
@@ -270,6 +245,7 @@ class RepaymentRateController {
 
         foreach ($rows as &$r) {
             $osM1 = (float)$r['os_m1']; $osCur = (float)$r['os_curr']; $dpd = (int)$r['dpd_curr'];
+            $totung = (float)$r['totung']; $tabungan = (float)$r['tabungan'];
             
             if ($osCur <= 0) { $r['status_ket'] = 'LUNAS'; }
             elseif ($dpd == 0) { $r['status_ket'] = 'LANCAR'; }
@@ -277,6 +253,13 @@ class RepaymentRateController {
 
             $r['os_m1']=$osM1; $r['os_curr']=$osCur; 
             $r['bayar_pokok'] = ($osM1 > $osCur) ? ($osM1 - $osCur) : 0;
+
+            // LOGIC STATUS TABUNGAN (0.015 adalah 1.5%)
+            if (($tabungan * 0.015) > $totung) {
+                $r['status_tabungan'] = 'Aman';
+            } else {
+                $r['status_tabungan'] = 'Belum Aman';
+            }
         }
 
         $this->send(200, "Detail Data RR", [
@@ -287,7 +270,6 @@ class RepaymentRateController {
 
     /**
      * 3. DETAIL LUNAS (REFINANCING CHECK)
-     * UPDATE: Filter berdasarkan DAY(t1.tgl_jatuh_tempo)
      */
     public function getDetailLunasRR($input = null) {
         set_time_limit(300); ini_set('memory_limit', '1024M');
@@ -296,6 +278,7 @@ class RepaymentRateController {
         $closing = $b['closing_date'] ?? null;
         $harian  = $b['harian_date'] ?? null;
         $kc      = $b['kode_kantor'] ?? null;
+        $kankas  = $b['kode_kankas'] ?? null; // Filter Kankas
         $tglMap  = isset($b['tgl_tagih']) ? (int)$b['tgl_tagih'] : null;
         $page    = $b['page'] ?? 1;
         $limit   = $b['limit'] ?? 10;
@@ -311,14 +294,11 @@ class RepaymentRateController {
 
         $includedDays = [];
         for ($d = 1; $d <= 31; $d++) {
-            if ($this->getMappedDay($d, $month, $year) == $tglMap) {
-                $includedDays[] = $d;
-            }
+            if ($this->getMappedDay($d, $month, $year) == $tglMap) $includedDays[] = $d;
         }
         if (empty($includedDays)) $includedDays = [$tglMap];
         $daysStr = implode(',', $includedDays);
 
-        // UPDATE: Ganti DAY(tgl_realisasi) -> DAY(tgl_jatuh_tempo)
         $baseQuery = "FROM nominatif t1 
                       LEFT JOIN nominatif t2 ON t1.no_rekening = t2.no_rekening 
                           AND (t2.created BETWEEN :s2 AND :e2)
@@ -328,20 +308,23 @@ class RepaymentRateController {
                       AND t1.baki_debet > 0
                       AND t1.hari_menunggak = 0 
                       AND (t2.no_rekening IS NULL OR t2.baki_debet <= 0)
-                      AND DAY(t1.tgl_jatuh_tempo) IN ($daysStr)"; // SUDAH DIUPDATE
+                      AND DAY(t1.tgl_jatuh_tempo) IN ($daysStr)";
 
         if ($kc) $baseQuery .= " AND t1.kode_cabang = :kc";
+        if ($kankas) $baseQuery .= " AND t1.kode_group1 = :kankas"; 
 
         // Count
         $stmtCnt = $this->pdo->prepare("SELECT COUNT(1) $baseQuery");
         $stmtCnt->bindValue(':s1', $s1); $stmtCnt->bindValue(':e1', $e1);
         $stmtCnt->bindValue(':s2', $s2); $stmtCnt->bindValue(':e2', $e2);
         if ($kc) $stmtCnt->bindValue(':kc', $kc);
+        if ($kankas) $stmtCnt->bindValue(':kankas', $kankas); 
         $stmtCnt->execute();
         $total = $stmtCnt->fetchColumn();
 
-        // Data
+        // FIX: t1.no_hp diganti menjadi t1.hp as no_hp
         $sqlData = "SELECT t1.nasabah_id, t1.no_rekening, t1.nama_nasabah, 
+                           t1.alamat, t1.hp as no_hp, t1.kode_group1 as kankas,
                            COALESCE(ao.nama_ao, t1.kode_group2) as nama_ao,
                            t1.jml_pinjaman as plafon_lama, 
                            t1.baki_debet as os_lunas, t1.tgl_realisasi as tgl_lama
@@ -353,12 +336,12 @@ class RepaymentRateController {
         $stmt->bindValue(':s1', $s1); $stmt->bindValue(':e1', $e1);
         $stmt->bindValue(':s2', $s2); $stmt->bindValue(':e2', $e2);
         if ($kc) $stmt->bindValue(':kc', $kc);
+        if ($kankas) $stmt->bindValue(':kankas', $kankas); 
         $stmt->bindValue(':lim', $limit, PDO::PARAM_INT);
         $stmt->bindValue(':off', $offset, PDO::PARAM_INT);
         $stmt->execute();
         $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-        // Check Refinancing (LOGIC INI TETAP MENGACU TGL REALISASI UNTUK LOAN BARU)
         $closingDateStr = date('Y-m-d', strtotime($closing));
         $harianDateStr  = date('Y-m-d', strtotime($harian));
 
@@ -400,5 +383,158 @@ class RepaymentRateController {
             'data' => $rows
         ]);
     }
+
+/**
+     * 4. REKAP RR (Summary M-1 vs Actual)
+     * % = (OS DPD 0 / OS Keseluruhan)
+     * Ditampilkan = Hanya NOA dan OS DPD 0
+     */
+    public function getRekapRr($input = null) {
+        set_time_limit(300); ini_set('memory_limit', '1024M');
+
+        $b = is_array($input) ? $input : [];
+        $closing = $b['closing_date'] ?? null;
+        $harian  = $b['harian_date'] ?? null;
+        $userKode = $b['kode_kantor'] ?? '000'; // default pusat
+
+        if (!$closing || !$harian) return $this->send(400, "Tanggal wajib diisi.");
+
+        [$s1, $e1] = $this->getDayRange($closing);
+        [$s2, $e2] = $this->getDayRange($harian);
+
+        $isPusat = ($userKode === '000');
+        $groupByCol = $isPusat ? 't1.kode_cabang' : 't1.kode_group1';
+
+        // 1. QUERY M-1 (CLOSING)
+        $sqlM1 = "SELECT 
+                    $groupByCol as group_id,
+                    COUNT(t1.no_rekening) as all_noa,
+                    SUM(t1.baki_debet) as all_os,
+                    SUM(CASE WHEN COALESCE(t1.hari_menunggak, 0) = 0 THEN 1 ELSE 0 END) as lancar_noa,
+                    SUM(CASE WHEN COALESCE(t1.hari_menunggak, 0) = 0 THEN t1.baki_debet ELSE 0 END) as lancar_os
+                  FROM nominatif t1
+                  WHERE t1.created BETWEEN :s1 AND :e1 
+                  AND t1.kolektibilitas = 'L' 
+                  AND t1.baki_debet > 0";
+                  
+        if (!$isPusat) $sqlM1 .= " AND t1.kode_cabang = :kc";
+        $sqlM1 .= " GROUP BY $groupByCol";
+
+        $stmt1 = $this->pdo->prepare($sqlM1);
+        $stmt1->bindValue(':s1', $s1); $stmt1->bindValue(':e1', $e1);
+        if (!$isPusat) $stmt1->bindValue(':kc', $userKode);
+        $stmt1->execute();
+        $targetData = $stmt1->fetchAll(PDO::FETCH_UNIQUE | PDO::FETCH_ASSOC);
+
+        // 2. QUERY ACTUAL (HARIAN)
+        $sqlCur = "SELECT 
+                    $groupByCol as group_id,
+                    COUNT(t1.no_rekening) as all_noa,
+                    SUM(t1.baki_debet) as all_os,
+                    SUM(CASE WHEN COALESCE(t1.hari_menunggak, 0) = 0 THEN 1 ELSE 0 END) as lancar_noa,
+                    SUM(CASE WHEN COALESCE(t1.hari_menunggak, 0) = 0 THEN t1.baki_debet ELSE 0 END) as lancar_os
+                   FROM nominatif t1
+                   WHERE t1.created BETWEEN :s2 AND :e2 
+                   AND t1.kolektibilitas = 'L' 
+                   AND t1.baki_debet > 0";
+
+        if (!$isPusat) $sqlCur .= " AND t1.kode_cabang = :kc";
+        $sqlCur .= " GROUP BY $groupByCol";
+
+        $stmt2 = $this->pdo->prepare($sqlCur);
+        $stmt2->bindValue(':s2', $s2); $stmt2->bindValue(':e2', $e2);
+        if (!$isPusat) $stmt2->bindValue(':kc', $userKode);
+        $stmt2->execute();
+        $actualData = $stmt2->fetchAll(PDO::FETCH_UNIQUE | PDO::FETCH_ASSOC);
+
+        // 3. FETCH MASTER NAMA (KANTOR / KANKAS)
+        $namaMap = [];
+        if ($isPusat) {
+            try {
+                $stmtN = $this->pdo->query("SELECT kode_kantor, nama_kantor FROM kode_kantor");
+                while ($r = $stmtN->fetch(PDO::FETCH_ASSOC)) $namaMap[$r['kode_kantor']] = $r['nama_kantor'];
+            } catch (Exception $e) {}
+        } else {
+            try {
+                $stmtN = $this->pdo->prepare("SELECT kode_group1, deskripsi_group1 FROM kankas WHERE kode_group1 LIKE ?");
+                $stmtN->execute([$userKode . '%']);
+                while ($r = $stmtN->fetch(PDO::FETCH_ASSOC)) $namaMap[$r['kode_group1']] = $r['deskripsi_group1'];
+            } catch (Exception $e) {}
+        }
+
+        // 4. MENGGABUNGKAN DATA M-1 DAN ACTUAL
+        $finalData = [];
+        $allKeys = array_unique(array_merge(array_keys($targetData), array_keys($actualData)));
+
+        $grandTotal = [
+            'm1_lancar_noa' => 0, 'm1_lancar_os' => 0, 'm1_all_os' => 0,
+            'cur_lancar_noa' => 0, 'cur_lancar_os' => 0, 'cur_all_os' => 0,
+            'delta_noa' => 0, 'delta_os' => 0,
+            'm1_pct' => 0, 'cur_pct' => 0, 'delta_pct' => 0
+        ];
+
+        foreach ($allKeys as $grpId) {
+            if (!$grpId) continue; 
+
+            $nama = $namaMap[$grpId] ?? ($isPusat ? "CABANG $grpId" : "KANKAS $grpId");
+            
+            $m1  = $targetData[$grpId] ?? ['all_noa'=>0, 'all_os'=>0, 'lancar_noa'=>0, 'lancar_os'=>0];
+            $cur = $actualData[$grpId] ?? ['all_noa'=>0, 'all_os'=>0, 'lancar_noa'=>0, 'lancar_os'=>0];
+
+            $m1Pct  = $m1['all_os'] > 0 ? ($m1['lancar_os'] / $m1['all_os']) * 100 : 0;
+            $curPct = $cur['all_os'] > 0 ? ($cur['lancar_os'] / $cur['all_os']) * 100 : 0;
+
+            $finalData[] = [
+                'kode' => $grpId,
+                'nama' => $nama,
+                
+                'm1_lancar_noa' => (int)$m1['lancar_noa'],
+                'm1_lancar_os'  => (float)$m1['lancar_os'],
+                'm1_pct'        => round($m1Pct, 2),
+                
+                'cur_lancar_noa' => (int)$cur['lancar_noa'],
+                'cur_lancar_os'  => (float)$cur['lancar_os'],
+                'cur_pct'        => round($curPct, 2),
+
+                // Delta ditarik dari selisih yang LANCAR saja
+                'delta_noa' => (int)$cur['lancar_noa'] - (int)$m1['lancar_noa'],
+                'delta_os'  => (float)$cur['lancar_os'] - (float)$m1['lancar_os'],
+                'delta_pct' => round($curPct - $m1Pct, 2)
+            ];
+
+            // Akumulasi Total
+            $grandTotal['m1_lancar_noa']  += $m1['lancar_noa'];
+            $grandTotal['m1_lancar_os']   += $m1['lancar_os'];
+            $grandTotal['m1_all_os']      += $m1['all_os'];
+
+            $grandTotal['cur_lancar_noa']  += $cur['lancar_noa'];
+            $grandTotal['cur_lancar_os']   += $cur['lancar_os'];
+            $grandTotal['cur_all_os']      += $cur['all_os'];
+        }
+
+        // Sort ASC by Kode
+        usort($finalData, function($a, $b) { return strcmp($a['kode'], $b['kode']); });
+
+        // Kalkulasi Persentase Grand Total
+        $gtM1Pct  = $grandTotal['m1_all_os'] > 0 ? ($grandTotal['m1_lancar_os'] / $grandTotal['m1_all_os']) * 100 : 0;
+        $gtCurPct = $grandTotal['cur_all_os'] > 0 ? ($grandTotal['cur_lancar_os'] / $grandTotal['cur_all_os']) * 100 : 0;
+
+        $grandTotal['m1_pct']    = round($gtM1Pct, 2);
+        $grandTotal['cur_pct']   = round($gtCurPct, 2);
+        $grandTotal['delta_noa'] = $grandTotal['cur_lancar_noa'] - $grandTotal['m1_lancar_noa'];
+        $grandTotal['delta_os']  = $grandTotal['cur_lancar_os'] - $grandTotal['m1_lancar_os'];
+        $grandTotal['delta_pct'] = round($gtCurPct - $gtM1Pct, 2);
+
+        $this->send(200, "Sukses", [
+            'meta' => [
+                'level' => $isPusat ? 'PUSAT' : 'CABANG',
+                'label_kode' => $isPusat ? 'KODE CABANG' : 'KODE KANKAS',
+                'label_nama' => $isPusat ? 'NAMA CABANG' : 'NAMA KANKAS'
+            ],
+            'grand_total' => $grandTotal,
+            'data' => $finalData
+        ]);
+    }
+
 }
 ?>

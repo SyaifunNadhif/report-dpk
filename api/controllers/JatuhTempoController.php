@@ -135,7 +135,7 @@ class JatuhTempoController {
     }
 
     /**
-     * API 2: DETAIL PROSPEK (With AO Name & Filter)
+     * API 2: DETAIL PROSPEK (With AO Name, Kankas, & Filter)
      */
     public function getDetailProspek($input = []) {
         $b = is_array($input) ? $input : (json_decode(file_get_contents('php://input'), true) ?: []);
@@ -152,8 +152,9 @@ class JatuhTempoController {
         $limit  = isset($b['limit']) ? (int)$b['limit'] : 10;
         $offset = ($page - 1) * $limit;
 
-        $kc_filter = isset($b['kode_kantor']) && $b['kode_kantor'] !== '' ? $b['kode_kantor'] : null;
-        $ao_filter = isset($b['kode_ao']) && $b['kode_ao'] !== '' ? $b['kode_ao'] : null;
+        $kc_filter     = isset($b['kode_kantor']) && $b['kode_kantor'] !== '' ? $b['kode_kantor'] : null;
+        $kankas_filter = isset($b['kode_kankas']) && $b['kode_kankas'] !== '' ? $b['kode_kankas'] : null;
+        $ao_filter     = isset($b['kode_ao']) && $b['kode_ao'] !== '' ? $b['kode_ao'] : null;
 
         // Base Conditions
         $where = " WHERE t1.created = :closing_date
@@ -161,6 +162,7 @@ class JatuhTempoController {
                    AND t1.tgl_jatuh_tempo BETWEEN :jt_start AND :jt_end ";
 
         if ($kc_filter) $where .= " AND t1.kode_cabang = :kc ";
+        if ($kankas_filter) $where .= " AND t1.kode_group1 = :kankas ";
         if ($ao_filter) $where .= " AND t1.kode_group2 = :ao ";
 
         try {
@@ -170,8 +172,11 @@ class JatuhTempoController {
             $stmtC->bindValue(':closing_date', $closing_date);
             $stmtC->bindValue(':jt_start', $jt_start);
             $stmtC->bindValue(':jt_end', $jt_end);
+            
             if ($kc_filter) $stmtC->bindValue(':kc', $kc_filter);
+            if ($kankas_filter) $stmtC->bindValue(':kankas', $kankas_filter);
             if ($ao_filter) $stmtC->bindValue(':ao', $ao_filter);
+            
             $stmtC->execute();
             $total_records = $stmtC->fetchColumn();
             $total_pages = ceil($total_records / $limit);
@@ -181,6 +186,9 @@ class JatuhTempoController {
                         t1.kode_cabang,
                         t1.no_rekening AS no_rekening_lama,
                         t1.nama_nasabah,
+                        t1.alamat,
+                        t1.hp as no_hp,
+                        t1.kode_group1 as kankas,
                         t1.jml_pinjaman AS plafond_lama,
                         COALESCE(t2.baki_debet, 0) as baki_debet_lama,
                         t1.tgl_jatuh_tempo,
@@ -191,6 +199,7 @@ class JatuhTempoController {
 
                         -- TOP UP INFO
                         t3.jml_pinjaman AS plafond_baru,
+                        t3.tgl_realisasi AS tgl_realisasi_baru,
                         
                         -- STATUS
                         CASE 
@@ -227,6 +236,7 @@ class JatuhTempoController {
             $stmt->bindValue(':hlimit', $harian_date);
             
             if ($kc_filter) $stmt->bindValue(':kc', $kc_filter);
+            if ($kankas_filter) $stmt->bindValue(':kankas', $kankas_filter);
             if ($ao_filter) $stmt->bindValue(':ao', $ao_filter);
             
             $stmt->bindValue(':limit', (int)$limit, PDO::PARAM_INT);
@@ -236,7 +246,6 @@ class JatuhTempoController {
             $data = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
             // Fetch List AO for Dropdown (Unique per context query)
-            // Note: Idealnya ini API terpisah, tapi kita inject disini untuk kemudahan
             $aoList = [];
             if(!empty($data)){
                 // Query distinct AO based on filters (tanpa limit)
@@ -244,12 +253,16 @@ class JatuhTempoController {
                           FROM nominatif t1 
                           LEFT JOIN ao_kredit ao ON t1.kode_group2 = ao.kode_group2 
                           $where ORDER BY nama_ao ASC";
+                
                 $stmtAO = $this->pdo->prepare($sqlAO);
                 $stmtAO->bindValue(':closing_date', $closing_date);
                 $stmtAO->bindValue(':jt_start', $jt_start);
                 $stmtAO->bindValue(':jt_end', $jt_end);
+                
                 if ($kc_filter) $stmtAO->bindValue(':kc', $kc_filter);
+                if ($kankas_filter) $stmtAO->bindValue(':kankas', $kankas_filter);
                 if ($ao_filter) $stmtAO->bindValue(':ao', $ao_filter);
+                
                 $stmtAO->execute();
                 $aoList = $stmtAO->fetchAll(PDO::FETCH_ASSOC);
             }
@@ -257,7 +270,7 @@ class JatuhTempoController {
             return $this->sendResponse(200, "Detail Data", [
                 'pagination' => ['current_page' => $page, 'total_pages' => $total_pages, 'total_records' => $total_records],
                 'data' => $data,
-                'ao_list' => $aoList // Kirim list AO untuk dropdown
+                'ao_list' => $aoList
             ]);
 
         } catch (PDOException $e) {
