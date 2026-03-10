@@ -154,15 +154,15 @@
       return await res.json();
   }
 
-  // Set Header Sesuai Format Excel (Baki Debet | NOA | %)
+  // Set Header Sesuai Format Screenshot User (Baki Debet | NOA | %)
   function setupHeaderRR(userKode) {
       const th = document.getElementById('headRR');
       let thHtml = `<tr>`;
 
       if (userKode === '000') {
           thHtml += `
-            <th rowspan="2" class="sticky-left-1 w-[60px] border-r border-b border-slate-200 align-middle bg-slate-50 text-center" id="lblKode">KODE</th>
-            <th rowspan="2" class="sticky-left-2 min-w-[150px] md:min-w-[180px] border-r border-b border-slate-200 align-middle text-left pl-4 bg-slate-50" id="lblNama">NAMA KANTOR</th>
+            <th rowspan="2" class="sticky-left-1 w-[60px] border-r border-b border-slate-200 align-middle bg-slate-50 text-center" id="lblKode">KODE CABANG</th>
+            <th rowspan="2" class="sticky-left-2 min-w-[150px] md:min-w-[180px] border-r border-b border-slate-200 align-middle text-left pl-4 bg-slate-50" id="lblNama">NAMA CABANG</th>
           `;
       } else {
           thHtml += `
@@ -218,13 +218,13 @@
           };
 
           const json = await apiCall(API_URL, payload, abortRekap.signal);
-          
           if(json.status !== 200) throw new Error(json.message);
 
           const rows = json.data?.data || [];
           const meta = json.data?.meta || {};
           const gt = json.data?.grand_total || {};
 
+          // Update Label Header Dinamis dari Backend
           if(document.getElementById('lblKode')) document.getElementById('lblKode').innerText = meta.label_kode || 'KODE';
           if(document.getElementById('lblNama')) document.getElementById('lblNama').innerText = meta.label_nama || 'NAMA KANTOR';
 
@@ -236,19 +236,18 @@
 
           let html = '';
           rows.forEach(r => {
-              // Styling Delta & Persen
               const dNoaClass = r.delta_noa < 0 ? 'text-rose-600' : 'text-slate-700';
               const dOsClass  = r.delta_os < 0 ? 'text-rose-600' : 'text-slate-700';
               const dPctClass = r.delta_pct < 0 ? 'text-rose-600' : 'text-slate-700';
               
-              const pM1Class  = r.m1_pct >= 90 ? 'text-emerald-700' : 'text-orange-600';
-              const pCurClass = r.cur_pct >= 90 ? 'text-emerald-700' : 'text-orange-600';
+              const pM1Class  = r.m1_pct >= 90 ? 'text-blue-700' : 'text-orange-600';
+              const pCurClass = r.cur_pct >= 90 ? 'text-blue-700' : 'text-orange-600';
 
               let rowHtml = `<tr class="transition h-[42px] border-b border-slate-100">`;
               
               if (userKodeGlobal === '000') {
                   rowHtml += `
-                    <td class="sticky-left-1 px-3 py-1.5 border-r border-slate-100 font-mono text-slate-500 z-20 shadow-[inset_-1px_0_0_#e2e8f0]">${r.kode}</td>
+                    <td class="sticky-left-1 px-3 py-1.5 border-r border-slate-100 font-mono text-slate-500 z-20 shadow-[inset_-1px_0_0_#e2e8f0] text-center">${r.kode}</td>
                     <td class="sticky-left-2 px-4 py-1.5 border-r border-slate-100 font-semibold text-slate-700 text-left truncate z-20 shadow-[inset_-1px_0_0_#e2e8f0]" title="${r.nama}">${r.nama}</td>
                   `;
               } else {
@@ -257,14 +256,15 @@
                   `;
               }
 
-              // MAPPING: M-1 Lancar, Actual Lancar
+              // MAPPING SESUAI EXCEL: BAKI DEBET DULUAN, BARU NOA, BARU %
+              // Data OS & NOA yang dikirim dari backend sekarang sudah murni yang DPD 0
               rowHtml += `
-                    <td class="px-3 py-1.5 border-r border-slate-100 text-right font-mono text-slate-600">${fmt(r.m1_lancar_os)}</td>
-                    <td class="px-3 py-1.5 border-r border-slate-100 text-center font-bold text-slate-700">${fmt(r.m1_lancar_noa)}</td>
+                    <td class="px-3 py-1.5 border-r border-slate-100 text-right font-mono text-slate-600">${fmt(r.m1_os)}</td>
+                    <td class="px-3 py-1.5 border-r border-slate-100 text-center font-bold text-slate-700">${fmt(r.m1_noa)}</td>
                     <td class="px-3 py-1.5 border-r border-slate-100 text-center font-bold ${pM1Class}">${r.m1_pct}%</td>
                     
-                    <td class="px-3 py-1.5 border-r border-emerald-100 text-right font-mono text-emerald-800 bg-emerald-50/30">${fmt(r.cur_lancar_os)}</td>
-                    <td class="px-3 py-1.5 border-r border-emerald-100 text-center font-bold text-emerald-800 bg-emerald-50/30">${fmt(r.cur_lancar_noa)}</td>
+                    <td class="px-3 py-1.5 border-r border-emerald-100 text-right font-mono text-emerald-800 bg-emerald-50/30">${fmt(r.cur_os)}</td>
+                    <td class="px-3 py-1.5 border-r border-emerald-100 text-center font-bold text-emerald-800 bg-emerald-50/30">${fmt(r.cur_noa)}</td>
                     <td class="px-3 py-1.5 border-r border-emerald-100 text-center font-bold ${pCurClass} bg-emerald-50/30">${r.cur_pct}%</td>
                     
                     <td class="px-3 py-1.5 border-r border-rose-100 text-right font-mono font-bold ${dOsClass} bg-rose-50/30">${fmt(r.delta_os)}</td>
@@ -275,7 +275,6 @@
           });
           tb.innerHTML = html;
 
-          // Cek Warna Grand Total
           const gtDNoaClass = gt.delta_noa < 0 ? 'text-rose-700' : 'text-blue-900';
           const gtDOsClass  = gt.delta_os < 0 ? 'text-rose-700' : 'text-blue-900';
           const gtDPctClass = gt.delta_pct < 0 ? 'text-rose-700' : 'text-blue-900';
@@ -294,12 +293,12 @@
           }
 
           gtHtml += `
-              <th class="px-3 border-r border-blue-200 text-right align-middle font-mono font-bold text-[11px] md:text-xs text-blue-900">${fmt(gt.m1_lancar_os)}</th>
-              <th class="px-3 border-r border-blue-200 text-center align-middle font-bold text-[11px] md:text-xs text-blue-900">${fmt(gt.m1_lancar_noa)}</th>
+              <th class="px-3 border-r border-blue-200 text-right align-middle font-mono font-bold text-[11px] md:text-xs text-blue-900">${fmt(gt.m1_os)}</th>
+              <th class="px-3 border-r border-blue-200 text-center align-middle font-bold text-[11px] md:text-xs text-blue-900">${fmt(gt.m1_noa)}</th>
               <th class="px-3 border-r border-blue-200 text-center align-middle font-bold text-[11px] md:text-xs text-blue-900">${gt.m1_pct}%</th>
               
-              <th class="px-3 border-r border-blue-200 text-right align-middle font-mono font-bold text-[11px] md:text-xs text-emerald-800 bg-emerald-100/50">${fmt(gt.cur_lancar_os)}</th>
-              <th class="px-3 border-r border-blue-200 text-center align-middle font-bold text-[11px] md:text-xs text-emerald-800 bg-emerald-100/50">${fmt(gt.cur_lancar_noa)}</th>
+              <th class="px-3 border-r border-blue-200 text-right align-middle font-mono font-bold text-[11px] md:text-xs text-emerald-800 bg-emerald-100/50">${fmt(gt.cur_os)}</th>
+              <th class="px-3 border-r border-blue-200 text-center align-middle font-bold text-[11px] md:text-xs text-emerald-800 bg-emerald-100/50">${fmt(gt.cur_noa)}</th>
               <th class="px-3 border-r border-blue-200 text-center align-middle font-bold text-[11px] md:text-xs text-blue-900 bg-emerald-100/50">${gt.cur_pct}%</th>
               
               <th class="px-3 border-r border-blue-200 text-right align-middle font-mono font-bold text-[11px] md:text-xs ${gtDOsClass}">${fmt(gt.delta_os)}</th>
@@ -309,11 +308,11 @@
           trTot.innerHTML = gtHtml;
 
           // Update Summary Pills
-          document.getElementById('sum_m1_noa').innerText  = fmt(gt.m1_lancar_noa);
-          document.getElementById('sum_m1_os').innerText   = 'Rp ' + fmt(gt.m1_lancar_os);
+          document.getElementById('sum_m1_noa').innerText  = fmt(gt.m1_noa);
+          document.getElementById('sum_m1_os').innerText   = 'Rp ' + fmt(gt.m1_os);
           
-          document.getElementById('sum_cur_noa').innerText = fmt(gt.cur_lancar_noa);
-          document.getElementById('sum_cur_os').innerText  = 'Rp ' + fmt(gt.cur_lancar_os);
+          document.getElementById('sum_cur_noa').innerText = fmt(gt.cur_noa);
+          document.getElementById('sum_cur_os').innerText  = 'Rp ' + fmt(gt.cur_os);
           
           document.getElementById('sum_pct_os').innerText  = gt.cur_pct + '%';
           
@@ -356,7 +355,7 @@
           } else {
               csv += `${r.nama||''}\t`;
           }
-          csv += `${Math.round(r.m1_lancar_os)}\t${r.m1_lancar_noa}\t${r.m1_pct}%\t${Math.round(r.cur_lancar_os)}\t${r.cur_lancar_noa}\t${r.cur_pct}%\t${Math.round(r.delta_os)}\t${r.delta_noa}\t${r.delta_pct}%\n`;
+          csv += `${Math.round(r.m1_os)}\t${r.m1_noa}\t${r.m1_pct}%\t${Math.round(r.cur_os)}\t${r.cur_noa}\t${r.cur_pct}%\t${Math.round(r.delta_os)}\t${r.delta_noa}\t${r.delta_pct}%\n`;
       });
 
       const blob = new Blob([csv], { type: 'application/vnd.ms-excel' });

@@ -219,183 +219,7 @@ class KreditController {
     
 
 
-    public function getMigrasiKolek1($input) {
-        $closing_date = !empty($input['closing_date']) ? $input['closing_date'] : date('Y-m-d', strtotime('last day of previous month'));
-        $harian_date  = !empty($input['harian_date'])  ? $input['harian_date']  : date('Y-m-d');
-        $kode_kantor  = !empty($input['kode_kantor'])  ? str_pad($input['kode_kantor'], 3, '0', STR_PAD_LEFT) : null;
 
-        // filter cabang (pakai placeholder BERBEDA)
-        $filter_cabang_closing = $kode_kantor ? " AND c.kode_cabang = :kode_kantor_c " : "";
-        $filter_cabang_harian  = $kode_kantor ? " AND h.kode_cabang = :kode_kantor_h " : "";
-
-        $sql = "
-            WITH 
-            closing AS (
-                SELECT c.no_rekening, c.kode_cabang, c.kolektibilitas AS kolek_closed, c.baki_debet AS baki_closed
-                FROM nominatif c
-                WHERE c.created = :closing_date_m
-                AND c.kolektibilitas IN ('L','DP','KL','D','M')
-                $filter_cabang_closing
-            ),
-            harian AS (
-                SELECT h.no_rekening, h.kode_cabang, h.kolektibilitas AS kolek_update, h.baki_debet AS baki_harian
-                FROM nominatif h
-                WHERE h.created = :harian_date_m
-                AND h.kolektibilitas IN ('L','DP','KL','D','M')
-                $filter_cabang_harian
-            ),
-            gabung AS (
-                SELECT 
-                    c.kolek_closed,
-                    h.kolek_update,
-                    c.baki_closed,
-                    COALESCE(h.baki_harian, 0) AS baki_harian,
-                    (c.baki_closed - COALESCE(h.baki_harian, 0)) AS pembayaran,
-                    CASE WHEN h.no_rekening IS NULL THEN 1 ELSE 0 END AS is_lunas
-                FROM closing c
-                LEFT JOIN harian h ON h.no_rekening = c.no_rekening
-            )
-            SELECT 
-                g.kolek_closed,
-                SUM(g.baki_closed) AS saldo_closed,
-                SUM(CASE WHEN g.kolek_update = 'L'  THEN g.baki_harian ELSE 0 END) AS migrasi_L,
-                SUM(CASE WHEN g.kolek_update = 'DP' THEN g.baki_harian ELSE 0 END) AS migrasi_DP,
-                SUM(CASE WHEN g.kolek_update = 'KL' THEN g.baki_harian ELSE 0 END) AS migrasi_KL,
-                SUM(CASE WHEN g.kolek_update = 'D'  THEN g.baki_harian ELSE 0 END) AS migrasi_D,
-                SUM(CASE WHEN g.kolek_update = 'M'  THEN g.baki_harian ELSE 0 END) AS migrasi_M,
-                SUM(g.pembayaran) AS pembayaran,
-                SUM(CASE WHEN g.is_lunas = 1 THEN g.baki_closed ELSE 0 END) AS lunas_osc
-            FROM gabung g
-            GROUP BY g.kolek_closed
-
-            UNION ALL
-
-            SELECT 
-                'TOTAL' AS kolek_closed,
-                SUM(g.baki_closed) AS saldo_closed,
-                SUM(CASE WHEN g.kolek_update = 'L'  THEN g.baki_harian ELSE 0 END) AS migrasi_L,
-                SUM(CASE WHEN g.kolek_update = 'DP' THEN g.baki_harian ELSE 0 END) AS migrasi_DP,
-                SUM(CASE WHEN g.kolek_update = 'KL' THEN g.baki_harian ELSE 0 END) AS migrasi_KL,
-                SUM(CASE WHEN g.kolek_update = 'D'  THEN g.baki_harian ELSE 0 END) AS migrasi_D,
-                SUM(CASE WHEN g.kolek_update = 'M'  THEN g.baki_harian ELSE 0 END) AS migrasi_M,
-                SUM(g.pembayaran) AS pembayaran,
-                SUM(CASE WHEN g.is_lunas = 1 THEN g.baki_closed ELSE 0 END) AS lunas_osc
-            FROM gabung g
-
-            ORDER BY 
-                CASE 
-                    WHEN kolek_closed = 'L'     THEN 1
-                    WHEN kolek_closed = 'DP'    THEN 2
-                    WHEN kolek_closed = 'KL'    THEN 3
-                    WHEN kolek_closed = 'D'     THEN 4
-                    WHEN kolek_closed = 'M'     THEN 5
-                    WHEN kolek_closed = 'TOTAL' THEN 99
-                    ELSE 98
-                END
-        ";
-
-        try {
-            // 1) Eksekusi migrasi
-            $stmt = $this->pdo->prepare($sql);
-            $stmt->bindValue(':closing_date_m', $closing_date);
-            $stmt->bindValue(':harian_date_m',  $harian_date);
-            if ($kode_kantor) {
-                $stmt->bindValue(':kode_kantor_c', $kode_kantor);
-                $stmt->bindValue(':kode_kantor_h', $kode_kantor);
-            }
-            $stmt->execute();
-            $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-            // ambil pembayaran TOTAL
-            $pembayaran_total = 0.0; $totalIdx = null;
-            foreach ($rows as $i => $r) {
-                if (($r['kolek_closed'] ?? '') === 'TOTAL') {
-                    $totalIdx = $i;
-                    $pembayaran_total = (float)($r['pembayaran'] ?? 0);
-                    break;
-                }
-            }
-
-            // ================== META: %NPL, REALISASI, GROWTH ==================
-            $awal_bulan = date('Y-m-01', strtotime($harian_date));
-            $filter_np = $kode_kantor ? " AND kode_cabang = :kode_np " : "";
-            $filter_nn = $kode_kantor ? " AND kode_cabang = :kode_nn " : "";
-            $filter_tp = $kode_kantor ? " AND kode_cabang = :kode_tp " : "";
-            $filter_tn = $kode_kantor ? " AND kode_cabang = :kode_tn " : "";
-            $filter_rl = $kode_kantor ? " AND kode_cabang = :kode_rl " : "";
-
-            $sqlMeta = "
-                SELECT
-                (SELECT COALESCE(SUM(baki_debet),0) FROM nominatif
-                    WHERE created = :closing_date_np
-                    AND kolektibilitas IN ('KL','D','M') $filter_np) AS npl_prev,
-                (SELECT COALESCE(SUM(baki_debet),0) FROM nominatif
-                    WHERE created = :harian_date_nn
-                    AND kolektibilitas IN ('KL','D','M') $filter_nn) AS npl_now,
-                (SELECT COALESCE(SUM(baki_debet),0) FROM nominatif
-                    WHERE created = :closing_date_tp
-                    AND kolektibilitas IN ('L','DP','KL','D','M') $filter_tp) AS total_prev,
-                (SELECT COALESCE(SUM(baki_debet),0) FROM nominatif
-                    WHERE created = :harian_date_tn
-                    AND kolektibilitas IN ('L','DP','KL','D','M') $filter_tn) AS total_now,
-                (SELECT COALESCE(SUM(baki_debet),0) FROM nominatif
-                    WHERE created = :harian_date_rl1
-                    AND tgl_realisasi >= :awal_bulan
-                    AND tgl_realisasi <= :harian_date_rl2 $filter_rl) AS realisasi_bulan_ini
-            ";
-
-            $st = $this->pdo->prepare($sqlMeta);
-            // bind tanggal – semua UNIK
-            $st->bindValue(':closing_date_np', $closing_date);
-            $st->bindValue(':harian_date_nn',  $harian_date);
-            $st->bindValue(':closing_date_tp', $closing_date);
-            $st->bindValue(':harian_date_tn',  $harian_date);
-            $st->bindValue(':harian_date_rl1', $harian_date);
-            $st->bindValue(':harian_date_rl2', $harian_date);
-            $st->bindValue(':awal_bulan',      $awal_bulan);
-            // bind cabang opsional
-            if ($kode_kantor) {
-                $st->bindValue(':kode_np', $kode_kantor);
-                $st->bindValue(':kode_nn', $kode_kantor);
-                $st->bindValue(':kode_tp', $kode_kantor);
-                $st->bindValue(':kode_tn', $kode_kantor);
-                $st->bindValue(':kode_rl', $kode_kantor);
-            }
-            $st->execute();
-            $meta = $st->fetch(PDO::FETCH_ASSOC) ?: [
-                'npl_prev'=>0,'npl_now'=>0,'total_prev'=>0,'total_now'=>0,'realisasi_bulan_ini'=>0
-            ];
-
-            $npl_prev = (float)$meta['npl_prev'];
-            $npl_now  = (float)$meta['npl_now'];
-            $tot_prev = (float)$meta['total_prev'];
-            $tot_now  = (float)$meta['total_now'];
-            $realisasi= (float)$meta['realisasi_bulan_ini'];
-
-            $npl_prev_pct = $tot_prev > 0 ? round($npl_prev * 100.0 / $tot_prev, 2) : 0.0;
-            $npl_now_pct  = $tot_now  > 0 ? round($npl_now  * 100.0 / $tot_now , 2) : 0.0;
-            $npl_delta_pct= round($npl_now_pct - $npl_prev_pct, 2);
-            $growth       = $realisasi - $pembayaran_total;
-
-            if ($totalIdx !== null) {
-                $rows[$totalIdx]['realisasi_bulan_ini'] = $realisasi;
-                $rows[$totalIdx]['npl_prev']            = $npl_prev;
-                $rows[$totalIdx]['npl_now']             = $npl_now;
-                $rows[$totalIdx]['total_prev']          = $tot_prev;
-                $rows[$totalIdx]['total_now']           = $tot_now;
-                $rows[$totalIdx]['npl_prev_pct']        = $npl_prev_pct;
-                $rows[$totalIdx]['npl_now_pct']         = $npl_now_pct;
-                $rows[$totalIdx]['npl_delta_pct']       = $npl_delta_pct;
-                $rows[$totalIdx]['growth']              = $growth;
-                $rows[$totalIdx]['pembayaran_total']    = $pembayaran_total;
-            }
-
-            sendResponse(200, "Berhasil ambil data migrasi kolektibilitas (dengan lunas_osc)", $rows);
-
-        } catch (PDOException $e) {
-            sendResponse(500, "PDO Error: " . $e->getMessage(), null);
-        }
-    }
 
     
     public function getMigrasiKolek($input) {
@@ -1201,6 +1025,185 @@ class KreditController {
 
         } catch (PDOException $e) {
             return sendResponse(500, "Database Error: " . $e->getMessage());
+        }
+    }
+
+
+        public function getMigrasiKolek1($input) {
+        $closing_date = !empty($input['closing_date']) ? $input['closing_date'] : date('Y-m-d', strtotime('last day of previous month'));
+        $harian_date  = !empty($input['harian_date'])  ? $input['harian_date']  : date('Y-m-d');
+        $kode_kantor  = !empty($input['kode_kantor'])  ? str_pad($input['kode_kantor'], 3, '0', STR_PAD_LEFT) : null;
+
+        // filter cabang (pakai placeholder BERBEDA)
+        $filter_cabang_closing = $kode_kantor ? " AND c.kode_cabang = :kode_kantor_c " : "";
+        $filter_cabang_harian  = $kode_kantor ? " AND h.kode_cabang = :kode_kantor_h " : "";
+
+        $sql = "
+            WITH 
+            closing AS (
+                SELECT c.no_rekening, c.kode_cabang, c.kolektibilitas AS kolek_closed, c.baki_debet AS baki_closed
+                FROM nominatif c
+                WHERE c.created = :closing_date_m
+                AND c.kolektibilitas IN ('L','DP','KL','D','M')
+                $filter_cabang_closing
+            ),
+            harian AS (
+                SELECT h.no_rekening, h.kode_cabang, h.kolektibilitas AS kolek_update, h.baki_debet AS baki_harian
+                FROM nominatif h
+                WHERE h.created = :harian_date_m
+                AND h.kolektibilitas IN ('L','DP','KL','D','M')
+                $filter_cabang_harian
+            ),
+            gabung AS (
+                SELECT 
+                    c.kolek_closed,
+                    h.kolek_update,
+                    c.baki_closed,
+                    COALESCE(h.baki_harian, 0) AS baki_harian,
+                    (c.baki_closed - COALESCE(h.baki_harian, 0)) AS pembayaran,
+                    CASE WHEN h.no_rekening IS NULL THEN 1 ELSE 0 END AS is_lunas
+                FROM closing c
+                LEFT JOIN harian h ON h.no_rekening = c.no_rekening
+            )
+            SELECT 
+                g.kolek_closed,
+                SUM(g.baki_closed) AS saldo_closed,
+                SUM(CASE WHEN g.kolek_update = 'L'  THEN g.baki_harian ELSE 0 END) AS migrasi_L,
+                SUM(CASE WHEN g.kolek_update = 'DP' THEN g.baki_harian ELSE 0 END) AS migrasi_DP,
+                SUM(CASE WHEN g.kolek_update = 'KL' THEN g.baki_harian ELSE 0 END) AS migrasi_KL,
+                SUM(CASE WHEN g.kolek_update = 'D'  THEN g.baki_harian ELSE 0 END) AS migrasi_D,
+                SUM(CASE WHEN g.kolek_update = 'M'  THEN g.baki_harian ELSE 0 END) AS migrasi_M,
+                SUM(g.pembayaran) AS pembayaran,
+                SUM(CASE WHEN g.is_lunas = 1 THEN g.baki_closed ELSE 0 END) AS lunas_osc
+            FROM gabung g
+            GROUP BY g.kolek_closed
+
+            UNION ALL
+
+            SELECT 
+                'TOTAL' AS kolek_closed,
+                SUM(g.baki_closed) AS saldo_closed,
+                SUM(CASE WHEN g.kolek_update = 'L'  THEN g.baki_harian ELSE 0 END) AS migrasi_L,
+                SUM(CASE WHEN g.kolek_update = 'DP' THEN g.baki_harian ELSE 0 END) AS migrasi_DP,
+                SUM(CASE WHEN g.kolek_update = 'KL' THEN g.baki_harian ELSE 0 END) AS migrasi_KL,
+                SUM(CASE WHEN g.kolek_update = 'D'  THEN g.baki_harian ELSE 0 END) AS migrasi_D,
+                SUM(CASE WHEN g.kolek_update = 'M'  THEN g.baki_harian ELSE 0 END) AS migrasi_M,
+                SUM(g.pembayaran) AS pembayaran,
+                SUM(CASE WHEN g.is_lunas = 1 THEN g.baki_closed ELSE 0 END) AS lunas_osc
+            FROM gabung g
+
+            ORDER BY 
+                CASE 
+                    WHEN kolek_closed = 'L'     THEN 1
+                    WHEN kolek_closed = 'DP'    THEN 2
+                    WHEN kolek_closed = 'KL'    THEN 3
+                    WHEN kolek_closed = 'D'     THEN 4
+                    WHEN kolek_closed = 'M'     THEN 5
+                    WHEN kolek_closed = 'TOTAL' THEN 99
+                    ELSE 98
+                END
+        ";
+
+        try {
+            // 1) Eksekusi migrasi
+            $stmt = $this->pdo->prepare($sql);
+            $stmt->bindValue(':closing_date_m', $closing_date);
+            $stmt->bindValue(':harian_date_m',  $harian_date);
+            if ($kode_kantor) {
+                $stmt->bindValue(':kode_kantor_c', $kode_kantor);
+                $stmt->bindValue(':kode_kantor_h', $kode_kantor);
+            }
+            $stmt->execute();
+            $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+            // ambil pembayaran TOTAL
+            $pembayaran_total = 0.0; $totalIdx = null;
+            foreach ($rows as $i => $r) {
+                if (($r['kolek_closed'] ?? '') === 'TOTAL') {
+                    $totalIdx = $i;
+                    $pembayaran_total = (float)($r['pembayaran'] ?? 0);
+                    break;
+                }
+            }
+
+            // ================== META: %NPL, REALISASI, GROWTH ==================
+            $awal_bulan = date('Y-m-01', strtotime($harian_date));
+            $filter_np = $kode_kantor ? " AND kode_cabang = :kode_np " : "";
+            $filter_nn = $kode_kantor ? " AND kode_cabang = :kode_nn " : "";
+            $filter_tp = $kode_kantor ? " AND kode_cabang = :kode_tp " : "";
+            $filter_tn = $kode_kantor ? " AND kode_cabang = :kode_tn " : "";
+            $filter_rl = $kode_kantor ? " AND kode_cabang = :kode_rl " : "";
+
+            $sqlMeta = "
+                SELECT
+                (SELECT COALESCE(SUM(baki_debet),0) FROM nominatif
+                    WHERE created = :closing_date_np
+                    AND kolektibilitas IN ('KL','D','M') $filter_np) AS npl_prev,
+                (SELECT COALESCE(SUM(baki_debet),0) FROM nominatif
+                    WHERE created = :harian_date_nn
+                    AND kolektibilitas IN ('KL','D','M') $filter_nn) AS npl_now,
+                (SELECT COALESCE(SUM(baki_debet),0) FROM nominatif
+                    WHERE created = :closing_date_tp
+                    AND kolektibilitas IN ('L','DP','KL','D','M') $filter_tp) AS total_prev,
+                (SELECT COALESCE(SUM(baki_debet),0) FROM nominatif
+                    WHERE created = :harian_date_tn
+                    AND kolektibilitas IN ('L','DP','KL','D','M') $filter_tn) AS total_now,
+                (SELECT COALESCE(SUM(baki_debet),0) FROM nominatif
+                    WHERE created = :harian_date_rl1
+                    AND tgl_realisasi >= :awal_bulan
+                    AND tgl_realisasi <= :harian_date_rl2 $filter_rl) AS realisasi_bulan_ini
+            ";
+
+            $st = $this->pdo->prepare($sqlMeta);
+            // bind tanggal – semua UNIK
+            $st->bindValue(':closing_date_np', $closing_date);
+            $st->bindValue(':harian_date_nn',  $harian_date);
+            $st->bindValue(':closing_date_tp', $closing_date);
+            $st->bindValue(':harian_date_tn',  $harian_date);
+            $st->bindValue(':harian_date_rl1', $harian_date);
+            $st->bindValue(':harian_date_rl2', $harian_date);
+            $st->bindValue(':awal_bulan',      $awal_bulan);
+            // bind cabang opsional
+            if ($kode_kantor) {
+                $st->bindValue(':kode_np', $kode_kantor);
+                $st->bindValue(':kode_nn', $kode_kantor);
+                $st->bindValue(':kode_tp', $kode_kantor);
+                $st->bindValue(':kode_tn', $kode_kantor);
+                $st->bindValue(':kode_rl', $kode_kantor);
+            }
+            $st->execute();
+            $meta = $st->fetch(PDO::FETCH_ASSOC) ?: [
+                'npl_prev'=>0,'npl_now'=>0,'total_prev'=>0,'total_now'=>0,'realisasi_bulan_ini'=>0
+            ];
+
+            $npl_prev = (float)$meta['npl_prev'];
+            $npl_now  = (float)$meta['npl_now'];
+            $tot_prev = (float)$meta['total_prev'];
+            $tot_now  = (float)$meta['total_now'];
+            $realisasi= (float)$meta['realisasi_bulan_ini'];
+
+            $npl_prev_pct = $tot_prev > 0 ? round($npl_prev * 100.0 / $tot_prev, 2) : 0.0;
+            $npl_now_pct  = $tot_now  > 0 ? round($npl_now  * 100.0 / $tot_now , 2) : 0.0;
+            $npl_delta_pct= round($npl_now_pct - $npl_prev_pct, 2);
+            $growth       = $realisasi - $pembayaran_total;
+
+            if ($totalIdx !== null) {
+                $rows[$totalIdx]['realisasi_bulan_ini'] = $realisasi;
+                $rows[$totalIdx]['npl_prev']            = $npl_prev;
+                $rows[$totalIdx]['npl_now']             = $npl_now;
+                $rows[$totalIdx]['total_prev']          = $tot_prev;
+                $rows[$totalIdx]['total_now']           = $tot_now;
+                $rows[$totalIdx]['npl_prev_pct']        = $npl_prev_pct;
+                $rows[$totalIdx]['npl_now_pct']         = $npl_now_pct;
+                $rows[$totalIdx]['npl_delta_pct']       = $npl_delta_pct;
+                $rows[$totalIdx]['growth']              = $growth;
+                $rows[$totalIdx]['pembayaran_total']    = $pembayaran_total;
+            }
+
+            sendResponse(200, "Berhasil ambil data migrasi kolektibilitas (dengan lunas_osc)", $rows);
+
+        } catch (PDOException $e) {
+            sendResponse(500, "PDO Error: " . $e->getMessage(), null);
         }
     }
 

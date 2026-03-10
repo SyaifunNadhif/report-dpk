@@ -5,7 +5,7 @@
     <div class="h-14 flex items-center justify-between">
       <a href="home" class="flex items-center gap-2">
         <img src="./img/logodpk.png" class="h-8 w-8 object-contain" alt="Logo">
-        <span class="text-slate-800 text-lg font-semibold">ATLAS</span>
+        <span class="text-slate-800 text-lg font-semibold">Monbis</span>
       </a>
 
       <div class="flex items-center gap-3">
@@ -165,12 +165,12 @@
 
       <!-- DESKTOP-ONLY: Profile dropdown -->
       <div id="dropdownProfile" class="dropdown-panel dropdown-profile" role="menu" aria-labelledby="dropdownProfileButton">
-        <!-- <a href="account_handle" class="block px-4 py-3 hover:bg-slate-50 nb-tap">
+        <a href="account_handle" class="block px-4 py-3 hover:bg-slate-50 nb-tap">
           <div class="text-xs text-slate-500">Account handle</div>
           <div id="accHandle" class="text-sm font-semibold text-slate-800 underline decoration-dotted">—</div>
         </a>
         <a href="#" id="linkHistoryDesk" class="block px-4 py-2 hover:bg-slate-50 text-sm text-slate-700 nb-tap">History Kunjungan</a>
-        <hr class="my-1"> -->
+        <hr class="my-1">
         <ul class="py-1 text-sm text-slate-700">
           <li><a href="#" id="linkLogoutDesk" class="block px-4 py-2 hover:bg-slate-50 nb-tap">Logout</a></li>
         </ul>

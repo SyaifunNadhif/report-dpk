@@ -67,6 +67,9 @@ switch ($endpoint) {
     case 'pipelane':
         require __DIR__ . '/routes/pipelane.php';
         break;
+    case 'dashboard':
+        require __DIR__ . '/routes/dashboard.php';
+        break;
 
     default:
         sendResponse(404, "Endpoint tidak ditemukan");
