@@ -62,9 +62,9 @@
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
          </svg>
       </div>
-      <h2 class="text-4xl font-bold mb-4 tracking-tight text-white drop-shadow-lg">Secure Portal</h2>
-      <p class="text-blue-100 text-lg drop-shadow-md">ATLAS</p>
-      <p class="text-blue-200 text-sm mt-2 opacity-80">Account Tracking & Lending Analytics System</p>
+      <h2 class="text-4xl font-bold mb-4 tracking-tight text-white drop-shadow-lg">MONBIS</h2>
+      <p class="text-blue-100 text-lg drop-shadow-md">MONITORING BISNIS BKK JATENG (PERSERODA)</p>
+      <p class="text-blue-200 text-sm mt-2 opacity-80">Secure Portal<</p>
     </div>
   </div>
 
