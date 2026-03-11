@@ -188,7 +188,7 @@
             if(j2?.data) saveUser(j2.data);
         } catch {}
 
-        location.href = `${BASE_APP}/home`;
+        location.href = `${BASE_APP}/dashboard`;
 
     } catch (error) {
         errMsg.textContent = error.message;
