@@ -40,22 +40,34 @@ switch ($method) {
         } elseif ($type === 'test delta npl') {
             $data = $controller->getTopKenaikanPenurunanNPL($input);
             sendResponse(200, "Testing Kenaikan & Penurunan NPL", $data);
+
+        } elseif ($type === 'test runoff korwil') {
+            $data = $controller->getRunOffVsRealisasiKorwil($input);
+            sendResponse(200, "Testing Run Off vs Realisasi (Per Korwil)", $data);
+
+        } elseif ($type === 'test flow recovery npl') {
+            $data = $controller->getFlowVsRecoveryNPL($input);
+            sendResponse(200, "Testing Flow NPL vs Recovery NPL", $data);
+
+        } elseif ($type === 'test top realisasi') {
+            $data = $controller->getTopBottomRealisasi($input);
+            sendResponse(200, "Testing Top Bottom Realisasi", $data);
             
         } elseif ($type === 'test flow par') {
             $data = $controller->getFlowPAR($input);
             sendResponse(200, "Testing Flow PAR", $data);
             
-        } elseif ($type === 'test repayment rate') {
-            $data = $controller->getRepaymentRate($input);
-            sendResponse(200, "Testing Repayment Rate", $data);
+        } elseif ($type === 'test rr cabang') {
+            $data = $controller->getRepaymentRateCabang($input);
+            sendResponse(200, "Testing Repayment Rate Cabang", $data);
             
-        } elseif ($type === 'test recovery vs flow par') {
-            $data = $controller->getRecoveryVsFlowPAR($input);
-            sendResponse(200, "Testing Recovery vs Flow PAR", $data);
-            
-        } elseif ($type === 'test realisasi per korwil') {
-            $data = $controller->getRealisasiPerKorwil($input);
-            sendResponse(200, "Testing Realisasi per Korwil", $data);
+        } elseif ($type === 'test perkembangan deposito') {
+            $data = $controller->getPerkembanganDeposito($input);
+            sendResponse(200, "Testing Perkembangan Deposito", $data);
+
+        } elseif ($type === 'test perkembangan tabungan') {
+            $data = $controller->getPerkembanganTabungan($input);
+            sendResponse(200, "Testing Perkembangan Tabungan", $data);
             
         } else {
             sendResponse(400, "Endpoint atau type salah bro");

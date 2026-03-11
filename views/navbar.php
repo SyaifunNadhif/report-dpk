@@ -41,8 +41,8 @@
     <!-- Menu -->
     <div id="navbar-default" class="nb-container">
       <ul class="nb-row">
-        <li class="nb-li"><a href="home" class="nb-link nb-tap nb-active">Dashboard</a></li>
-
+        <li class="nb-li"><a href="dashboard" class="nb-link nb-tap nb-active">Dashboard</a></li>
+      
         <!-- NPL -->
         <li class="nb-li">
           <button data-dropdown="dropdownNPL" class="nb-parent nb-tap">
@@ -96,6 +96,7 @@
               <li><a href="actual_kredit" class="nb-item nb-tap">Bucket DPD and Kolek</a></li>
               <li><a href="migrasi_bucket" class="nb-item nb-tap">Migrasi Bucket</a></li>
               <li><a href="search_debitur" class="nb-item nb-tap">Seach Debitur Kredit</a></li>
+              <li class="nb-li"><a href="migrasi_kolek" class="nb-link nb-tap nb-active">Migrasi Kolek</a></li>
               <!-- <li><a href="monitoring_ao" class="nb-item nb-tap">Monitoring Ao Remedial</a></li> -->
             </ul>
           </div>

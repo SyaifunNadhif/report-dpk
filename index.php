@@ -44,7 +44,7 @@ if (strpos($url, 'api/')) {
 // ROUTING DEFAULT
 // =========================
 if ($url === '') {
-    $url = !empty($_SESSION['user_id']) ? 'home' : 'login';
+    $url = !empty($_SESSION['user_id']) ? 'dashboard' : 'login';
 }
 
 // page / param
