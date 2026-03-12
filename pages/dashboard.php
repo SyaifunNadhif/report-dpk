@@ -321,7 +321,7 @@
       const j = await res.json();
       
       let html = `
-        <option value="000">Konsolidasi (Nasional)</option>
+        <option value="000">Konsolidasi</option>
         <option value="SEMARANG">Korwil Semarang</option>
         <option value="SOLO">Korwil Solo</option>
         <option value="BANYUMAS">Korwil Banyumas</option>
