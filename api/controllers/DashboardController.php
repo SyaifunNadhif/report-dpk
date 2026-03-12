@@ -150,7 +150,7 @@ class DashboardController{
                 $dates[] = date('Y-m-d', strtotime("-$i day", strtotime($harian_date)));
             }
         } elseif ($periode === 'tahunan') {
-            // LOGIKA BARU: Mundur 12 bulan ke belakang (ambil data closing akhir bulan)
+            // Mundur 12 bulan ke belakang (ambil data closing akhir bulan)
             $patokan_mundur = strtotime(date('Y-m-01', strtotime($harian_date))); 
             for ($i = 1; $i <= 12; $i++) {
                 $dates[] = date('Y-m-d', strtotime("last day of -$i month", $patokan_mundur));
@@ -163,6 +163,10 @@ class DashboardController{
             }
         }
         
+        // -- START PATCH FIX GAPPING: Urutkan tanggal ASC agar SQL ORDER BY sesuai dan carry-forward berjalan --
+        sort($dates); // ASC [03, 04, 05, 06, 07, 08, 09]
+        // -- END PATCH FIX GAPPING --
+
         // 2. Siapkan Binding Parameter untuk Klausa IN (...)
         $inParams = [];
         $inQueryParts = [];
@@ -204,33 +208,64 @@ class DashboardController{
             $stmt->execute();
             $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-            // 5. Format data untuk output
+            // -- START PATCH FIX GAPPING: HANDLE MISSING DATES IN RESULT --
+            // 1. Index hasil DB berdasarkan tanggal untuk lookup cepat
+            $dbDataIndexed = [];
+            foreach ($rows as $row) {
+                $dbDataIndexed[$row['tanggal']] = $row;
+            }
+
+            // 2. Format data output dengan mengisi gap tanggal (Carry Forward Mechanism)
             $formattedData = [];
-            foreach ($rows as $r) {
+            $lastValidNplAmt = 0;
+            $lastValidTotalKredit = 0;
+            $lastValidNplPersen = 0;
+
+            foreach ($dates as $expectedDate) {
                 // Formatting label biar cantik di sumbu X pada chart
+                $label = '';
                 if ($periode === 'bulanan' || $periode === 'tahunan') {
-                    // Untuk tahunan dan bulanan, labelnya pake Bulan & Tahun
-                    // Kalau tanggalnya sama dengan harian_date, tambahkan label "(Act)"
-                    if ($r['tanggal'] === $harian_date) {
-                        $label = date('d M Y', strtotime($r['tanggal'])) . ' (Act)';
-                    } else {
-                        $label = date('M Y', strtotime($r['tanggal'])); // cth: Mar 2025
-                    }
+                    $label = date('M Y', strtotime($expectedDate)); // cth: Mar 2026
                 } elseif ($periode === 'mingguan') {
-                    $label = date('d M Y', strtotime($r['tanggal'])); 
+                    $label = date('d M Y', strtotime($expectedDate)); // cth: 10 Mar 2026
                 } else {
-                    // Untuk harian (7, 14, 30), tanggal & bulan aja biar nggak kepanjangan
-                    $label = date('d M', strtotime($r['tanggal'])); // cth: 10 Mar
+                    $label = date('d M', strtotime($expectedDate)); // cth: 10 Mar
                 }
 
-                $formattedData[] = [
-                    'tanggal'      => $r['tanggal'],
-                    'label'        => $label,
-                    'npl_amt'      => (float) $r['npl_amt'],
-                    'total_kredit' => (float) $r['total_kredit'],
-                    'npl_persen'   => (float) $r['npl_persen']
-                ];
+                // Tambah label (Act) jika tanggal hari ini
+                if ($expectedDate === $harian_date) {
+                    $label .= ' (Act)';
+                }
+
+                if (isset($dbDataIndexed[$expectedDate])) {
+                    // Data ADA di database
+                    $dbItem = $dbDataIndexed[$expectedDate];
+                    
+                    // Simpan nilai valid terakhir untuk nanti dipakai kalau ada data bolong
+                    $lastValidNplAmt = (float) $dbItem['npl_amt'];
+                    $lastValidTotalKredit = (float) $dbItem['total_kredit'];
+                    $lastValidNplPersen = (float) $dbItem['npl_persen'];
+
+                    $formattedData[] = [
+                        'tanggal'      => $expectedDate,
+                        'label'        => $label,
+                        'npl_amt'      => $lastValidNplAmt,
+                        'total_kredit' => $lastValidTotalKredit,
+                        'npl_persen'   => $lastValidNplPersen
+                    ];
+                } else {
+                    // Data TIDAK ADA di database (GAPPING, cth: 07 Mar)
+                    // Paksa buat titik data dengan nilai dari hari sebelumnya (Carry Forward)
+                    $formattedData[] = [
+                        'tanggal'      => $expectedDate,
+                        'label'        => $label, // Label tetap tanggal yg hilang
+                        'npl_amt'      => $lastValidNplAmt,
+                        'total_kredit' => $lastValidTotalKredit,
+                        'npl_persen'   => $lastValidNplPersen
+                    ];
+                }
             }
+            // -- END PATCH FIX GAPPING --
 
             return $formattedData;
 
