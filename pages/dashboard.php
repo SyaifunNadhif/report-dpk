@@ -507,7 +507,7 @@
             <div class="inline-flex gap-1 bg-gray-100 px-2 py-1 rounded font-bold">Closing: <span class="text-gray-800">Rp ${fmtB(osPrev)}</span></div>
             ${getDeltaHTML(osCurr - osPrev, false, false)}
         </div>
-        <div class="w-full mt-1.5"><span class="inline-flex bg-blue-50 text-blue-700 px-3 py-1 rounded-lg font-bold border border-blue-100 text-xs">${fmt(noaOs)} NOA</span></div>
+        
       `;
 
       document.getElementById('kpi_rr').textContent = pct(rrG.rr_persen_curr);
