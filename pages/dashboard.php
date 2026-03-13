@@ -97,25 +97,43 @@
 
     <div class="grid lg:grid-cols-12 gap-4 mt-6">
       
-      <div class="bg-white p-5 rounded-3xl shadow-sm border border-gray-100 lg:col-span-3">
-        <h3 class="font-bold text-gray-800 mb-3 border-b border-gray-100 pb-2 text-[12px] flex items-center gap-1.5 leading-tight">
+      <div class="bg-white p-5 rounded-3xl shadow-sm border border-gray-100 lg:col-span-3 flex flex-col">
+        <h3 class="font-bold text-gray-800 mb-3 border-b border-gray-100 pb-2 text-[12px] flex items-center gap-1.5 leading-tight shrink-0">
           <span>🔄</span> Realisasi vs Run Off
         </h3>
-        <div id="box_runoff_realisasi" class="space-y-3"></div>
+        <div id="box_runoff_realisasi" class="space-y-3 flex-grow mb-3"></div>
+        
+        <div class="mt-auto pt-3 border-t border-gray-50 flex items-center justify-center gap-4 text-[10px] font-bold text-gray-500 shrink-0">
+            <div class="flex items-center gap-1.5">
+                <span class="w-3 h-1.5 rounded-full bg-green-400"></span> Realisasi
+            </div>
+            <div class="flex items-center gap-1.5">
+                <span class="w-3 h-1.5 rounded-full bg-red-400"></span> Run Off
+            </div>
+        </div>
       </div>
 
-      <div class="bg-white p-5 rounded-3xl shadow-sm border border-gray-100 lg:col-span-3">
-        <h3 class="font-bold text-gray-800 mb-3 border-b border-gray-100 pb-2 text-[12px] flex items-center gap-1.5 leading-tight">
+      <div class="bg-white p-5 rounded-3xl shadow-sm border border-gray-100 lg:col-span-3 flex flex-col">
+        <h3 class="font-bold text-gray-800 mb-3 border-b border-gray-100 pb-2 text-[12px] flex items-center gap-1.5 leading-tight shrink-0">
           <span>🛡️</span> Flow NPL vs Recovery
         </h3>
-        <div id="box_flow_recovery" class="space-y-3"></div>
+        <div id="box_flow_recovery" class="space-y-3 flex-grow mb-3"></div>
+        
+        <div class="mt-auto pt-3 border-t border-gray-50 flex items-center justify-center gap-4 text-[10px] font-bold text-gray-500 shrink-0">
+            <div class="flex items-center gap-1.5">
+                <span class="w-3 h-1.5 rounded-full bg-red-400"></span> Flow NPL
+            </div>
+            <div class="flex items-center gap-1.5">
+                <span class="w-3 h-1.5 rounded-full bg-green-400"></span> Recovery
+            </div>
+        </div>
       </div>
 
-      <div class="bg-white p-6 rounded-3xl shadow-sm border border-gray-100 lg:col-span-6 relative">
+      <div class="bg-white p-6 rounded-3xl shadow-sm border border-gray-100 lg:col-span-6 relative flex flex-col">
         <div id="loadingChartRunoff" class="absolute inset-0 flex justify-center items-center bg-white bg-opacity-90 z-10 hidden rounded-3xl">
            <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
         </div>
-        <div class="flex items-center justify-between mb-4 border-b border-gray-100 pb-3">
+        <div class="flex items-center justify-between mb-4 border-b border-gray-100 pb-3 shrink-0">
           <div>
             <h3 class="font-bold text-gray-800 flex items-center gap-2 text-lg">
               <span class="text-blue-500">📊</span> Tren Realisasi vs Run Off
@@ -132,7 +150,7 @@
               <option value="7_hari" selected>7 Hari Terakhir</option>
           </select>
         </div>
-        <div class="relative w-full h-[280px]">
+        <div class="relative w-full flex-grow min-h-[250px]">
           <canvas id="canvasTrenRunoff"></canvas>
         </div>
       </div>
@@ -218,6 +236,10 @@
 
 <style>
   .bar-fill { transition: height 1s cubic-bezier(0.4, 0, 0.2, 1), width 1s ease-in-out; }
+  .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+  .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+  .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
 </style>
 
 <script>
@@ -280,7 +302,7 @@
       }
       const res = await apiCall('./api/kode/', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({type:'kode_kantor'}) });
       const j = await res.json();
-      let html = `<option value="000">Konsolidasi (Nasional)</option><option value="SEMARANG">Korwil Semarang</option><option value="SOLO">Korwil Solo</option><option value="BANYUMAS">Korwil Banyumas</option><option value="PEKALONGAN">Korwil Pekalongan</option>`;
+      let html = `<option value="000">Konsolidasi</option><option value="SEMARANG">Korwil Semarang</option><option value="SOLO">Korwil Solo</option><option value="BANYUMAS">Korwil Banyumas</option><option value="PEKALONGAN">Korwil Pekalongan</option>`;
       if(j.data) j.data.filter(x => x.kode_kantor !== '000').forEach(k => html += `<option value="${k.kode_kantor}">${k.kode_kantor} - ${k.nama_kantor}</option>`);
       optKantor.innerHTML = html; optKantor.disabled = false;
     } catch(e) {}
@@ -495,7 +517,7 @@
             <div class="inline-flex gap-1 bg-gray-100 px-2 py-1 rounded font-bold">Closing: <span class="text-gray-800">Rp ${fmtB(osPrev)}</span></div>
             ${getDeltaHTML(osCurr - osPrev, false, false)}
         </div>
-        <div class="w-full mt-1.5"><span class="inline-flex bg-blue-50 text-blue-700 px-3 py-1 rounded-lg font-bold border border-blue-100 text-xs">${fmt(noaOs)} NOA</span></div>
+        
       `;
 
       document.getElementById('kpi_rr').textContent = pct(rrG.rr_persen_curr);
@@ -513,9 +535,26 @@
         renderUniversalList('box_realisasi_produk', prods, 'nama_produk', 'total_realisasi', 'noa_realisasi', 'bg-indigo-400', false, 'NOA');
     } catch(e) {}
 
-    // RENDER KORWIL BAR
+    // RENDER KORWIL BAR DENGAN SCROLL DINAMIS
     try {
       let hideGrandTotal = (kantorMode !== '000');
+      let isKorwilFilter = ['SEMARANG','SOLO','BANYUMAS','PEKALONGAN'].includes(kantorMode);
+
+      // 🔥 Manajemen Scrollbar Dinamis
+      const boxRunoff = document.getElementById('box_runoff_realisasi');
+      const boxFlow = document.getElementById('box_flow_recovery');
+
+      if (isKorwilFilter) {
+          boxRunoff.style.maxHeight = '200px';
+          boxRunoff.classList.add('overflow-y-auto', 'custom-scrollbar', 'pr-1');
+          boxFlow.style.maxHeight = '200px';
+          boxFlow.classList.add('overflow-y-auto', 'custom-scrollbar', 'pr-1');
+      } else {
+          boxRunoff.style.maxHeight = 'none';
+          boxRunoff.classList.remove('overflow-y-auto', 'custom-scrollbar', 'pr-1');
+          boxFlow.style.maxHeight = 'none';
+          boxFlow.classList.remove('overflow-y-auto', 'custom-scrollbar', 'pr-1');
+      }
       
       let runoffData = [...(d.runoff_vs_realisasi?.detail_korwil || [])]; 
       if(d.runoff_vs_realisasi?.grand_total && !hideGrandTotal) {
