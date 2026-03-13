@@ -85,34 +85,33 @@
         </div>
       </div>
 
-      <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 flex flex-col justify-between">
-        <div>
-          <h3 class="font-bold text-gray-800 mb-2 border-b border-gray-100 pb-2 text-sm flex items-center gap-2">
-            <span>🔄</span> Realisasi vs Run Off (Korwil)
-          </h3>
-          <div id="box_runoff_realisasi" class="space-y-3 mb-4"></div>
-        </div>
-        <div>
-          <h3 class="font-bold text-gray-800 mb-2 border-b border-gray-100 pb-2 text-sm flex items-center gap-2">
-            <span>🛡️</span> Flow NPL vs Recovery (Korwil)
-          </h3>
-          <div id="box_flow_recovery" class="space-y-3"></div>
-        </div>
-      </div>
-    </div>
-
-    <div class="grid lg:grid-cols-3 gap-4 mt-6">
-      
-      <div class="bg-white p-6 rounded-3xl shadow-sm border border-gray-100">
-        <div class="flex items-center justify-between mb-4 border-b border-gray-100 pb-3">
-          <h3 class="font-bold text-gray-800 flex items-center gap-2 text-[15px]">
+      <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 flex flex-col">
+        <div class="flex items-center justify-between mb-3 border-b border-gray-100 pb-2">
+          <h3 class="font-bold text-gray-800 flex items-center gap-2 text-sm">
             <span class="text-indigo-500">📦</span> Realisasi by Produk
           </h3>
         </div>
-        <div id="box_realisasi_produk" class="space-y-3 max-h-[280px] overflow-y-auto pr-2 custom-scrollbar"></div>
+        <div id="box_realisasi_produk" class="space-y-3 flex-grow"></div>
+      </div>
+    </div>
+
+    <div class="grid lg:grid-cols-12 gap-4 mt-6">
+      
+      <div class="bg-white p-5 rounded-3xl shadow-sm border border-gray-100 lg:col-span-3">
+        <h3 class="font-bold text-gray-800 mb-3 border-b border-gray-100 pb-2 text-[12px] flex items-center gap-1.5 leading-tight">
+          <span>🔄</span> Realisasi vs Run Off
+        </h3>
+        <div id="box_runoff_realisasi" class="space-y-3"></div>
       </div>
 
-      <div class="bg-white p-6 rounded-3xl shadow-sm border border-gray-100 lg:col-span-2 relative">
+      <div class="bg-white p-5 rounded-3xl shadow-sm border border-gray-100 lg:col-span-3">
+        <h3 class="font-bold text-gray-800 mb-3 border-b border-gray-100 pb-2 text-[12px] flex items-center gap-1.5 leading-tight">
+          <span>🛡️</span> Flow NPL vs Recovery
+        </h3>
+        <div id="box_flow_recovery" class="space-y-3"></div>
+      </div>
+
+      <div class="bg-white p-6 rounded-3xl shadow-sm border border-gray-100 lg:col-span-6 relative">
         <div id="loadingChartRunoff" class="absolute inset-0 flex justify-center items-center bg-white bg-opacity-90 z-10 hidden rounded-3xl">
            <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
         </div>
@@ -219,10 +218,6 @@
 
 <style>
   .bar-fill { transition: height 1s cubic-bezier(0.4, 0, 0.2, 1), width 1s ease-in-out; }
-  .custom-scrollbar::-webkit-scrollbar { width: 4px; }
-  .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
-  .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
-  .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
 </style>
 
 <script>
@@ -266,7 +261,7 @@
 
   let chartTrenInstance = null;
   let chartRunoffInstance = null; 
-  let initialHarianDate = null; // 🔥 DETEKTOR DEFAULT TANGGAL
+  let initialHarianDate = null; 
 
   const apiCall = (url, opt={}) => (window.apiFetch ? window.apiFetch(url, opt) : fetch(url, opt));
 
@@ -301,7 +296,6 @@
       document.getElementById('filter_harian').value = '2026-03-10';
     }
 
-    // Simpan data default saat pertama kali buka web
     initialHarianDate = document.getElementById('filter_harian').value;
 
     const user = (window.getUser && window.getUser()) || null;
@@ -334,7 +328,6 @@
     let kantor = document.getElementById('filter_kantor').value;
     let currFilterDate = document.getElementById('filter_harian').value;
     
-    // 🔥 LOGIKA PINTAR: Kalau tanggal gak diubah user -> pake Hari Ini (Realtime). Kalau diubah -> pake tanggal pilihan
     let isDefaultDate = (currFilterDate === initialHarianDate);
     let targetRealtimeDate = isDefaultDate ? getTodayRealtime() : currFilterDate;
     
@@ -359,15 +352,12 @@
       let dataToRender = Array.isArray(json.data) ? json.data : (json.data?.tren_runoff_realisasi || []);
       let isAllZero = dataToRender.length > 0 && dataToRender.every(d => d.total_realisasi === 0 && d.total_runoff === 0);
 
-      // Fallback ke H-1 JIKA KITA MINTA REALTIME TAPI DATA BELUM ADA
       if ((dataToRender.length === 0 || isAllZero) && !isRetry && isDefaultDate) {
-          console.log("Data realtime hari ini kosong, mundur ke H-1...");
           return fetchTrenRunoff(true, getYesterdayRealtime()); 
       }
 
       renderChartRunoff(dataToRender);
     } catch(e) { 
-      console.error(e); 
       renderChartRunoff([]);
     } finally {
       if (!isRetry) loadingChart.classList.add('hidden');
@@ -455,7 +445,7 @@
     if(chartTrenInstance) chartTrenInstance.destroy();
     if(!dataArray || dataArray.length === 0) {
       ctx.clearRect(0, 0, canvas.width, canvas.height); ctx.font = "14px Arial"; ctx.fillStyle = "#9ca3af"; ctx.textAlign = "center";
-      ctx.fillText("Data tren tidak tersedia", canvas.width/2, canvas.height/2); return;
+      ctx.fillText("Data tren tidak tersedia untuk periode ini", canvas.width/2, canvas.height/2); return;
     }
     const labels = dataArray.map(d => d.label || d.tanggal); const dataNominal = dataArray.map(d => Number(d.npl_amt)); const dataPersen = dataArray.map(d => parseFloat(Number(d.npl_persen).toFixed(2))); 
     let minVal = Math.min(...dataPersen); let maxVal = Math.max(...dataPersen); let padding = (maxVal - minVal) === 0 ? 0.5 : (maxVal - minVal) * 0.3; let yMin = Math.max(0, minVal - padding); 
@@ -472,15 +462,13 @@
     
     let kantor = document.getElementById('filter_kantor').value;
     let currDate = document.getElementById('filter_harian').value;
-    
-    // 🔥 SAMAKAN LOGIKA PINTAR REALTIME UNTUK DASHBOARD UTAMA
     let targetRealisasiDate = (currDate === initialHarianDate) ? getTodayRealtime() : currDate;
 
     const payload = { 
       type: 'executive dashboard', 
       closing_date: document.getElementById('filter_closing').value, 
       harian_date: currDate,
-      harian_date_realisasi: targetRealisasiDate // 🔥 Kirim parameter ini ke BE
+      harian_date_realisasi: targetRealisasiDate
     };
     
     if(kantor !== '000') { if(['SEMARANG','SOLO','BANYUMAS','PEKALONGAN'].includes(kantor)) payload.korwil = kantor; else payload.kode_kantor = kantor; }
@@ -507,7 +495,7 @@
             <div class="inline-flex gap-1 bg-gray-100 px-2 py-1 rounded font-bold">Closing: <span class="text-gray-800">Rp ${fmtB(osPrev)}</span></div>
             ${getDeltaHTML(osCurr - osPrev, false, false)}
         </div>
-        
+        <div class="w-full mt-1.5"><span class="inline-flex bg-blue-50 text-blue-700 px-3 py-1 rounded-lg font-bold border border-blue-100 text-xs">${fmt(noaOs)} NOA</span></div>
       `;
 
       document.getElementById('kpi_rr').textContent = pct(rrG.rr_persen_curr);
@@ -525,9 +513,9 @@
         renderUniversalList('box_realisasi_produk', prods, 'nama_produk', 'total_realisasi', 'noa_realisasi', 'bg-indigo-400', false, 'NOA');
     } catch(e) {}
 
+    // RENDER KORWIL BAR
     try {
-      // 🔥 Sembunyikan "TOTAL KONSOLIDASI" kalau filter yang di pilih adalah Cabang
-      let hideGrandTotal = (kantorMode !== '000' && !['SEMARANG','SOLO','BANYUMAS','PEKALONGAN'].includes(kantorMode));
+      let hideGrandTotal = (kantorMode !== '000');
       
       let runoffData = [...(d.runoff_vs_realisasi?.detail_korwil || [])]; 
       if(d.runoff_vs_realisasi?.grand_total && !hideGrandTotal) {
