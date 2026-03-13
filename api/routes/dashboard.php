@@ -68,7 +68,15 @@ switch ($method) {
         } elseif ($type === 'test perkembangan tabungan') {
             $data = $controller->getPerkembanganTabungan($input);
             sendResponse(200, "Testing Perkembangan Tabungan", $data);
-            
+
+        } elseif ($type === 'tren_runoff_realisasi') {
+            $data = $controller->getTrenRunOffRealisasi($input);
+            sendResponse(200, "Testing tren run off realisasi", $data);
+
+        } elseif ($type === 'realisasi_by_produk') {
+            $data = $controller->getRealisasiRealtimeByProduk($input);
+            sendResponse(200, "test realisasi produk", $data);
+   
         } else {
             sendResponse(400, "Endpoint atau type salah bro");
         }
