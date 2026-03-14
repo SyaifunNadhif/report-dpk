@@ -34,6 +34,21 @@ class DashboardController{
                 $inputRealtime['harian_date'] = $input['harian_date_realisasi']; 
             }
 
+            // =========================================================================
+            // 🔥 LOGIKA PINTAR REPORT CLOSING (SOLUSI GANTI BULAN)
+            // =========================================================================
+            // Jika bulan pada harian_date berbeda dengan bulan pada realtime date (hari ini),
+            // berarti user sedang melihat data closing akhir bulan (contoh: 31 Maret, dibuka 1 April).
+            // Maka kita paksa data realtimenya MUNDUR mengikuti harian_date agar tidak kosong!
+            
+            $month_harian   = date('Y-m', strtotime($input['harian_date'] ?? date('Y-m-d')));
+            $month_realtime = date('Y-m', strtotime($inputRealtime['harian_date']));
+            
+            if ($month_harian !== $month_realtime) {
+                $inputRealtime['harian_date'] = $input['harian_date'];
+            }
+            // =========================================================================
+
             // Kita kumpulkan semua puzzle-nya di sini!
             $data = [
                 // 1. Metrik NPL & Kolektibilitas (Pakai $input standar -> H-1)
@@ -44,10 +59,10 @@ class DashboardController{
                 
                 // 2. Metrik Kredit & Realisasi
                 // top_bottom & repayment pakai $input standar
-                'top_bottom_realisasi'    => $this->getTopBottomRealisasi($input),
+                'top_bottom_realisasi'    => $this->getTopBottomRealisasi($inputRealtime),
                 'repayment_rate'          => $this->getRepaymentRateCabang($input),
                 
-                // 🔥 Ini yang pakai $inputRealtime (Biar bisa nembak Hari Ini)
+                // 🔥 Ini yang pakai $inputRealtime (Bisa Realtime Hari Ini, bisa ikut Closing)
                 'tren_runoff_realisasi'   => $this->getTrenRunOffRealisasi($inputRealtime),
                 'realisasi_by_produk'     => $this->getRealisasiRealtimeByProduk($inputRealtime),
                 'runoff_vs_realisasi'     => $this->getRunOffVsRealisasiKorwil($inputRealtime),
@@ -490,7 +505,6 @@ class DashboardController{
         // =========================================================
         // 1. FILTER CABANG & KORWIL
         // =========================================================
-        // Kita menggunakan alias 't' untuk tabel update_realisasi_kredit
         $filterSql = "";
         $filterParams = [];
 
@@ -512,17 +526,17 @@ class DashboardController{
         // =========================================================
         // 2. SUSUN QUERY JOIN DENGAN PRODUK KREDIT
         // =========================================================
-        // Rentang: > closing_date DAN <= harian_date
+        // 🔥 FIX: Mengubah t.tgl_realisasi menjadi t.tanggal_realisasi sesuai DB
         $sql = "
             SELECT 
                 t.kode_produk,
                 COALESCE(p.nama_produk, CONCAT('PRODUK ', t.kode_produk)) AS nama_produk,
-                SUM(t.realisasi_pokok) AS total_realisasi,
-                COUNT(t.no_rekening) AS noa_realisasi
+                SUM(COALESCE(t.realisasi_pokok, 0)) AS total_realisasi,
+                COUNT(DISTINCT t.no_rekening) AS noa_realisasi
             FROM update_realisasi_kredit t
             LEFT JOIN produk_kredit p ON t.kode_produk = p.kode_produk
-            WHERE t.tgl_realisasi > :closing_date 
-              AND t.tgl_realisasi <= :harian_date
+            WHERE t.tanggal_realisasi > :closing_date 
+              AND t.tanggal_realisasi <= :harian_date
             {$filterSql}
             GROUP BY t.kode_produk, p.nama_produk
             ORDER BY total_realisasi DESC
@@ -574,6 +588,7 @@ class DashboardController{
             ];
 
         } catch (PDOException $e) {
+            // Kalau masih error, nanti akan tercatat di log error PHP
             error_log("Error getRealisasiRealtimeByProduk: " . $e->getMessage());
             return ['detail_produk' => [], 'grand_total' => []];
         }
@@ -1132,50 +1147,51 @@ class DashboardController{
 
     public function getTopBottomRealisasi($input) {
         $harian_date = $input['harian_date'] ?? date('Y-m-d');
-        $awal_bulan  = date('Y-m-01', strtotime($harian_date));
+        // Untuk realisasi, kita ambil akumulasi dari tanggal 1 bulan yang sama sampai harian_date (MTD)
+        $awal_bulan  = date('Y-m-01', strtotime($harian_date)); 
         
-        // Ambil filter Korwil (jika ada request dari Front-End)
+        // Ambil filter Korwil (gunakan alias 't' untuk tabel update_realisasi_kredit)
         $filter = $this->buildFilterQuery($input, 't');
 
         // ==========================================
         // 1. QUERY REALISASI CABANG (Top & Bottom)
         // ==========================================
+        // Menggunakan tabel update_realisasi_kredit
         $sqlCabang = "
             SELECT 
-                t.kode_cabang,
-                COALESCE(k.nama_kantor, CONCAT('CABANG ', t.kode_cabang)) AS nama_cabang,
-                SUM(t.plafond) AS total_realisasi,
-                COUNT(t.no_rekening) AS noa_realisasi
-            FROM nominatif t
-            LEFT JOIN kode_kantor k ON t.kode_cabang = k.kode_kantor
-            WHERE t.created = :harian_date
-              AND t.tgl_realisasi >= :awal_bulan
-              AND t.tgl_realisasi <= :harian_date2
+                t.kode_kantor AS kode_cabang,
+                COALESCE(k.nama_kantor, CONCAT('CABANG ', t.kode_kantor)) AS nama_cabang,
+                SUM(COALESCE(t.realisasi_pokok, 0)) AS total_realisasi,
+                COUNT(DISTINCT t.no_rekening) AS noa_realisasi
+            FROM update_realisasi_kredit t
+            LEFT JOIN kode_kantor k ON t.kode_kantor = k.kode_kantor
+            WHERE t.tanggal_realisasi >= :awal_bulan
+              AND t.tanggal_realisasi <= :harian_date
             {$filter['sql']}
-            GROUP BY t.kode_cabang, k.nama_kantor
-            HAVING SUM(t.plafond) > 0
+            GROUP BY t.kode_kantor, k.nama_kantor
+            HAVING SUM(COALESCE(t.realisasi_pokok, 0)) > 0
         ";
 
         // ==========================================
         // 2. QUERY REALISASI AO (Top 5 Saja)
         // ==========================================
+        // Kita join dengan tabel user (karena ini tabel update_realisasi_kredit, biasanya pakai kode_group2 / ID AO)
         $sqlAO = "
             SELECT 
                 t.kode_group2,
-                COALESCE(ao.nama_ao, t.kode_group2) AS nama_ao,
-                t.kode_cabang,
-                COALESCE(k.nama_kantor, CONCAT('CABANG ', t.kode_cabang)) AS nama_cabang,
-                SUM(t.plafond) AS total_realisasi,
-                COUNT(t.no_rekening) AS noa_realisasi
-            FROM nominatif t
+                COALESCE(ao.nama_ao, CONCAT('AO ', t.kode_group2)) AS nama_ao,
+                t.kode_kantor AS kode_cabang,
+                COALESCE(k.nama_kantor, CONCAT('CABANG ', t.kode_kantor)) AS nama_cabang,
+                SUM(COALESCE(t.realisasi_pokok, 0)) AS total_realisasi,
+                COUNT(DISTINCT t.no_rekening) AS noa_realisasi
+            FROM update_realisasi_kredit t
             LEFT JOIN ao_kredit ao ON t.kode_group2 = ao.kode_group2
-            LEFT JOIN kode_kantor k ON t.kode_cabang = k.kode_kantor
-            WHERE t.created = :harian_date
-              AND t.tgl_realisasi >= :awal_bulan
-              AND t.tgl_realisasi <= :harian_date2
+            LEFT JOIN kode_kantor k ON t.kode_kantor = k.kode_kantor
+            WHERE t.tanggal_realisasi >= :awal_bulan
+              AND t.tanggal_realisasi <= :harian_date
             {$filter['sql']}
-            GROUP BY t.kode_group2, ao.nama_ao, t.kode_cabang, k.nama_kantor
-            HAVING SUM(t.plafond) > 0
+            GROUP BY t.kode_group2, ao.nama_ao, t.kode_kantor, k.nama_kantor
+            HAVING SUM(COALESCE(t.realisasi_pokok, 0)) > 0
             ORDER BY total_realisasi DESC
             LIMIT 5
         ";
@@ -1184,7 +1200,6 @@ class DashboardController{
             // --- Eksekusi Cabang ---
             $stmtCabang = $this->pdo->prepare($sqlCabang);
             $stmtCabang->bindValue(':harian_date', $harian_date);
-            $stmtCabang->bindValue(':harian_date2', $harian_date);
             $stmtCabang->bindValue(':awal_bulan', $awal_bulan);
             foreach ($filter['params'] as $key => $val) {
                 $stmtCabang->bindValue($key, $val);
@@ -1192,7 +1207,7 @@ class DashboardController{
             $stmtCabang->execute();
             $rowsCabang = $stmtCabang->fetchAll(PDO::FETCH_ASSOC);
 
-            // Kita sort di PHP untuk Top dan Bottom Cabang
+            // Sort di PHP untuk Top dan Bottom Cabang
             $cabangData = array_map(function($r) {
                 return [
                     'kode_cabang'     => $r['kode_cabang'],
@@ -1217,7 +1232,6 @@ class DashboardController{
             // --- Eksekusi AO ---
             $stmtAO = $this->pdo->prepare($sqlAO);
             $stmtAO->bindValue(':harian_date', $harian_date);
-            $stmtAO->bindValue(':harian_date2', $harian_date);
             $stmtAO->bindValue(':awal_bulan', $awal_bulan);
             foreach ($filter['params'] as $key => $val) {
                 $stmtAO->bindValue($key, $val);
@@ -1236,23 +1250,38 @@ class DashboardController{
                 ];
             }, $rowsAO);
 
+            // ==========================================
+            // GRAND TOTAL (Untuk dikirim ke KPI Box Atas)
+            // ==========================================
+            $grand_total_realisasi = 0;
+            $grand_total_noa = 0;
+            foreach($cabangData as $cd) {
+                $grand_total_realisasi += $cd['total_realisasi'];
+                $grand_total_noa += $cd['noa_realisasi'];
+            }
+
             return [
                 'top_cabang'    => $topCabang,
                 'bottom_cabang' => $bottomCabang,
-                'top_ao'        => $topAO
+                'top_ao'        => $topAO,
+                'grand_total'   => [
+                    'total_realisasi' => $grand_total_realisasi,
+                    'noa_realisasi'   => $grand_total_noa
+                ]
             ];
 
         } catch (PDOException $e) {
             error_log("Error getTopBottomRealisasi: " . $e->getMessage());
-            return ['top_cabang' => [], 'bottom_cabang' => [], 'top_ao' => []];
+            return [
+                'top_cabang'    => [], 
+                'bottom_cabang' => [], 
+                'top_ao'        => [],
+                'grand_total'   => ['total_realisasi' => 0, 'noa_realisasi' => 0]
+            ];
         }
     }
 
-    public function getFlowPAR($input) {
-        // Logika query untuk migrasi ke L, DP menjadi KL, D, M (Flow PAR)
-        // Kamu bisa comot bagian query CTE gabung di getMigrasiKolek sebelumnya
-        return [];
-    }
+
 
     public function getRepaymentRateCabang($input) {
         $harian_date  = $input['harian_date'] ?? date('Y-m-d');
@@ -1513,10 +1542,11 @@ class DashboardController{
                 $grand_total['saldo_baru']  += $saldo_baru;
                 $grand_total['saldo_cair']  += $saldo_cair;
 
-                // Simpan Data Cabang untuk di-Sortir nanti
+                // 🔥 FIX: Tambahkan 'noa_curr' ke array Cabang biar muncul di Front-End
                 $cabang_array[] = [
                     'kode_cabang' => $kd,
                     'nama_cabang' => $r['nama_cabang'],
+                    'noa_curr'    => $noa_curr,      // <--- INI BIANG KEROKNYA
                     'noa_tambah'  => $noa_tambah,
                     'noa_kurang'  => $noa_kurang,
                     'saldo_prev'  => $saldo_prev,
@@ -1529,27 +1559,22 @@ class DashboardController{
 
             // 6. Eksekusi Kategori Sortir
 
-            // A. Top Kenaikan (Selisih Net Paling Positif)
             $kenaikan = array_filter($cabang_array, function($c) { return $c['delta_saldo'] > 0; });
             usort($kenaikan, function($a, $b) { return $b['delta_saldo'] <=> $a['delta_saldo']; });
             $top_kenaikan = array_slice($kenaikan, 0, 5);
 
-            // B. Top Penurunan (Selisih Net Paling Negatif)
             $penurunan = array_filter($cabang_array, function($c) { return $c['delta_saldo'] < 0; });
             usort($penurunan, function($a, $b) { return $a['delta_saldo'] <=> $b['delta_saldo']; }); 
             $top_penurunan = array_slice($penurunan, 0, 5);
 
-            // C. Top Uang Baru Masuk (Pencetak Deposito Baru Terbesar)
             $baru = array_filter($cabang_array, function($c) { return $c['saldo_baru'] > 0; });
             usort($baru, function($a, $b) { return $b['saldo_baru'] <=> $a['saldo_baru']; });
             $top_baru = array_slice($baru, 0, 5);
 
-            // D. Top Uang Keluar / Pencairan (Paling banyak kehilangan Deposito)
             $cair = array_filter($cabang_array, function($c) { return $c['saldo_cair'] > 0; });
             usort($cair, function($a, $b) { return $b['saldo_cair'] <=> $a['saldo_cair']; });
             $top_cair = array_slice($cair, 0, 5);
 
-            // E. Top & Bottom Saldo Terbesar
             $saldo_aktif = array_filter($cabang_array, function($c) { return $c['saldo_curr'] > 0; });
             
             usort($saldo_aktif, function($a, $b) { return $b['saldo_curr'] <=> $a['saldo_curr']; });
@@ -1699,10 +1724,11 @@ class DashboardController{
                 $grand_total['saldo_baru']  += $saldo_baru;
                 $grand_total['saldo_cair']  += $saldo_cair;
 
-                // Simpan Data Cabang untuk di-Sortir nanti
+                // 🔥 FIX: Tambahkan 'noa_curr' ke array Cabang biar muncul di Front-End
                 $cabang_array[] = [
                     'kode_cabang' => $kd,
                     'nama_cabang' => $r['nama_cabang'],
+                    'noa_curr'    => $noa_curr,      // <--- INI BIANG KEROKNYA
                     'noa_tambah'  => $noa_tambah,
                     'noa_kurang'  => $noa_kurang,
                     'saldo_prev'  => $saldo_prev,
