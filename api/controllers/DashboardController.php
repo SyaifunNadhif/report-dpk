@@ -506,12 +506,34 @@ class DashboardController{
         $closing_date = $input['closing_date'] ?? date('Y-m-d', strtotime('last day of previous month'));
         $harian_date  = $input['harian_date']  ?? date('Y-m-d');
         
-        // 🔥 Panggil fungsi sakti filter wilayah (Korwil / Cabang)
-        $filter = $this->buildFilterQuery($input, 't');
+        $kode_kantor = $input['kode_kantor'] ?? '000';
+        $korwil      = strtoupper($input['korwil'] ?? '');
 
         // =========================================================
-        // SUSUN QUERY JOIN DENGAN PRODUK KREDIT
+        // 1. FILTER CABANG & KORWIL
         // =========================================================
+        $filterSql = "";
+        $filterParams = [];
+
+        if ($kode_kantor !== '000' && empty($korwil)) {
+            $filterSql .= " AND t.kode_kantor = :kode_kantor";
+            $filterParams[':kode_kantor'] = $kode_kantor;
+        } elseif (!empty($korwil)) {
+            if ($korwil === 'SEMARANG') {
+                $filterSql .= " AND t.kode_kantor BETWEEN '001' AND '007'";
+            } elseif ($korwil === 'SOLO') {
+                $filterSql .= " AND t.kode_kantor BETWEEN '008' AND '014'";
+            } elseif ($korwil === 'BANYUMAS') {
+                $filterSql .= " AND t.kode_kantor BETWEEN '015' AND '021'";
+            } elseif ($korwil === 'PEKALONGAN') {
+                $filterSql .= " AND t.kode_kantor BETWEEN '022' AND '028'";
+            }
+        }
+
+        // =========================================================
+        // 2. SUSUN QUERY JOIN DENGAN PRODUK KREDIT
+        // =========================================================
+        // 🔥 FIX: Mengubah t.tgl_realisasi menjadi t.tanggal_realisasi sesuai DB
         $sql = "
             SELECT 
                 t.kode_produk,
@@ -522,7 +544,7 @@ class DashboardController{
             LEFT JOIN produk_kredit p ON t.kode_produk = p.kode_produk
             WHERE t.tanggal_realisasi > :closing_date 
               AND t.tanggal_realisasi <= :harian_date
-            {$filter['sql']}
+            {$filterSql}
             GROUP BY t.kode_produk, p.nama_produk
             ORDER BY total_realisasi DESC
         ";
@@ -534,8 +556,8 @@ class DashboardController{
             $stmt->bindValue(':closing_date', $closing_date);
             $stmt->bindValue(':harian_date', $harian_date);
             
-            // 🔥 Bind parameter filter wilayah dari helper fungsi sakti
-            foreach ($filter['params'] as $key => $val) {
+            // Bind parameter filter wilayah
+            foreach ($filterParams as $key => $val) {
                 $stmt->bindValue($key, $val);
             }
             
@@ -543,7 +565,7 @@ class DashboardController{
             $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
             // =========================================================
-            // FORMAT OUTPUT & HITUNG GRAND TOTAL
+            // 3. FORMAT OUTPUT & HITUNG GRAND TOTAL
             // =========================================================
             $formattedData = [];
             $grand_total_realisasi = 0;
@@ -575,13 +597,7 @@ class DashboardController{
         } catch (PDOException $e) {
             // Kalau masih error, nanti akan tercatat di log error PHP
             error_log("Error getRealisasiRealtimeByProduk: " . $e->getMessage());
-            return [
-                'detail_produk' => [], 
-                'grand_total' => [
-                    'total_realisasi' => 0,
-                    'noa_realisasi' => 0
-                ]
-            ];
+            return ['detail_produk' => [], 'grand_total' => []];
         }
     }
 
@@ -1136,18 +1152,38 @@ class DashboardController{
         }
     }
 
-    public function getTopBottomRealisasi($input) {
+public function getTopBottomRealisasi($input) {
         $harian_date = $input['harian_date'] ?? date('Y-m-d');
         // Untuk realisasi, kita ambil akumulasi dari tanggal 1 bulan yang sama sampai harian_date (MTD)
         $awal_bulan  = date('Y-m-01', strtotime($harian_date)); 
         
-        // Ambil filter Korwil (gunakan alias 't' untuk tabel update_realisasi_kredit)
-        $filter = $this->buildFilterQuery($input, 't');
+        $kode_kantor = $input['kode_kantor'] ?? '000';
+        $korwil      = strtoupper($input['korwil'] ?? '');
+
+        // =========================================================
+        // FILTER CABANG & KORWIL EKSKLUSIF (Manual)
+        // =========================================================
+        $filterSql = "";
+        $filterParams = [];
+
+        if ($kode_kantor !== '000' && empty($korwil)) {
+            $filterSql .= " AND t.kode_kantor = :kode_kantor";
+            $filterParams[':kode_kantor'] = $kode_kantor;
+        } elseif (!empty($korwil)) {
+            if ($korwil === 'SEMARANG') {
+                $filterSql .= " AND t.kode_kantor BETWEEN '001' AND '007'";
+            } elseif ($korwil === 'SOLO') {
+                $filterSql .= " AND t.kode_kantor BETWEEN '008' AND '014'";
+            } elseif ($korwil === 'BANYUMAS') {
+                $filterSql .= " AND t.kode_kantor BETWEEN '015' AND '021'";
+            } elseif ($korwil === 'PEKALONGAN') {
+                $filterSql .= " AND t.kode_kantor BETWEEN '022' AND '028'";
+            }
+        }
 
         // ==========================================
         // 1. QUERY REALISASI CABANG (Top & Bottom)
         // ==========================================
-        // Menggunakan tabel update_realisasi_kredit
         $sqlCabang = "
             SELECT 
                 t.kode_kantor AS kode_cabang,
@@ -1158,7 +1194,7 @@ class DashboardController{
             LEFT JOIN kode_kantor k ON t.kode_kantor = k.kode_kantor
             WHERE t.tanggal_realisasi >= :awal_bulan
               AND t.tanggal_realisasi <= :harian_date
-            {$filter['sql']}
+            {$filterSql}
             GROUP BY t.kode_kantor, k.nama_kantor
             HAVING SUM(COALESCE(t.realisasi_pokok, 0)) > 0
         ";
@@ -1166,7 +1202,6 @@ class DashboardController{
         // ==========================================
         // 2. QUERY REALISASI AO (Top 5 Saja)
         // ==========================================
-        // Kita join dengan tabel user (karena ini tabel update_realisasi_kredit, biasanya pakai kode_group2 / ID AO)
         $sqlAO = "
             SELECT 
                 t.kode_group2,
@@ -1180,7 +1215,7 @@ class DashboardController{
             LEFT JOIN kode_kantor k ON t.kode_kantor = k.kode_kantor
             WHERE t.tanggal_realisasi >= :awal_bulan
               AND t.tanggal_realisasi <= :harian_date
-            {$filter['sql']}
+            {$filterSql}
             GROUP BY t.kode_group2, ao.nama_ao, t.kode_kantor, k.nama_kantor
             HAVING SUM(COALESCE(t.realisasi_pokok, 0)) > 0
             ORDER BY total_realisasi DESC
@@ -1192,9 +1227,12 @@ class DashboardController{
             $stmtCabang = $this->pdo->prepare($sqlCabang);
             $stmtCabang->bindValue(':harian_date', $harian_date);
             $stmtCabang->bindValue(':awal_bulan', $awal_bulan);
-            foreach ($filter['params'] as $key => $val) {
+            
+            // Bind manual parameter untuk Cabang
+            foreach ($filterParams as $key => $val) {
                 $stmtCabang->bindValue($key, $val);
             }
+            
             $stmtCabang->execute();
             $rowsCabang = $stmtCabang->fetchAll(PDO::FETCH_ASSOC);
 
@@ -1224,9 +1262,12 @@ class DashboardController{
             $stmtAO = $this->pdo->prepare($sqlAO);
             $stmtAO->bindValue(':harian_date', $harian_date);
             $stmtAO->bindValue(':awal_bulan', $awal_bulan);
-            foreach ($filter['params'] as $key => $val) {
+            
+            // Bind manual parameter untuk AO
+            foreach ($filterParams as $key => $val) {
                 $stmtAO->bindValue($key, $val);
             }
+            
             $stmtAO->execute();
             $rowsAO = $stmtAO->fetchAll(PDO::FETCH_ASSOC);
 
