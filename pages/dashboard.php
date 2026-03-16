@@ -30,7 +30,7 @@
 
   <div id="loadingDash" class="hidden flex flex-col justify-center items-center py-32">
     <div class="animate-spin rounded-full h-14 w-14 border-t-4 border-b-4 border-blue-600 mb-4"></div>
-    <span class="text-gray-500 font-semibold animate-pulse">Menyedot data dari database...</span>
+    <span class="text-gray-500 font-semibold animate-pulse">Loading data dari database...</span>
   </div>
 
   <div id="contentDash" class="hidden space-y-6 overflow-x-hidden">

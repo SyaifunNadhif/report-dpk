@@ -24,8 +24,15 @@ class DashboardController{
      */
     public function getExecutiveDashboard($input = []) {
         try {
+            // Tentukan base date standar (kalau tidak ada dari FE, pakai hari ini)
+            $baseDate = $input['harian_date'] ?? date('Y-m-d');
 
-            // 🔥 TRIK SAKTI: Clone input khusus untuk blok Realisasi/Runoff yang butuh Realtime
+            // 🔥 TRIK SAKTI 1: Clone input khusus untuk H-1 (Metrik DPK)
+            $inputH1 = $input;
+            // Set tanggal mundur 1 hari dari base date
+            $inputH1['harian_date'] = date('Y-m-d', strtotime($baseDate . ' -1 day'));
+
+            // 🔥 TRIK SAKTI 2: Clone input khusus untuk blok Realisasi/Runoff yang butuh Realtime
             $inputRealtime = $input;
             
             // Cek apakah FE ngirim 'harian_date_realisasi'
@@ -41,17 +48,17 @@ class DashboardController{
             // berarti user sedang melihat data closing akhir bulan (contoh: 31 Maret, dibuka 1 April).
             // Maka kita paksa data realtimenya MUNDUR mengikuti harian_date agar tidak kosong!
             
-            $month_harian   = date('Y-m', strtotime($input['harian_date'] ?? date('Y-m-d')));
+            $month_harian   = date('Y-m', strtotime($baseDate));
             $month_realtime = date('Y-m', strtotime($inputRealtime['harian_date']));
             
             if ($month_harian !== $month_realtime) {
-                $inputRealtime['harian_date'] = $input['harian_date'];
+                $inputRealtime['harian_date'] = $baseDate;
             }
             // =========================================================================
 
             // Kita kumpulkan semua puzzle-nya di sini!
             $data = [
-                // 1. Metrik NPL & Kolektibilitas (Pakai $input standar -> H-1)
+                // 1. Metrik NPL & Kolektibilitas (Pakai $input standar)
                 'tren_npl'                => $this->getTrenNPL($input),
                 'top_bottom_npl'          => $this->getTopBottomNPL($input),
                 'kenaikan_penurunan_npl'  => $this->getTopKenaikanPenurunanNPL($input),
@@ -59,17 +66,17 @@ class DashboardController{
                 
                 // 2. Metrik Kredit & Realisasi
                 // top_bottom & repayment pakai $input standar
-                'top_bottom_realisasi'    => $this->getTopBottomRealisasi($inputRealtime),
+                'top_bottom_realisasi'    => $this->getTopBottomRealisasi($input),
                 'repayment_rate'          => $this->getRepaymentRateCabang($input),
                 
-                // 🔥 Ini yang pakai $inputRealtime (Bisa Realtime Hari Ini, bisa ikut Closing)
-                'tren_runoff_realisasi'   => $this->getTrenRunOffRealisasi($inputRealtime),
-                'realisasi_by_produk'     => $this->getRealisasiRealtimeByProduk($inputRealtime),
-                'runoff_vs_realisasi'     => $this->getRunOffVsRealisasiKorwil($inputRealtime),
+                // 🔥 Ini yang pakai $input (Bisa Realtime Hari Ini, bisa ikut Closing)
+                'tren_runoff_realisasi'   => $this->getTrenRunOffRealisasi($input),
+                'realisasi_by_produk'     => $this->getRealisasiRealtimeByProduk($input),
+                'runoff_vs_realisasi'     => $this->getRunOffVsRealisasiKorwil($input),
                 
-                // 3. Metrik DPK (Dana Pihak Ketiga) (Pakai $input standar -> H-1)
-                'perkembangan_deposito'   => $this->getPerkembanganDeposito($input),
-                'perkembangan_tabungan'   => $this->getPerkembanganTabungan($input)
+                // 3. Metrik DPK (Dana Pihak Ketiga) (🔥 Pakai $inputH1 -> Pasti H-1)
+                'perkembangan_deposito'   => $this->getPerkembanganDeposito($inputH1),
+                'perkembangan_tabungan'   => $this->getPerkembanganTabungan($inputH1)
             ];
 
             // Kirim responsenya ke Front-End dengan penuh gaya
