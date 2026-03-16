@@ -141,6 +141,20 @@
           </div>
         </li>
 
+        <li class="nb-li">
+          <button data-dropdown="dropdownMonev" class="nb-parent nb-tap">
+            <span>Monev</span>
+            <svg class="nb-caret" viewBox="0 0 20 20" fill="currentColor" width="16" height="16">
+              <path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.586l3.71-4.354a.75.75 0 111.14.976l-4.25 5a.75.75 0 01-1.14 0l-4.25-5a.75.75 0 01.02-1.06z" clip-rule="evenodd"/>
+            </svg>
+          </button>
+          <div id="dropdownMonev" class="dropdown-panel">
+            <ul class="nb-list">
+              <li><a href="monev_mingguan" class="nb-item nb-tap">Komitmen dan Realisasi Monev</a></li>
+            </ul>
+          </div>
+        </li>
+
         <!-- ===== MOBILE-ONLY: Profile dimasukkan ke menu (di bawah Kredit) ===== -->
         <li class="nb-li md:hidden">
           <button data-dropdown="dropdownProfileMobile" class="nb-parent nb-tap">
