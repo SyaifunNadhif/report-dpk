@@ -613,8 +613,12 @@ class KreditController {
     // ===================================================================
     // FUNGSI CHART PROMO VS NON-PROMO (Dikelompokkan per Hari)
     // ===================================================================
+// ===================================================================
+    // FUNGSI CHART PROMO VS NON-PROMO (Dikelompokkan PER MINGGU / PERIODE)
+    // ===================================================================
     public function getChartPromo($input = []) {
-        $closing_date = "2026-02-23";
+        // 🔥 FIX 1: Closing Date BEBAS diubah, tapi default-nya 2026-02-23
+        $closing_date = $input['closing_date'] ?? '2026-02-23'; 
         $harian_date  = $input['harian_date']  ?? date('Y-m-d');
         
         // Hardcode kode promo sesuai permintaan
@@ -625,13 +629,12 @@ class KreditController {
         $sqlWilayah    = $filterData['sql'];
         $paramsWilayah = $filterData['params'];
 
-        // 2. Gabungkan klausa WHERE utama dengan klausa WHERE dari helper
+        // 2. Gabungkan klausa WHERE
         $filterClause = "WHERE t.tanggal_realisasi > :closing_date 
                            AND t.tanggal_realisasi <= :harian_date 
                            {$sqlWilayah}";
                            
         // 3. Setup Parameter Bawaan
-        // 🔥 FIX: Buat 4 parameter unik agar PDO tidak ngambek (Error HY093)
         $params = [
             ':closing_date' => $closing_date,
             ':harian_date'  => $harian_date,
@@ -641,33 +644,30 @@ class KreditController {
             ':promo4'       => $promo_code
         ];
 
-        // 4. Merge parameter bawaan dengan parameter dari helper
+        // 4. Merge parameter
         $params = array_merge($params, $paramsWilayah);
 
-        // SQL Group By Tanggal (Gunakan parameter yang sudah dibedakan)
+        // 🔥 FIX 2: GROUP BY YEARWEEK (Jadikan mingguan) 
+        // Mengambil MIN() dan MAX() tanggal realisasi di minggu tersebut untuk label chart
         $sql = "
             SELECT 
-                t.tanggal_realisasi as tanggal,
+                MIN(t.tanggal_realisasi) as start_date,
+                MAX(t.tanggal_realisasi) as end_date,
                 SUM(CASE WHEN t.kode_promo = :promo1 THEN COALESCE(t.realisasi_pokok, 0) ELSE 0 END) as promo_nominal,
                 SUM(CASE WHEN t.kode_promo != :promo2 OR t.kode_promo IS NULL THEN COALESCE(t.realisasi_pokok, 0) ELSE 0 END) as non_promo_nominal,
                 COUNT(DISTINCT CASE WHEN t.kode_promo = :promo3 THEN t.no_rekening END) as promo_noa,
                 COUNT(DISTINCT CASE WHEN t.kode_promo != :promo4 OR t.kode_promo IS NULL THEN t.no_rekening END) as non_promo_noa
             FROM update_realisasi_kredit t
             $filterClause
-            GROUP BY t.tanggal_realisasi
-            ORDER BY t.tanggal_realisasi ASC
+            GROUP BY YEARWEEK(t.tanggal_realisasi, 1)
+            ORDER BY MIN(t.tanggal_realisasi) ASC
         ";
 
         try {
             $stmt = $this->pdo->prepare($sql);
-            
-            // Eksekusi Parameter
-            foreach ($params as $k => $v) {
-                $stmt->bindValue($k, $v);
-            }
-            
+            foreach ($params as $k => $v) { $stmt->bindValue($k, $v); }
             $stmt->execute();
-            $dailyRows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            $weeklyRows = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
             // Variabel penyimpan Total keseluruhan
             $totals = [
@@ -676,14 +676,19 @@ class KreditController {
             ];
 
             $chartData = [];
-            foreach ($dailyRows as $r) {
+            foreach ($weeklyRows as $r) {
                 $p_nom  = (float)$r['promo_nominal'];
                 $np_nom = (float)$r['non_promo_nominal'];
                 $p_noa  = (int)$r['promo_noa'];
                 $np_noa = (int)$r['non_promo_noa'];
 
+                // 🔥 FORMAT LABEL TANGGAL: "02 Mar - 08 Mar"
+                $start = date('d M', strtotime($r['start_date']));
+                $end   = date('d M', strtotime($r['end_date']));
+                $label = ($start === $end) ? $start : "$start - $end";
+
                 $chartData[] = [
-                    'tanggal'           => $r['tanggal'],
+                    'tanggal'           => $label, // Label yang akan muncul di Chart FE
                     'promo_nominal'     => $p_nom,
                     'non_promo_nominal' => $np_nom,
                     'promo_noa'         => $p_noa,

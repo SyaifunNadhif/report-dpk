@@ -6,7 +6,6 @@
   .custom-scrollbar::-webkit-scrollbar-track { background: #f8fafc; border-radius: 4px; }
   .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
   .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
-  
   .no-scrollbar::-webkit-scrollbar { display: none; }
   .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
@@ -14,26 +13,16 @@
   @keyframes scaleUp { from { transform: scale(0.95); opacity: 0; } to { transform: scale(1); opacity: 1; } }
   .animate-scale-up { animation: scaleUp 0.2s ease-out forwards; }
 
-  /* ========================================================
-     CSS MAGIC STICKY TABLE (GENERIC UNTUK SEMUA TABEL)
-     ======================================================== */
+  /* Magic Sticky Table */
   table thead th { position: sticky; box-shadow: inset 0 -1px 0 #cbd5e1; }
-  
   .head-lapis-1 th { top: 0; z-index: 40; height: 50px; }
   .head-lapis-2 th { top: 50px; z-index: 38; height: 50px; border-bottom: 2px solid #cbd5e1; box-shadow: inset 0 -1px 0 #cbd5e1; }
-  
-  /* Lapis 1 Modal */
   .head-mod-1 th { top: 0; z-index: 40; height: 46px; }
   .head-mod-2 th { top: 46px; z-index: 39; height: 44px; border-bottom: 2px solid #cbd5e1; box-shadow: inset 0 -1px 0 #cbd5e1; }
 
-  /* Freeze Kolom Kiri */
   .freeze-col-1 { position: sticky; left: 0; z-index: 20; box-shadow: inset -1px 0 0 #e2e8f0; }
   .freeze-col-2 { position: sticky; left: 0; z-index: 20; box-shadow: inset -1px 0 0 #e2e8f0; }
-  
-  @media (min-width: 768px) { 
-      .freeze-col-2 { left: 80px; } 
-      .mod-freeze-2 { left: 120px; } 
-  }
+  @media (min-width: 768px) { .freeze-col-2 { left: 80px; } .mod-freeze-2 { left: 120px; } }
 
   .head-lapis-1 th.freeze-col-1, .head-mod-1 th.freeze-col-1 { z-index: 50; border-top-left-radius: 8px; }
   .head-lapis-1 th.freeze-col-2, .head-mod-1 th.mod-freeze-2 { z-index: 49; }
@@ -67,13 +56,11 @@
   </div>
 
   <div class="flex-none mb-4 flex flex-col xl:flex-row justify-between xl:items-start gap-4 w-full">
-      
-      <div class="flex flex-col gap-1.5 shrink-0" id="header-title-container">
-          </div>
+      <div class="flex flex-col gap-1.5 shrink-0" id="header-title-container"></div>
 
       <form id="formFilterUtama" class="bg-white p-2 md:p-3 rounded-xl border border-slate-200 shadow-sm flex flex-wrap md:flex-nowrap items-end gap-2 w-full xl:w-auto shrink-0 xl:ml-auto overflow-x-auto no-scrollbar" onsubmit="event.preventDefault(); fetchRekap();">
           
-          <div class="field w-[calc(50%-4px)] md:w-[130px] shrink-0 transition-opacity duration-300" id="wrap-closing">
+          <div class="field w-[calc(50%-4px)] md:w-[130px] shrink-0" id="wrap-closing">
               <label class="lbl">CLOSING</label>
               <input type="date" id="closing_date" class="inp w-full text-[11px] md:text-sm font-semibold h-[34px] md:h-[38px] px-2 md:px-3 text-slate-700 cursor-pointer" required onclick="try{this.showPicker()}catch(e){}">
           </div>
@@ -83,16 +70,15 @@
               <input type="date" id="harian_date" class="inp w-full text-[11px] md:text-sm font-semibold h-[34px] md:h-[38px] px-2 md:px-3 text-slate-700 cursor-pointer" required onclick="try{this.showPicker()}catch(e){}">
           </div>
 
-          <div class="w-px h-6 bg-slate-200 shrink-0 mx-1 hidden md:block mt-auto mb-2" id="divider-filter"></div>
+          <div class="w-px h-6 bg-slate-200 shrink-0 mx-1 hidden md:block mt-auto mb-2" id="divider-filter" style="display: none;"></div>
 
           <div class="field flex-1 min-w-[160px] md:w-[220px] shrink-0 transition-opacity duration-300" id="wrap-area" style="display: none;">
               <label class="lbl text-pink-700">AREA / CABANG</label>
-              <select id="opt_area" class="inp border-pink-200 focus:border-pink-500 bg-pink-50/30 text-[11px] md:text-sm font-bold h-[34px] md:h-[38px] px-2 text-pink-800 cursor-pointer w-full truncate">
-                  </select>
+              <select id="opt_area" class="inp border-pink-200 focus:border-pink-500 bg-pink-50/30 text-[11px] md:text-sm font-bold h-[34px] md:h-[38px] px-2 text-pink-800 cursor-pointer w-full truncate"></select>
           </div>
           
           <div class="flex items-center gap-1.5 shrink-0 h-[34px] md:h-[38px] mt-1 md:mt-0 w-full md:w-auto">
-              <button type="submit" id="btn-cari" class="btn-icon h-full flex-1 md:w-[80px] bg-blue-600 hover:bg-blue-700 text-white rounded-lg shadow-sm" title="Cari Data">
+              <button type="submit" id="btn-cari" class="btn-icon h-full flex-1 md:w-[80px] bg-blue-600 hover:bg-blue-700 text-white rounded-lg shadow-sm">
                   <span class="font-bold text-xs md:text-sm uppercase tracking-wider">CARI</span>
               </button>
               <button type="button" onclick="exportExcelRekap()" class="btn-icon h-full px-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg shadow-sm" title="Download Excel">
@@ -112,8 +98,7 @@
           
           <div class="h-full overflow-auto custom-scrollbar relative flex items-start justify-start">
               <table class="w-full text-center border-separate border-spacing-0 text-slate-700 table-fixed min-w-full" id="tabelUtama">
-                <thead class="tracking-wider text-slate-700 font-extrabold text-xs md:text-sm head-lapis-1" id="headUtama">
-                  </thead>
+                <thead class="tracking-wider text-slate-700 font-extrabold text-xs md:text-sm head-lapis-1" id="headUtama"></thead>
                 <tbody id="bodyUtama" class="divide-y divide-slate-100 bg-white text-xs md:text-sm"></tbody>
               </table>
           </div>
@@ -123,6 +108,14 @@
           <div id="loadingPromo" class="hidden absolute inset-0 bg-slate-50/80 z-[100] flex flex-col items-center justify-center text-pink-600 backdrop-blur-sm transition-colors rounded-xl">
               <div class="animate-spin rounded-full h-10 w-10 border-4 border-current border-t-transparent mb-3"></div>
               <span class="text-sm font-bold uppercase tracking-widest">Membangun Grafik...</span>
+          </div>
+
+          <div class="flex gap-2 items-center bg-white p-2 rounded-xl shadow-sm border border-slate-200 shrink-0 overflow-x-auto no-scrollbar">
+              <span class="text-xs font-bold text-slate-500 uppercase ml-2 mr-1 shrink-0"><span class="hidden md:inline">Quick</span> Filter:</span>
+              <button type="button" onclick="quickDatePromo('7')" class="px-3 py-1.5 bg-pink-50 hover:bg-pink-100 text-pink-700 text-[10px] md:text-xs font-bold rounded-lg transition shrink-0 border border-pink-100">7 HARI</button>
+              <button type="button" onclick="quickDatePromo('14')" class="px-3 py-1.5 bg-pink-50 hover:bg-pink-100 text-pink-700 text-[10px] md:text-xs font-bold rounded-lg transition shrink-0 border border-pink-100">14 HARI</button>
+              <button type="button" onclick="quickDatePromo('bulan_ini')" class="px-3 py-1.5 bg-pink-50 hover:bg-pink-100 text-pink-700 text-[10px] md:text-xs font-bold rounded-lg transition shrink-0 border border-pink-100">BULAN INI</button>
+              <button type="button" onclick="quickDatePromo('awal_promo')" class="px-3 py-1.5 bg-pink-600 hover:bg-pink-700 text-white text-[10px] md:text-xs font-bold rounded-lg shadow-sm transition shrink-0">AWAL PROMO</button>
           </div>
 
           <div class="grid grid-cols-2 gap-3 md:gap-4 shrink-0">
@@ -153,7 +146,6 @@
               </div>
           </div>
       </div>
-
   </div>
 </div>
 
@@ -163,24 +155,14 @@
     <div class="flex justify-between items-center px-3 py-3 md:px-5 md:py-4 border-b bg-slate-50 shrink-0 flex-wrap gap-2">
         <div class="flex-1 min-w-[200px]" id="modal-title-container"></div>
         <div class="flex flex-wrap items-center gap-1.5 ml-auto shrink-0 w-full sm:w-auto mt-2 sm:mt-0 overflow-x-auto no-scrollbar">
-            <select id="filter_kankas_modal" class="inp px-2 md:px-3 h-[34px] md:h-10 flex-1 sm:w-[160px] text-xs md:text-sm font-bold text-blue-800 bg-blue-50 outline-none shrink-0 cursor-pointer" onchange="fetchDetail(1)">
-                <option value="">Semua Kankas</option>
-            </select>
-            <select id="filter_ao_modal" class="inp px-2 md:px-3 h-[34px] md:h-10 flex-1 sm:w-[160px] text-xs md:text-sm font-bold text-slate-700 bg-white outline-none shrink-0 cursor-pointer" onchange="fetchDetail(1)">
-                <option value="">Semua AO</option>
-            </select>
-            <button id="btn-excel-modal" onclick="exportExcelDetail()" class="btn-icon bg-emerald-600 hover:bg-emerald-700 text-white px-3 md:px-4 h-[34px] md:h-10 rounded-lg shadow-sm text-xs md:text-sm font-bold uppercase tracking-wider shrink-0">
-                <svg class="w-4 h-4 md:w-5 md:h-5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
-                <span class="hidden sm:inline ml-1.5">Excel</span>
-            </button>
+            <select id="filter_kankas_modal" class="inp px-2 md:px-3 h-[34px] md:h-10 flex-1 sm:w-[160px] text-xs md:text-sm font-bold text-blue-800 bg-blue-50 outline-none shrink-0 cursor-pointer" onchange="fetchDetail(1)"><option value="">Semua Kankas</option></select>
+            <select id="filter_ao_modal" class="inp px-2 md:px-3 h-[34px] md:h-10 flex-1 sm:w-[160px] text-xs md:text-sm font-bold text-slate-700 bg-white outline-none shrink-0 cursor-pointer" onchange="fetchDetail(1)"><option value="">Semua AO</option></select>
+            <button id="btn-excel-modal" onclick="exportExcelDetail()" class="btn-icon bg-emerald-600 hover:bg-emerald-700 text-white px-3 md:px-4 h-[34px] md:h-10 rounded-lg shadow-sm text-xs md:text-sm font-bold uppercase tracking-wider shrink-0"><span class="hidden sm:inline ml-1.5">Excel</span></button>
             <button onclick="closeModal()" class="w-[34px] md:w-10 h-[34px] md:h-10 flex items-center justify-center rounded-xl bg-slate-200 hover:bg-red-500 hover:text-white text-slate-600 transition font-bold text-xl md:text-2xl leading-none shrink-0">&times;</button>
         </div>
     </div>
     <div class="flex-1 overflow-auto bg-slate-50 relative custom-scrollbar p-0 md:p-3">
-        <div id="loadingModal" class="hidden absolute inset-0 bg-white/90 z-40 flex flex-col items-center justify-center text-blue-600 backdrop-blur-sm transition-colors">
-            <div class="animate-spin rounded-full h-10 w-10 border-4 border-current border-t-transparent mb-3"></div>
-            <span class="text-[10px] md:text-sm font-bold uppercase tracking-widest">Memuat Detail...</span>
-        </div>
+        <div id="loadingModal" class="hidden absolute inset-0 bg-white/90 z-40 flex flex-col items-center justify-center text-blue-600 backdrop-blur-sm transition-colors"></div>
         <table class="w-max min-w-full text-left text-slate-700 border border-slate-200 md:rounded-xl shadow-sm bg-white table-fixed" id="tableDetail">
             <thead class="text-slate-600 font-extrabold uppercase tracking-wider text-[10px] md:text-xs head-mod-1" id="headDetail"></thead>
             <tbody id="bodyDetail" class="divide-y divide-slate-100 bg-white text-[10px] md:text-sm"></tbody>
@@ -201,6 +183,9 @@
   const API_URL  = './api/kredit/'; 
   const API_KODE = './api/kode/';
   const API_DATE = './api/date/';
+  
+  // DEFAULT AWAL PROMO (Sesuai Arahan)
+  const AWAL_PROMO_DATE = '2026-02-23';
 
   const nfID = new Intl.NumberFormat('id-ID');
   const fmt = n => nfID.format(Math.round(Number(n||0)));
@@ -217,24 +202,26 @@
   let currentDetailPage = 1; let currentDetailTotalPages = 1;
   const detailLimit = 20; 
   let userKodeGlobal = window.currentUser.kode_kantor || '000';
+  let defaultClosingGrowth = '';
 
   // --- INIT ---
   window.addEventListener('DOMContentLoaded', async () => {
       const d = await getLastHarianData(); 
       if(d) {
-          document.getElementById('closing_date').value = d.last_closing;
+          defaultClosingGrowth = d.last_closing;
+          document.getElementById('closing_date').value = defaultClosingGrowth;
           document.getElementById('harian_date').value  = d.last_created;
       } else {
           const now = new Date();
-          document.getElementById('closing_date').value = `${now.getFullYear() - 1}-12-31`;
+          defaultClosingGrowth = `${now.getFullYear() - 1}-12-31`;
+          document.getElementById('closing_date').value = defaultClosingGrowth;
           document.getElementById('harian_date').value = now.toISOString().split('T')[0];
       }
       
       await populateAreaOptions(userKodeGlobal);
-      switchTab('growth'); // Start at growth
+      switchTab('growth');
   });
 
-  // --- GENERATE DROPDOWN GABUNGAN AREA/CABANG ---
   async function populateAreaOptions(userKode){
       const el = document.getElementById('opt_area');
       if(userKode !== '000'){
@@ -246,30 +233,24 @@
       try {
           const res = await apiCall(API_KODE, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({type:'kode_kantor'}) });
           const json = await res.json();
-          
-          let html = `<option value="ALL|ALL">Konsolidasi</option>`;
-          
-        //   html += `<optgroup label="Berdasarkan Koordinator Wilayah">`;
+          let html = `<option value="ALL|ALL">Konsolidasi (Seluruh Cabang)</option>`;
+          html += `<optgroup label="Berdasarkan Koordinator Wilayah">`;
           html += `<option value="KORWIL|SEMARANG">Korwil Semarang</option>`;
           html += `<option value="KORWIL|SOLO">Korwil Solo</option>`;
           html += `<option value="KORWIL|BANYUMAS">Korwil Banyumas</option>`;
           html += `<option value="KORWIL|PEKALONGAN">Korwil Pekalongan</option>`;
           html += `</optgroup>`;
-
-        //   html += `<optgroup label="Berdasarkan Cabang">`;
+          html += `<optgroup label="Berdasarkan Cabang">`;
           (json.data||[]).filter(x => x.kode_kantor && x.kode_kantor !== '000')
               .sort((a,b) => String(a.kode_kantor).localeCompare(b.kode_kantor))
               .forEach(it => { html += `<option value="CABANG|${String(it.kode_kantor).padStart(3,'0')}">${String(it.kode_kantor).padStart(3,'0')} - ${it.nama_kantor}</option>`; });
           html += `</optgroup>`;
-          
           el.innerHTML = html;
           el.disabled = false;
       } catch(e){ el.innerHTML = `<option value="ALL|ALL">Error Load</option>`; }
   }
 
-  // ========================================================================
-  // === TAB SWITCHER LOGIC ===
-  // ========================================================================
+  // --- TAB SWITCHER LOGIC ---
   function switchTab(tab) {
       activeTab = tab;
       
@@ -280,18 +261,22 @@
       const btnCari = document.getElementById('btn-cari');
       
       const wrapArea = document.getElementById('wrap-area');
-      const wrapClosing = document.getElementById('wrap-closing');
       const divider = document.getElementById('divider-filter');
 
+      // Ambil elemen Closing Date
+      const elClosing = document.getElementById('closing_date');
+
       if (tab === 'growth') {
-          // --- TAB GROWTH ACTIVE ---
+          // --- TAB GROWTH ---
           tabGrowth.className = "pb-2 md:pb-3 font-extrabold text-xs md:text-sm uppercase transition border-b-[3px] border-blue-600 text-blue-700 whitespace-nowrap";
           tabPromo.className  = "pb-2 md:pb-3 font-extrabold text-xs md:text-sm uppercase transition border-b-[3px] border-transparent text-slate-400 hover:text-slate-600 whitespace-nowrap";
           
-          // Memaksa DOM Javascript menyembunyikan elemen tanpa peduli class Tailwind
-          if(wrapClosing) wrapClosing.style.display = 'flex'; // Munculkan Closing
-          if(wrapArea) wrapArea.style.display = 'none';       // Hilangkan Area/Cabang
+          // Sembunyikan Filter Area (Tabel Growth tanpa filter area)
+          if(wrapArea) wrapArea.style.display = 'none';       
           if(divider) divider.style.display = 'none';
+          
+          // Kembalikan Closing Date ke tanggal normal bulan lalu
+          elClosing.value = defaultClosingGrowth;
 
           btnCari.className = "btn-icon h-full flex-1 md:w-[80px] bg-blue-600 hover:bg-blue-700 text-white rounded-lg shadow-sm";
           loaderUtama.className = "hidden absolute inset-0 bg-white/80 z-[100] flex flex-col items-center justify-center text-blue-600 backdrop-blur-sm transition-colors";
@@ -308,14 +293,16 @@
           `;
           setupHeaderUtama(userKodeGlobal); 
       } else {
-          // --- TAB PROMO ACTIVE ---
+          // --- TAB PROMO ---
           tabPromo.className  = "pb-2 md:pb-3 font-extrabold text-xs md:text-sm uppercase transition border-b-[3px] border-pink-600 text-pink-700 whitespace-nowrap";
           tabGrowth.className = "pb-2 md:pb-3 font-extrabold text-xs md:text-sm uppercase transition border-b-[3px] border-transparent text-slate-400 hover:text-slate-600 whitespace-nowrap";
           
-          // Memaksa DOM Javascript menyembunyikan elemen tanpa peduli class Tailwind
-          if(wrapClosing) wrapClosing.style.display = 'none'; // Hilangkan Closing
-          if(wrapArea) wrapArea.style.display = 'flex';       // Munculkan Area/Cabang
+          // Munculkan Filter Area
+          if(wrapArea) wrapArea.style.display = 'flex';       
           if(divider) divider.style.display = 'block';
+
+          // Set Closing Date default Promo: 2026-02-23 (bisa diedit user)
+          elClosing.value = AWAL_PROMO_DATE;
 
           btnCari.className = "btn-icon h-full flex-1 md:w-[80px] bg-pink-600 hover:bg-pink-700 text-white rounded-lg shadow-sm";
           loaderUtama.className = "hidden absolute inset-0 bg-white/80 z-[100] flex flex-col items-center justify-center text-pink-600 backdrop-blur-sm transition-colors";
@@ -331,7 +318,35 @@
               <p class="text-[11px] md:text-sm text-slate-500 italic ml-10 md:ml-[44px] font-bold text-pink-700">*Promo Kredit Ramadhan Dan Idul Fitri (000011)</p>
           `;
       }
+      fetchRekap();
+  }
 
+  // --- LOGIKA QUICK FILTER PROMO ---
+  function quickDatePromo(tipe) {
+      const elHarian = document.getElementById('harian_date');
+      const elClosing = document.getElementById('closing_date');
+      
+      const dateHarian = new Date(elHarian.value);
+      if (isNaN(dateHarian)) return;
+
+      if (tipe === '7') {
+          dateHarian.setDate(dateHarian.getDate() - 7);
+          elClosing.value = dateHarian.toISOString().split('T')[0];
+      } else if (tipe === '14') {
+          dateHarian.setDate(dateHarian.getDate() - 14);
+          elClosing.value = dateHarian.toISOString().split('T')[0];
+      } else if (tipe === '30') {
+          dateHarian.setDate(dateHarian.getDate() - 30);
+          elClosing.value = dateHarian.toISOString().split('T')[0];
+      } else if (tipe === 'bulan_ini') {
+          // Tanggal 1 bulan ini
+          const firstDay = new Date(dateHarian.getFullYear(), dateHarian.getMonth(), 1);
+          elClosing.value = firstDay.toISOString().split('T')[0];
+      } else if (tipe === 'awal_promo') {
+          // Hardcode 23 Feb 2026
+          elClosing.value = AWAL_PROMO_DATE;
+      }
+      
       fetchRekap();
   }
 
@@ -339,7 +354,6 @@
       try{ const r=await apiCall(API_DATE); const j=await r.json(); return j.data||null; }catch{ return null; } 
   }
 
-  // --- SETUP HEADER UTAMA ---
   function setupHeaderUtama(userKode) {
       if (activeTab !== 'growth') return; 
 
@@ -382,7 +396,6 @@
       rekapDataCache = null;
 
       try {
-          // --- LOGIC PARSING DROPDOWN GABUNGAN ---
           let reqCabang = "000"; 
           let reqKorwil = "";
           
@@ -409,7 +422,8 @@
               };
           } else {
               payload = { 
-                  type: 'chart_promo', // Panggil API Chart
+                  type: 'chart_promo', 
+                  closing_date: document.getElementById('closing_date').value, // Kirim dari form input yang diedit/diklik
                   harian_date: document.getElementById('harian_date').value,
                   kode_kantor: reqCabang, 
                   korwil: reqKorwil 

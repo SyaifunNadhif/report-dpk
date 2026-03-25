@@ -129,7 +129,7 @@
           </button>
           <div id="dropdownPemasaran" class="dropdown-panel">
             <ul class="nb-list">
-              <li><a href="realisasi_kredit" class="nb-item nb-tap">Realisasi Kredit</a></li>
+              <li><a href="realisasi_promo" class="nb-item nb-tap">Realisasi Kredit dan Promo</a></li>
               <li><a href="realisasi_ao" class="nb-item nb-tap">Realisasi Kredit AO</a></li>
               <li><a href="repayment_rate" class="nb-item nb-tap">Repayment Rate</a></li>
               <li><a href="rekap_rr" class="nb-item nb-tap">Rekap Repayment Rate</a></li>
