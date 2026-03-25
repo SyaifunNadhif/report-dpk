@@ -1152,10 +1152,10 @@ class DashboardController{
         }
     }
 
-public function getTopBottomRealisasi($input) {
-        $harian_date = $input['harian_date'] ?? date('Y-m-d');
-        // Untuk realisasi, kita ambil akumulasi dari tanggal 1 bulan yang sama sampai harian_date (MTD)
-        $awal_bulan  = date('Y-m-01', strtotime($harian_date)); 
+    public function getTopBottomRealisasi($input) {
+        $harian_date  = $input['harian_date'] ?? date('Y-m-d');
+        // Tangkap closing_date dari FE. Jika kosong, fallback ke hari terakhir bulan lalu
+        $closing_date = $input['closing_date'] ?? date('Y-m-t', strtotime($harian_date . ' -1 month')); 
         
         $kode_kantor = $input['kode_kantor'] ?? '000';
         $korwil      = strtoupper($input['korwil'] ?? '');
@@ -1184,6 +1184,7 @@ public function getTopBottomRealisasi($input) {
         // ==========================================
         // 1. QUERY REALISASI CABANG (Top & Bottom)
         // ==========================================
+        // 🔥 FIX: Ubah logika WHERE menjadi > closing_date AND <= harian_date
         $sqlCabang = "
             SELECT 
                 t.kode_kantor AS kode_cabang,
@@ -1192,7 +1193,7 @@ public function getTopBottomRealisasi($input) {
                 COUNT(DISTINCT t.no_rekening) AS noa_realisasi
             FROM update_realisasi_kredit t
             LEFT JOIN kode_kantor k ON t.kode_kantor = k.kode_kantor
-            WHERE t.tanggal_realisasi >= :awal_bulan
+            WHERE t.tanggal_realisasi > :closing_date
               AND t.tanggal_realisasi <= :harian_date
             {$filterSql}
             GROUP BY t.kode_kantor, k.nama_kantor
@@ -1202,6 +1203,7 @@ public function getTopBottomRealisasi($input) {
         // ==========================================
         // 2. QUERY REALISASI AO (Top 5 Saja)
         // ==========================================
+        // 🔥 FIX: Ubah logika WHERE menjadi > closing_date AND <= harian_date
         $sqlAO = "
             SELECT 
                 t.kode_group2,
@@ -1213,7 +1215,7 @@ public function getTopBottomRealisasi($input) {
             FROM update_realisasi_kredit t
             LEFT JOIN ao_kredit ao ON t.kode_group2 = ao.kode_group2
             LEFT JOIN kode_kantor k ON t.kode_kantor = k.kode_kantor
-            WHERE t.tanggal_realisasi >= :awal_bulan
+            WHERE t.tanggal_realisasi > :closing_date
               AND t.tanggal_realisasi <= :harian_date
             {$filterSql}
             GROUP BY t.kode_group2, ao.nama_ao, t.kode_kantor, k.nama_kantor
@@ -1226,7 +1228,7 @@ public function getTopBottomRealisasi($input) {
             // --- Eksekusi Cabang ---
             $stmtCabang = $this->pdo->prepare($sqlCabang);
             $stmtCabang->bindValue(':harian_date', $harian_date);
-            $stmtCabang->bindValue(':awal_bulan', $awal_bulan);
+            $stmtCabang->bindValue(':closing_date', $closing_date); // Bind closing_date
             
             // Bind manual parameter untuk Cabang
             foreach ($filterParams as $key => $val) {
@@ -1261,7 +1263,7 @@ public function getTopBottomRealisasi($input) {
             // --- Eksekusi AO ---
             $stmtAO = $this->pdo->prepare($sqlAO);
             $stmtAO->bindValue(':harian_date', $harian_date);
-            $stmtAO->bindValue(':awal_bulan', $awal_bulan);
+            $stmtAO->bindValue(':closing_date', $closing_date); // Bind closing_date
             
             // Bind manual parameter untuk AO
             foreach ($filterParams as $key => $val) {

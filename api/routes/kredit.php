@@ -30,6 +30,20 @@ switch ($method) {
             $controller->getMigrasiKolek($input);
         } elseif ($input['type'] === 'kolektibilitas') {
             $controller->getKolek($input);
+        } elseif ($input['type'] === 'rekap_realisasi_growth') {
+            $controller->getRealisasiSum($input);
+        } elseif ($input['type'] === 'detail_realisasi_growth') {
+            $controller->getDetailRealisasiUpdate($input);
+        } elseif ($input['type'] === 'list_promo') {
+            $controller->getListPromo($input);
+        } elseif ($input['type'] === 'rekap_promo') {
+            $controller->getRekapPromo($input);
+        } elseif ($input['type'] === 'detail_promo') {
+            $controller->getDetailPromo($input);
+        } elseif ($input['type'] === 'chart_promo') {
+            $controller->getChartPromo($input);
+            
+
 
         } elseif ($input['type'] === 'Detail Realisasi Kredit') {
             if (!isset($input['kode_kantor'])) {
