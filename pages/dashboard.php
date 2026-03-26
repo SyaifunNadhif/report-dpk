@@ -215,7 +215,7 @@
             <div><h3 class="font-bold text-gray-700 mb-3 text-xs uppercase tracking-wider">Top Saldo Deposito</h3><div id="list_dep_saldo_top" class="space-y-2.5"></div></div>
             <div><h3 class="font-bold text-gray-700 mb-3 text-xs uppercase tracking-wider">Bottom Saldo Deposito</h3><div id="list_dep_saldo_bot" class="space-y-2.5"></div></div>
             <div><h3 class="font-bold text-green-700 mb-3 text-xs uppercase tracking-wider">Deposito Baru Masuk</h3><div id="list_dep_baru" class="space-y-2.5"></div></div>
-            <div><h3 class="font-bold text-red-700 mb-3 text-xs uppercase tracking-wider">Deposito Cair</h3><div id="list_dep_cair" class="space-y-2.5"></div></div>
+            <div><h3 class="font-bold text-red-700 mb-3 text-xs uppercase tracking-wider">Deposito Keluar</h3><div id="list_dep_cair" class="space-y-2.5"></div></div>
           </div>
         </div>
         <div class="border-t border-dashed border-gray-200"></div>
@@ -225,7 +225,7 @@
             <div><h3 class="font-bold text-gray-700 mb-3 text-xs uppercase tracking-wider">Top Saldo Tabungan</h3><div id="list_tab_saldo_top" class="space-y-2.5"></div></div>
             <div><h3 class="font-bold text-gray-700 mb-3 text-xs uppercase tracking-wider">Bottom Saldo Tabungan</h3><div id="list_tab_saldo_bot" class="space-y-2.5"></div></div>
             <div><h3 class="font-bold text-blue-700 mb-3 text-xs uppercase tracking-wider">Tabungan Baru Masuk</h3><div id="list_tab_baru" class="space-y-2.5"></div></div>
-            <div><h3 class="font-bold text-red-700 mb-3 text-xs uppercase tracking-wider">Tabungan Cair</h3><div id="list_tab_cair" class="space-y-2.5"></div></div>
+            <div><h3 class="font-bold text-red-700 mb-3 text-xs uppercase tracking-wider">Tabungan Kaluar</h3><div id="list_tab_cair" class="space-y-2.5"></div></div>
           </div>
         </div>
       </div>
