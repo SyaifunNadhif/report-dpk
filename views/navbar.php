@@ -143,13 +143,16 @@
 
         <li class="nb-li">
           <button data-dropdown="dropdownMonev" class="nb-parent nb-tap">
-            <span>Monev</span>
+            <span>Laporan dan Komitmen</span>
             <svg class="nb-caret" viewBox="0 0 20 20" fill="currentColor" width="16" height="16">
               <path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.586l3.71-4.354a.75.75 0 111.14.976l-4.25 5a.75.75 0 01-1.14 0l-4.25-5a.75.75 0 01.02-1.06z" clip-rule="evenodd"/>
             </svg>
           </button>
           <div id="dropdownMonev" class="dropdown-panel">
             <ul class="nb-list">
+              <li id="menuLapKeu" style="display: none;">
+                <a href="lapkeu_kantor" class="nb-item nb-tap">Laporan Keuangan</a>
+              </li>
               <li><a href="monev_mingguan" class="nb-item nb-tap">Komitmen dan Realisasi Monev</a></li>
             </ul>
           </div>
@@ -180,12 +183,12 @@
 
       <!-- DESKTOP-ONLY: Profile dropdown -->
       <div id="dropdownProfile" class="dropdown-panel dropdown-profile" role="menu" aria-labelledby="dropdownProfileButton">
-        <a href="account_handle" class="block px-4 py-3 hover:bg-slate-50 nb-tap">
+        <!-- <a href="account_handle" class="block px-4 py-3 hover:bg-slate-50 nb-tap">
           <div class="text-xs text-slate-500">Account handle</div>
           <div id="accHandle" class="text-sm font-semibold text-slate-800 underline decoration-dotted">—</div>
         </a>
         <a href="#" id="linkHistoryDesk" class="block px-4 py-2 hover:bg-slate-50 text-sm text-slate-700 nb-tap">History Kunjungan</a>
-        <hr class="my-1">
+        <hr class="my-1"> -->
         <ul class="py-1 text-sm text-slate-700">
           <li><a href="#" id="linkLogoutDesk" class="block px-4 py-2 hover:bg-slate-50 nb-tap">Logout</a></li>
         </ul>
@@ -400,28 +403,76 @@
 <script>
 (() => {
   const TOKEN_KEY='dpk_token', USER_KEY='dpk_user';
-  function parseJwt(t){ try{const p=String(t).split('.'); if(p.length<2) return null;
-    const b64=p[1].replace(/-/g,'+').replace(/_/g,'/'); const json=decodeURIComponent(atob(b64).split('').map(c=>'%'+('00'+c.charCodeAt(0).toString(16)).slice(-2)).join('')); return JSON.parse(json);
-  }catch{return null;} }
-  function getUser(){
-    try{ if(window.__USER) return window.__USER; const raw=localStorage.getItem(USER_KEY); if(raw) return JSON.parse(raw);}catch{}
-    const tok=(localStorage.getItem(TOKEN_KEY)||'').trim(); if(!tok) return null;
-    const p=parseJwt(tok)||{}; return { full_name:p.full_name||p.name||p.nama||null, branch_name:p.branch_name||p.branch||p.cabang||null,
-      employee_id:p.employee_id||p.emp_id||p.nik||null, id:p.sub||p.user_id||null, kode:p.kode||p.branch_code||null,
-      account_handle:p.handle||p.username||p.email||null };
+  
+  function parseJwt(t){ 
+    try{
+      const p=String(t).split('.'); 
+      if(p.length<2) return null;
+      const b64=p[1].replace(/-/g,'+').replace(/_/g,'/'); 
+      const json=decodeURIComponent(atob(b64).split('').map(c=>'%'+('00'+c.charCodeAt(0).toString(16)).slice(-2)).join('')); 
+      return JSON.parse(json);
+    } catch { return null; } 
   }
+  
+  function getUser(){
+    try { 
+      if(window.__USER) return window.__USER; 
+      const raw=localStorage.getItem(USER_KEY); 
+      if(raw) return JSON.parse(raw);
+    } catch {}
+    
+    const tok=(localStorage.getItem(TOKEN_KEY)||'').trim(); 
+    if(!tok) return null;
+    
+    const p=parseJwt(tok)||{}; 
+    return { 
+      full_name:p.full_name||p.name||p.nama||null, 
+      branch_name:p.branch_name||p.branch||p.cabang||null,
+      employee_id:p.employee_id||p.emp_id||p.nik||null, 
+      id:p.sub||p.user_id||null, 
+      kode:p.kode||p.branch_code||null,
+      account_handle:p.handle||p.username||p.email||null,
+      role: p.role || null // 🔥 TAMBAHAN: Ambil properti role
+    };
+  }
+  
   function paint(u){
     if(!u) return false;
-    const name=document.getElementById('navUserName'), br=document.getElementById('navBranch'), nav=document.getElementById('mainNavbar'), acc=document.getElementById('accHandle');
+    const name=document.getElementById('navUserName'), 
+          br=document.getElementById('navBranch'), 
+          nav=document.getElementById('mainNavbar'), 
+          acc=document.getElementById('accHandle'),
+          menuLapKeu=document.getElementById('menuLapKeu'); // 🔥 Tangkap elemen menu
+          
     let ok=false;
+    
     if(name){ name.textContent=u.full_name||'-'; ok=true; }
     if(br){ br.textContent=u.branch_name||'-'; ok=true; }
-    if(nav){ nav.dataset.userId=u.id??''; nav.dataset.employeeId=u.employee_id??''; nav.dataset.kode=u.kode??''; ok=true; }
+    if(nav){ 
+      nav.dataset.userId=u.id??''; 
+      nav.dataset.employeeId=u.employee_id??''; 
+      nav.dataset.kode=u.kode??''; 
+      ok=true; 
+    }
     if(acc){ acc.textContent=(u.account_handle||u.username||u.email||u.employee_id||u.kode||'-'); ok=true; }
+    
+    // 🔥 LOGIKA SAKTI MENAMPILKAN MENU LAPORAN KEUANGAN:
+    if(menuLapKeu) {
+      if(u.role === 'Super User') {
+        menuLapKeu.style.display = 'block'; // Munculkan kalau rolenya cocok
+      } else {
+        menuLapKeu.style.display = 'none';  // Pastikan tetap sembunyi buat yang lain
+      }
+      ok=true;
+    }
+    
     return ok;
   }
-  const user=getUser(); if(!paint(user)){
-    let n=0; const t=setInterval(()=>{ if(paint(user)||++n>40) clearInterval(t); },100);
+  
+  const user=getUser(); 
+  if(!paint(user)){
+    let n=0; 
+    const t=setInterval(()=>{ if(paint(user)||++n>40) clearInterval(t); },100);
     document.addEventListener('DOMContentLoaded', ()=>paint(user), {once:true});
     const mo=new MutationObserver(()=>{ if(paint(user)) mo.disconnect(); });
     mo.observe(document.documentElement,{childList:true,subtree:true});

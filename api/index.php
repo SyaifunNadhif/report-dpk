@@ -73,6 +73,9 @@ switch ($endpoint) {
     case 'monev':
         require __DIR__ . '/routes/monev.php';
         break;
+    case 'lapkeu':
+        require __DIR__ . '/routes/lapkeu.php';
+        break;
 
     default:
         sendResponse(404, "Endpoint tidak ditemukan");
