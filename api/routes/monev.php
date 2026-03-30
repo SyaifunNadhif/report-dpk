@@ -29,8 +29,14 @@ switch ($method) {
     
     // 1. Get Data (Bisa diakses siapapun untuk melihat)
     if ($type === 'get_monev') {
-        // Opsional: $user = requireAuth(); kalau mau di-protect
-        $controller->getMonevData($input);
+      // Opsional: $user = requireAuth(); kalau mau di-protect
+      $controller->getMonevData($input);
+    } 
+    elseif ($type === 'get_real_kredit') {  
+      $controller->getRealisasiKredit($input);
+    } 
+    elseif ($type === 'get_real_dpk') {  
+      $controller->getRealisasiDPK($input);
     } 
     
     // 2. Save Data (Hanya Kacab, Terproteksi)

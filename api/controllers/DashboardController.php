@@ -17,7 +17,8 @@ class DashboardController{
      * Fungsi ini yang dipanggil oleh API Front-End.
      * Dia akan mengumpulkan data dari fungsi-fungsi kecil di bawahnya.
      */
-/**
+
+    /**
      * =================================================================
      * FUNGSI MANDOR (EXECUTIVE DASHBOARD ULTIMATE)
      * =================================================================
@@ -73,10 +74,12 @@ class DashboardController{
                 'tren_runoff_realisasi'   => $this->getTrenRunOffRealisasi($input),
                 'realisasi_by_produk'     => $this->getRealisasiRealtimeByProduk($input),
                 'runoff_vs_realisasi'     => $this->getRunOffVsRealisasiKorwil($input),
+                'saldo_bank'              => $this->getSaldoBank($input),
                 
                 // 3. Metrik DPK (Dana Pihak Ketiga) (🔥 Pakai $inputH1 -> Pasti H-1)
                 'perkembangan_deposito'   => $this->getPerkembanganDeposito($inputH1),
-                'perkembangan_tabungan'   => $this->getPerkembanganTabungan($inputH1)
+                'perkembangan_tabungan'   => $this->getPerkembanganTabungan($inputH1),
+                'tren_portofolio_kredit'  => $this->getTrenPortofolioKredit($input)
             ];
 
             // Kirim responsenya ke Front-End dengan penuh gaya
@@ -160,6 +163,71 @@ class DashboardController{
             return $stmt->fetch(PDO::FETCH_ASSOC) ?: ['total_run_off' => 0, 'total_realisasi' => 0];
         } catch (Exception $e) {
             return []; // Kembalikan array kosong jika error agar dashboard tidak mati total
+        }
+    }
+
+/**
+     * =================================================================
+     * FUNGSI SALDO BANK (UNTUK KPI BOX)
+     * =================================================================
+     * Mengambil total Saldo Bank untuk hari ini (Actual) 
+     * dan dibandingkan dengan bulan lalu (Closing) dari tabel nominatif
+     */
+    public function getSaldoBank($input) {
+        $harian_date  = $input['harian_date'] ?? date('Y-m-d');
+        // Default closing: hari terakhir bulan sebelumnya
+        $closing_date = $input['closing_date'] ?? date('Y-m-t', strtotime($harian_date . ' -1 month')); 
+        
+        $filter = $this->buildFilterQuery($input, 't');
+
+        // Tarik data Actual dan Closing sekaligus pakai CASE WHEN dari tabel nominatif
+        $sql = "
+            SELECT 
+                -- Data Current (Harian / Actual)
+                SUM(CASE WHEN t.created = :harian_date_1 THEN COALESCE(t.saldo_bank, 0) ELSE 0 END) AS saldo_bank_curr,
+                
+                -- Data Previous (Closing)
+                SUM(CASE WHEN t.created = :closing_date_1 THEN COALESCE(t.saldo_bank, 0) ELSE 0 END) AS saldo_bank_prev
+                
+            FROM nominatif t
+            WHERE t.created IN (:harian_date_2, :closing_date_2)
+            {$filter['sql']}
+        ";
+
+        try {
+            $stmt = $this->pdo->prepare($sql);
+            
+            // Bind parameter berulang
+            $stmt->bindValue(':harian_date_1', $harian_date);
+            $stmt->bindValue(':harian_date_2', $harian_date);
+            
+            $stmt->bindValue(':closing_date_1', $closing_date);
+            $stmt->bindValue(':closing_date_2', $closing_date);
+            
+            // Bind parameter filter (Korwil / Cabang)
+            foreach ($filter['params'] as $key => $val) {
+                $stmt->bindValue($key, $val);
+            }
+            
+            $stmt->execute();
+            $result = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            $saldo_bank_curr = (float) ($result['saldo_bank_curr'] ?? 0);
+            $saldo_bank_prev = (float) ($result['saldo_bank_prev'] ?? 0);
+
+            return [
+                'actual'  => $saldo_bank_curr,
+                'closing' => $saldo_bank_prev,
+                'delta'   => $saldo_bank_curr - $saldo_bank_prev
+            ];
+
+        } catch (PDOException $e) {
+            error_log("Error getSaldoBank: " . $e->getMessage());
+            return [
+                'actual'  => 0, 
+                'closing' => 0, 
+                'delta'   => 0
+            ];
         }
     }
 
@@ -308,6 +376,181 @@ class DashboardController{
 
         } catch (PDOException $e) {
             error_log("Error getTrenNPL: " . $e->getMessage());
+            return [];
+        }
+    }
+
+    /**
+     * =================================================================
+     * FUNGSI TREN PORTOFOLIO KREDIT (OSC TOTAL, NPL, RR)
+     * =================================================================
+     * Mengambil tren pergerakan Outstanding (OSC) Total, OSC NPL, 
+     * dan Repayment Rate (RR) langsung dari tabel nominatif beserta GAP-nya.
+     */
+    public function getTrenPortofolioKredit($input) {
+        $harian_date = $input['harian_date'] ?? date('Y-m-d');
+        $periode = $input['periode'] ?? 'bulanan'; 
+        
+        $dates = [$harian_date]; // Selalu masukkan tanggal hari ini (ACTUAL)
+        
+        // 1. Generate Tanggal Secara Dinamis
+        if ($periode === 'mingguan') {
+            for ($i = 1; $i <= 6; $i++) {
+                $dates[] = date('Y-m-d', strtotime("-$i week", strtotime($harian_date)));
+            }
+        } elseif ($periode === '7_hari') {
+            for ($i = 1; $i <= 6; $i++) {
+                $dates[] = date('Y-m-d', strtotime("-$i day", strtotime($harian_date)));
+            }
+        } elseif ($periode === '14_hari') {
+            for ($i = 1; $i <= 13; $i++) {
+                $dates[] = date('Y-m-d', strtotime("-$i day", strtotime($harian_date)));
+            }
+        } elseif ($periode === '30_hari') {
+            for ($i = 1; $i <= 29; $i++) {
+                $dates[] = date('Y-m-d', strtotime("-$i day", strtotime($harian_date)));
+            }
+        } elseif ($periode === 'tahunan') {
+            $patokan_mundur = strtotime(date('Y-m-01', strtotime($harian_date))); 
+            for ($i = 1; $i <= 12; $i++) {
+                $dates[] = date('Y-m-d', strtotime("last day of -$i month", $patokan_mundur));
+            }
+        } else {
+            // Default: Bulanan
+            $patokan_mundur = strtotime(date('Y-m-01', strtotime($harian_date))); 
+            for ($i = 1; $i <= 6; $i++) {
+                $dates[] = date('Y-m-d', strtotime("last day of -$i month", $patokan_mundur));
+            }
+        }
+        
+        // Urutkan tanggal ASC
+        sort($dates); 
+
+        // 2. Siapkan Binding Parameter untuk Klausa IN (...)
+        $inParams = [];
+        $inQueryParts = [];
+        foreach ($dates as $i => $date) {
+            $paramName = ":date_$i";
+            $inParams[$paramName] = $date;
+            $inQueryParts[] = $paramName;
+        }
+        $inString = implode(', ', $inQueryParts); 
+
+        // 3. Ambil Filter Wilayah/Cabang
+        $filter = $this->buildFilterQuery($input, 't'); 
+
+        // 4. Query Super Ngebut (1 Tabel untuk semua metrik)
+        $sql = "
+            SELECT 
+                t.created AS tanggal,
+                SUM(t.baki_debet) AS osc_total,
+                SUM(CASE WHEN t.kolektibilitas IN ('KL','D','M') THEN t.baki_debet ELSE 0 END) AS osc_npl,
+                SUM(CASE WHEN t.hari_menunggak = 0 THEN t.baki_debet ELSE 0 END) AS osc_rr
+            FROM nominatif t
+            WHERE t.created IN ($inString)
+            {$filter['sql']}
+            GROUP BY t.created
+            ORDER BY t.created ASC
+        ";
+
+        try {
+            // Eksekusi Query
+            $stmt = $this->pdo->prepare($sql);
+            foreach ($inParams as $key => $val) { $stmt->bindValue($key, $val); }
+            foreach ($filter['params'] as $key => $val) { $stmt->bindValue($key, $val); }
+            $stmt->execute();
+            $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+            // 5. Mapping Data agar cepat dilookup
+            $dbIndexed = []; 
+            foreach ($rows as $r) { 
+                $dbIndexed[$r['tanggal']] = $r; 
+            }
+
+            // 6. Format Output, Carry Forward, dan Kalkulasi GAP
+            $formattedData = [];
+            
+            // Variabel penyimpan nilai saat ini
+            $last_osc_total = 0;
+            $last_osc_npl = 0;
+            $last_osc_rr = 0; 
+            
+            // Variabel penyimpan nilai sebelumnya (untuk hitung gap)
+            $prev_osc_total = null;
+            $prev_osc_npl = null;
+            $prev_osc_rr = null;
+            $prev_npl_persen = null;
+            $prev_rr_persen = null;
+
+            foreach ($dates as $expectedDate) {
+                // Formatting label tanggal
+                $label = '';
+                if ($periode === 'bulanan' || $periode === 'tahunan') {
+                    $label = date('M Y', strtotime($expectedDate));
+                } elseif ($periode === 'mingguan') {
+                    $label = date('d M Y', strtotime($expectedDate));
+                } else {
+                    $label = date('d M', strtotime($expectedDate));
+                }
+
+                if ($expectedDate === $harian_date) {
+                    $label .= ' (Act)';
+                }
+
+                // Ambil data jika ada, jika tidak pakai data hari sebelumnya (Carry Forward)
+                if (isset($dbIndexed[$expectedDate])) {
+                    $last_osc_total = (float) $dbIndexed[$expectedDate]['osc_total'];
+                    $last_osc_npl   = (float) $dbIndexed[$expectedDate]['osc_npl'];
+                    $last_osc_rr    = (float) $dbIndexed[$expectedDate]['osc_rr'];
+                }
+
+                // Kalkulasi Persentase
+                $npl_persen = $last_osc_total > 0 ? round(($last_osc_npl / $last_osc_total) * 100, 2) : 0;
+                $rr_persen  = $last_osc_total > 0 ? round(($last_osc_rr / $last_osc_total) * 100, 2) : 0;
+
+                // ==========================================
+                // 🔥 KALKULASI GAP (SELISIH)
+                // ==========================================
+                // Jika prev_* masih null (data pertama), gap = 0
+                $gap_osc_total  = $prev_osc_total !== null ? ($last_osc_total - $prev_osc_total) : 0;
+                $gap_osc_npl    = $prev_osc_npl !== null ? ($last_osc_npl - $prev_osc_npl) : 0;
+                $gap_osc_rr     = $prev_osc_rr !== null ? ($last_osc_rr - $prev_osc_rr) : 0;
+                $gap_npl_persen = $prev_npl_persen !== null ? round($npl_persen - $prev_npl_persen, 2) : 0;
+                $gap_rr_persen  = $prev_rr_persen !== null ? round($rr_persen - $prev_rr_persen, 2) : 0;
+
+                // Push ke array final
+                $formattedData[] = [
+                    'tanggal'        => $expectedDate,
+                    'label'          => $label,
+                    
+                    'osc_total'      => $last_osc_total,
+                    'gap_osc_total'  => $gap_osc_total, // Output Gap Nominal OS
+                    
+                    'osc_npl'        => $last_osc_npl,
+                    'gap_osc_npl'    => $gap_osc_npl, // Output Gap Nominal NPL
+                    
+                    'npl_persen'     => $npl_persen,
+                    'gap_npl_persen' => $gap_npl_persen, // Output Gap % NPL
+                    
+                    'osc_rr'         => $last_osc_rr, 
+                    'gap_osc_rr'     => $gap_osc_rr, // Output Gap Nominal RR
+                    
+                    'rr_persen'      => $rr_persen,
+                    'gap_rr_persen'  => $gap_rr_persen // Output Gap % RR
+                ];
+
+                // Set nilai prev untuk iterasi berikutnya
+                $prev_osc_total  = $last_osc_total;
+                $prev_osc_npl    = $last_osc_npl;
+                $prev_osc_rr     = $last_osc_rr;
+                $prev_npl_persen = $npl_persen;
+                $prev_rr_persen  = $rr_persen;
+            }
+
+            return $formattedData;
+
+        } catch (PDOException $e) {
+            error_log("Error getTrenPortofolioKredit: " . $e->getMessage());
             return [];
         }
     }
@@ -1814,5 +2057,7 @@ class DashboardController{
             return [];
         }
     }
+
+
 
 }

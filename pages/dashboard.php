@@ -35,30 +35,36 @@
 
   <div id="contentDash" class="hidden space-y-6 overflow-x-hidden">
     
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-      <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 relative">
+    <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">
+      <div class="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 relative overflow-hidden">
         <div class="absolute top-0 left-0 w-1.5 h-full bg-blue-500 rounded-l-2xl"></div>
-        <p class="text-[11px] text-gray-500 font-bold uppercase tracking-wider mb-1">Total Baki Debet (OS)</p>
-        <h3 id="kpi_os" class="text-3xl font-black text-gray-900 tracking-tight">Rp 0</h3>
-        <div class="mt-3 flex flex-wrap items-center gap-2 text-sm flex-col items-start" id="kpi_os_pill"></div>
+        <p class="text-[10px] text-gray-500 font-bold uppercase tracking-wider mb-1 truncate">Total Baki Debet (OS)</p>
+        <h3 id="kpi_os" class="text-xl xl:text-2xl font-black text-gray-900 tracking-tight whitespace-nowrap mb-2.5">Rp 0</h3>
+        <div id="kpi_os_pill"></div>
       </div>
-      <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 relative">
+      <div class="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 relative overflow-hidden">
+        <div class="absolute top-0 left-0 w-1.5 h-full bg-cyan-500 rounded-l-2xl"></div>
+        <p class="text-[10px] text-gray-500 font-bold uppercase tracking-wider mb-1 truncate">Saldo Bank</p>
+        <h3 id="kpi_saldobank" class="text-xl xl:text-2xl font-black text-cyan-600 tracking-tight whitespace-nowrap mb-2.5">Rp 0</h3>
+        <div id="kpi_saldobank_pill"></div>
+      </div>
+      <div class="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 relative overflow-hidden">
         <div class="absolute top-0 left-0 w-1.5 h-full bg-red-500 rounded-l-2xl"></div>
-        <p class="text-[11px] text-gray-500 font-bold uppercase tracking-wider mb-1">Total OSC NPL</p>
-        <h3 id="kpi_npl" class="text-3xl font-black text-red-600 tracking-tight">Rp 0</h3>
-        <div class="mt-3 flex flex-wrap items-center gap-2 text-sm" id="kpi_npl_pill"></div>
+        <p class="text-[10px] text-gray-500 font-bold uppercase tracking-wider mb-1 truncate">Total OSC NPL</p>
+        <h3 id="kpi_npl" class="text-xl xl:text-2xl font-black text-red-600 tracking-tight whitespace-nowrap mb-2.5">Rp 0</h3>
+        <div id="kpi_npl_pill"></div>
       </div>
-      <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 relative">
+      <div class="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 relative overflow-hidden">
         <div class="absolute top-0 left-0 w-1.5 h-full bg-green-500 rounded-l-2xl"></div>
-        <p class="text-[11px] text-gray-500 font-bold uppercase tracking-wider mb-1">Repayment Rate (RR)</p>
-        <h3 id="kpi_rr" class="text-3xl font-black text-green-600 tracking-tight">0%</h3>
-        <div class="mt-3 flex flex-wrap items-center gap-2 text-sm" id="kpi_rr_pill"></div>
+        <p class="text-[10px] text-gray-500 font-bold uppercase tracking-wider mb-1 truncate">Repayment Rate (RR)</p>
+        <h3 id="kpi_rr" class="text-xl xl:text-2xl font-black text-green-600 tracking-tight whitespace-nowrap mb-2.5">0%</h3>
+        <div id="kpi_rr_pill"></div>
       </div>
-      <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 relative">
+      <div class="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 relative overflow-hidden">
         <div class="absolute top-0 left-0 w-1.5 h-full bg-purple-500 rounded-l-2xl"></div>
-        <p class="text-[11px] text-gray-500 font-bold uppercase tracking-wider mb-1">Total DPK (Depo + Tab)</p>
-        <h3 id="kpi_dpk" class="text-3xl font-black text-purple-700 tracking-tight">Rp 0</h3>
-        <div class="mt-3 flex flex-wrap items-center gap-2 text-sm" id="kpi_dpk_pill"></div>
+        <p class="text-[10px] text-gray-500 font-bold uppercase tracking-wider mb-1 truncate">Total DPK (Depo + Tab)</p>
+        <h3 id="kpi_dpk" class="text-xl xl:text-2xl font-black text-purple-700 tracking-tight whitespace-nowrap mb-2.5">Rp 0</h3>
+        <div id="kpi_dpk_pill"></div>
       </div>
     </div>
 
@@ -66,22 +72,29 @@
       <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 lg:col-span-2 flex flex-col">
         <div class="flex justify-between items-center mb-2 border-b border-gray-100 pb-3">
           <h3 class="font-bold text-gray-800 flex items-center gap-2">
-            <span class="text-red-500">📈</span> Tren Pergerakan NPL (%)
+            <span class="text-blue-500">📈</span> Tren Portofolio Kredit
           </h3>
+          <div class="flex gap-2">
+            <select id="filter_tren_tipe" class="border border-gray-200 rounded-md px-2 py-1 text-xs font-semibold text-gray-600 outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer bg-white shadow-sm">
+                <option value="nom">Nominal (Rp)</option>
+                <option value="pct">Persentase (%)</option>
+                <option value="npl" selected>NPL</option>
+            </select>
             <select id="filter_tren" class="border border-gray-200 rounded-md px-2 py-1 text-xs font-semibold text-gray-600 outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer bg-white shadow-sm">
                 <option value="tahunan">Periode Tahunan</option>
-                <option value="bulanan">Periode Bulanan</option>
+                <option value="bulanan" selected>Periode Bulanan</option>
                 <option value="mingguan">Periode Mingguan</option>
                 <option value="30_hari">30 Hari Terakhir</option>
                 <option value="14_hari">14 Hari Terakhir</option>
-                <option value="7_hari" selected>7 Hari Terakhir</option>
+                <option value="7_hari">7 Hari Terakhir</option>
             </select>
+          </div>
         </div>
         <div class="relative flex-grow min-h-[220px] w-full mt-2">
           <div id="loadingChartTren" class="absolute inset-0 flex justify-center items-center bg-white bg-opacity-80 z-10 hidden">
-            <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-red-500"></div>
+            <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
           </div>
-          <canvas id="canvasTrenNPL"></canvas>
+          <canvas id="canvasTrenPortofolio"></canvas>
         </div>
       </div>
 
@@ -90,6 +103,10 @@
           <h3 class="font-bold text-gray-800 flex items-center gap-2 text-sm">
             <span class="text-indigo-500">📦</span> Realisasi by Produk
           </h3>
+          <div class="text-right flex flex-col items-end">
+            <span class="text-[9px] text-gray-400 font-bold uppercase tracking-wider">Total Realisasi</span>
+            <span id="label_total_realisasi_produk" class="text-sm font-black text-indigo-600">Rp 0</span>
+          </div>
         </div>
         <div id="box_realisasi_produk" class="space-y-3 flex-grow"></div>
       </div>
@@ -143,11 +160,11 @@
           
           <select id="filter_tren_runoff" class="border border-gray-200 rounded-md px-3 py-1.5 text-sm font-semibold text-gray-600 outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer bg-white shadow-sm">
               <option value="tahunan">Periode Tahunan</option>
-              <option value="bulanan">Periode Bulanan</option>
+              <option value="bulanan" selected>Periode Bulanan</option>
               <option value="mingguan">Periode Mingguan</option>
               <option value="30_hari">30 Hari Terakhir</option>
               <option value="14_hari">14 Hari Terakhir</option>
-              <option value="7_hari" selected>7 Hari Terakhir</option>
+              <option value="7_hari">7 Hari Terakhir</option>
           </select>
         </div>
         <div class="relative w-full flex-grow min-h-[250px]">
@@ -259,14 +276,15 @@
   
   const pct = x => (x == null ? '0%' : `${(+x).toFixed(2)}%`);
   
-  const getDeltaHTML = (val, isPercent = false, invertGoodBad = false, useParentSize = false) => {
+  const getDeltaHTML = (val, isPercent = false, invertGoodBad = false, tight = false) => {
     let numVal = Number(val || 0);
-    if(numVal === 0) return `<span class="text-gray-400 font-normal ${useParentSize ? '' : 'text-sm'}">Tetap 0</span>`;
+    let sizeClass = tight ? 'text-[11px]' : 'text-sm';
+    if(numVal === 0) return `<span class="text-gray-400 font-bold ${sizeClass}">Tetap 0</span>`;
+    
     let isGood = invertGoodBad ? numVal < 0 : numVal > 0;
     let color = isGood ? 'text-green-600' : 'text-red-600';
     let icon = numVal > 0 ? '▲' : '▼';
     let displayVal = isPercent ? pct(Math.abs(numVal)) : fmtB(Math.abs(numVal));
-    let sizeClass = useParentSize ? '' : 'text-sm';
     return `<span class="${color} font-black ${sizeClass}">${icon} ${displayVal}</span>`;
   };
 
@@ -284,6 +302,7 @@
   let chartTrenInstance = null;
   let chartRunoffInstance = null; 
   let initialHarianDate = null; 
+  let trenPortoDataGlobal = [];
 
   const apiCall = (url, opt={}) => (window.apiFetch ? window.apiFetch(url, opt) : fetch(url, opt));
 
@@ -315,7 +334,7 @@
       document.getElementById('filter_harian').value  = d.last_created;
     } else {
       document.getElementById('filter_closing').value = '2026-02-28';
-      document.getElementById('filter_harian').value = '2026-03-10';
+      document.getElementById('filter_harian').value = '2026-03-28';
     }
 
     initialHarianDate = document.getElementById('filter_harian').value;
@@ -325,23 +344,231 @@
     await populateKantorOptions(userKode);
 
     fetchDashboardUtama();
-    fetchTrenNPL();
+    fetchTrenPortofolio();
     fetchTrenRunoff(); 
   });
 
   document.getElementById('formFilterMaster').addEventListener('submit', e => {
     e.preventDefault();
     fetchDashboardUtama();
-    fetchTrenNPL();
+    fetchTrenPortofolio();
     fetchTrenRunoff(); 
   });
 
-  document.getElementById('filter_tren').addEventListener('change', () => { fetchTrenNPL(); });
+  document.getElementById('filter_tren').addEventListener('change', () => { fetchTrenPortofolio(); });
+  document.getElementById('filter_tren_tipe').addEventListener('change', () => { renderChartPortofolio(); });
   document.getElementById('filter_tren_runoff').addEventListener('change', () => { fetchTrenRunoff(); });
 
 
   // ==========================================
-  // 3. FETCH & RENDER KHUSUS TREN RUN OFF
+  // 3. FETCH & RENDER TREN PORTOFOLIO KREDIT
+  // ==========================================
+  async function fetchTrenPortofolio() {
+    const loadingChart = document.getElementById('loadingChartTren'); 
+    loadingChart.classList.remove('hidden');
+    let kantor = document.getElementById('filter_kantor').value;
+    
+    const payload = { 
+        type: 'tren_portofolio_kredit', 
+        harian_date: document.getElementById('filter_harian').value, 
+        periode: document.getElementById('filter_tren').value 
+    };
+    
+    if(kantor !== '000') { 
+        if(['SEMARANG','SOLO','BANYUMAS','PEKALONGAN'].includes(kantor)) payload.korwil = kantor; 
+        else payload.kode_kantor = kantor; 
+    } else {
+        payload.kode_kantor = "000";
+    }
+
+    try {
+      const res = await apiCall('./api/dashboard/', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+      const json = await res.json(); 
+      trenPortoDataGlobal = Array.isArray(json.data) ? json.data : (json.data?.tren_portofolio || []);
+      renderChartPortofolio();
+    } catch(e) {
+      trenPortoDataGlobal = [];
+      renderChartPortofolio();
+    } finally { 
+      loadingChart.classList.add('hidden'); 
+    }
+  }
+
+  function renderChartPortofolio() {
+    const canvas = document.getElementById('canvasTrenPortofolio'); 
+    const ctx = canvas.getContext('2d');
+    if(chartTrenInstance) chartTrenInstance.destroy();
+    
+    if(!trenPortoDataGlobal || trenPortoDataGlobal.length === 0) {
+      ctx.clearRect(0, 0, canvas.width, canvas.height); 
+      ctx.font = "14px Arial"; ctx.fillStyle = "#9ca3af"; ctx.textAlign = "center";
+      ctx.fillText("Data tren tidak tersedia untuk periode ini", canvas.width/2, canvas.height/2); 
+      return;
+    }
+
+    const tipe = document.getElementById('filter_tren_tipe').value;
+    const labels = trenPortoDataGlobal.map(d => d.label || d.tanggal); 
+    
+    let datasets = [];
+    let yAxisCallback;
+
+    if (tipe === 'nom') {
+        const dataTotal = trenPortoDataGlobal.map(d => Number(d.osc_total)); 
+        const dataRR = trenPortoDataGlobal.map(d => Number(d.osc_rr)); 
+        const dataNPL = trenPortoDataGlobal.map(d => Number(d.osc_npl)); 
+        
+        let gradTotal = ctx.createLinearGradient(0, 0, 0, 300); gradTotal.addColorStop(0, 'rgba(59, 130, 246, 0.1)'); gradTotal.addColorStop(1, 'rgba(59, 130, 246, 0.0)');
+        let gradRR = ctx.createLinearGradient(0, 0, 0, 300); gradRR.addColorStop(0, 'rgba(16, 185, 129, 0.1)'); gradRR.addColorStop(1, 'rgba(16, 185, 129, 0.0)');
+        let gradNPL = ctx.createLinearGradient(0, 0, 0, 300); gradNPL.addColorStop(0, 'rgba(239, 68, 68, 0.1)'); gradNPL.addColorStop(1, 'rgba(239, 68, 68, 0.0)');
+
+        datasets = [
+            { label: 'OSC Total', data: dataTotal, borderColor: '#3b82f6', backgroundColor: gradTotal, borderWidth: 3, pointBackgroundColor: '#ffffff', pointBorderColor: '#3b82f6', pointRadius: 4, pointHoverRadius: 6, fill: true, tension: 0.4 },
+            { label: 'OSC RR', data: dataRR, borderColor: '#10b981', backgroundColor: gradRR, borderWidth: 3, pointBackgroundColor: '#ffffff', pointBorderColor: '#10b981', pointRadius: 4, pointHoverRadius: 6, fill: true, tension: 0.4 },
+            { label: 'OSC NPL', data: dataNPL, borderColor: '#ef4444', backgroundColor: gradNPL, borderWidth: 3, pointBackgroundColor: '#ffffff', pointBorderColor: '#ef4444', pointRadius: 4, pointHoverRadius: 6, fill: true, tension: 0.4 }
+        ];
+        yAxisCallback = function(value) { return fmtB(value); };
+    } else if (tipe === 'pct') {
+        const dataRRPct = trenPortoDataGlobal.map(d => parseFloat(Number(d.rr_persen).toFixed(2))); 
+        const dataNPLPct = trenPortoDataGlobal.map(d => parseFloat(Number(d.npl_persen).toFixed(2))); 
+        
+        let gradRR = ctx.createLinearGradient(0, 0, 0, 300); gradRR.addColorStop(0, 'rgba(16, 185, 129, 0.2)'); gradRR.addColorStop(1, 'rgba(16, 185, 129, 0.0)');
+        let gradNPL = ctx.createLinearGradient(0, 0, 0, 300); gradNPL.addColorStop(0, 'rgba(239, 68, 68, 0.2)'); gradNPL.addColorStop(1, 'rgba(239, 68, 68, 0.0)');
+
+        datasets = [
+            { label: 'RR (%)', data: dataRRPct, borderColor: '#10b981', backgroundColor: gradRR, borderWidth: 3, pointBackgroundColor: '#ffffff', pointBorderColor: '#10b981', pointRadius: 4, pointHoverRadius: 6, fill: true, tension: 0.4 },
+            { label: 'NPL (%)', data: dataNPLPct, borderColor: '#ef4444', backgroundColor: gradNPL, borderWidth: 3, pointBackgroundColor: '#ffffff', pointBorderColor: '#ef4444', pointRadius: 4, pointHoverRadius: 6, fill: true, tension: 0.4 }
+        ];
+        yAxisCallback = function(value) { return value + '%'; };
+    } else if (tipe === 'npl') {
+        const dataNPLPct = trenPortoDataGlobal.map(d => parseFloat(Number(d.npl_persen).toFixed(2))); 
+        let gradNPL = ctx.createLinearGradient(0, 0, 0, 300); 
+        gradNPL.addColorStop(0, 'rgba(239, 68, 68, 0.2)'); 
+        gradNPL.addColorStop(1, 'rgba(239, 68, 68, 0.0)');
+
+        datasets = [
+            { label: 'NPL (%)', data: dataNPLPct, borderColor: '#ef4444', backgroundColor: gradNPL, borderWidth: 3, pointBackgroundColor: '#ffffff', pointBorderColor: '#ef4444', pointRadius: 4, pointHoverRadius: 6, fill: true, tension: 0.4 }
+        ];
+        yAxisCallback = function(value) { return value + '%'; };
+    }
+
+    const labelPlugin = {
+        id: 'alwaysShowLabels',
+        afterDatasetsDraw(chart) {
+            const periode = document.getElementById('filter_tren').value;
+            if (periode !== 'bulanan') return;
+
+            const { ctx, data } = chart;
+            ctx.save();
+            ctx.font = 'bold 11px sans-serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+
+            const numPoints = data.labels.length;
+            const numDatasets = data.datasets.length;
+
+            for (let i = 0; i < numPoints; i++) {
+                let points = [];
+                for (let j = 0; j < numDatasets; j++) {
+                    const meta = chart.getDatasetMeta(j);
+                    if (!meta.hidden && meta.data[i]) {
+                        const val = data.datasets[j].data[i];
+                        const text = (tipe === 'nom') ? fmtB(val) : val + '%';
+                        const pos = meta.data[i].tooltipPosition();
+                        points.push({ index: j, text: text, color: data.datasets[j].borderColor, x: pos.x, y: pos.y });
+                    }
+                }
+
+                points.sort((a, b) => a.y !== b.y ? a.y - b.y : a.index - b.index);
+
+                for (let k = 0; k < points.length; k++) {
+                    let desiredY = points[k].y - 12; 
+                    if (k > 0) {
+                        if (Math.abs(desiredY - points[k-1].drawY) < 16) {
+                            desiredY = points[k].y + 14; 
+                            if (Math.abs(desiredY - points[k-1].drawY) < 16) {
+                                desiredY = points[k-1].drawY + 16;
+                            }
+                        }
+                    }
+                    points[k].drawY = desiredY;
+                    ctx.fillStyle = points[k].color; 
+                    ctx.fillText(points[k].text, points[k].x, points[k].drawY);
+                }
+            }
+            ctx.restore();
+        }
+    };
+
+    chartTrenInstance = new Chart(ctx, {
+      type: 'line',
+      data: { labels: labels, datasets: datasets },
+      options: { 
+          layout: { padding: { top: 30, bottom: 15 } },
+          responsive: true, 
+          maintainAspectRatio: false, 
+          interaction: { mode: 'index', intersect: false },
+          plugins: { 
+              legend: { position: 'top', labels: { usePointStyle: true, boxWidth: 10, font: {family: 'sans-serif', size: 11, weight: 'bold'} } }, 
+              tooltip: { 
+                  backgroundColor: 'rgba(17, 24, 39, 0.95)', 
+                  padding: 10,
+                  usePointStyle: true,
+                  callbacks: { 
+                      labelColor: function(context) {
+                          return { borderColor: context.dataset.borderColor, backgroundColor: context.dataset.borderColor };
+                      },
+                      label: function(c) { 
+                          const raw = c.raw;
+                          const dataObj = trenPortoDataGlobal[c.dataIndex];
+                          let text = '';
+                          
+                          if (tipe === 'nom') {
+                              text = `${c.dataset.label}: Rp ${fmtB(raw)}`;
+                              if (c.datasetIndex === 0 && dataObj.gap_osc_total) {
+                                  let isGood = dataObj.gap_osc_total > 0;
+                                  text += ` (${isGood ? '🟢 ▲' : '🔴 ▼'} ${fmtB(Math.abs(dataObj.gap_osc_total))})`;
+                              }
+                              if (c.datasetIndex === 1 && dataObj.gap_osc_rr) {
+                                  let isGood = dataObj.gap_osc_rr > 0;
+                                  text += ` (${isGood ? '🟢 ▲' : '🔴 ▼'} ${fmtB(Math.abs(dataObj.gap_osc_rr))})`;
+                              }
+                              if (c.datasetIndex === 2 && dataObj.gap_osc_npl) {
+                                  let isGood = dataObj.gap_osc_npl < 0; 
+                                  text += ` (${isGood ? '🟢 ▼' : '🔴 ▲'} ${fmtB(Math.abs(dataObj.gap_osc_npl))})`;
+                              }
+                          } else if (tipe === 'pct') {
+                              text = `${c.dataset.label}: ${Number(raw).toFixed(2)}%`;
+                              if (c.datasetIndex === 0 && dataObj.gap_rr_persen) {
+                                  let isGood = dataObj.gap_rr_persen > 0;
+                                  text += ` (${isGood ? '🟢 ▲' : '🔴 ▼'} ${Math.abs(dataObj.gap_rr_persen)}%)`;
+                              }
+                              if (c.datasetIndex === 1 && dataObj.gap_npl_persen) {
+                                  let isGood = dataObj.gap_npl_persen < 0; 
+                                  text += ` (${isGood ? '🟢 ▼' : '🔴 ▲'} ${Math.abs(dataObj.gap_npl_persen)}%)`;
+                              }
+                          } else if (tipe === 'npl') {
+                              text = `NPL: ${Number(raw).toFixed(2)}% (Rp ${fmtB(dataObj.osc_npl)})`;
+                              if (dataObj.gap_npl_persen) {
+                                  let isGood = dataObj.gap_npl_persen < 0; 
+                                  text += ` (${isGood ? '🟢 ▼' : '🔴 ▲'} ${Math.abs(dataObj.gap_npl_persen)}%)`;
+                              }
+                          }
+                          return text;
+                      } 
+                  } 
+              } 
+          }, 
+          scales: { 
+              x: { grid: { display: false } }, 
+              y: { beginAtZero: false, grid: { borderDash: [4, 4], color: '#f3f4f6' }, ticks: { callback: yAxisCallback } } 
+          } 
+      },
+      plugins: [labelPlugin] 
+    });
+  }
+
+  // ==========================================
+  // 4. FETCH & RENDER KHUSUS TREN RUN OFF
   // ==========================================
   async function fetchTrenRunoff(isRetry = false, targetDateOverride = null) {
     const loadingChart = document.getElementById('loadingChartRunoff');
@@ -407,6 +634,54 @@
     let gradReal = ctx.createLinearGradient(0, 0, 0, 300); gradReal.addColorStop(0, 'rgba(16, 185, 129, 0.2)'); gradReal.addColorStop(1, 'rgba(16, 185, 129, 0.0)');
     let gradRunoff = ctx.createLinearGradient(0, 0, 0, 300); gradRunoff.addColorStop(0, 'rgba(239, 68, 68, 0.2)'); gradRunoff.addColorStop(1, 'rgba(239, 68, 68, 0.0)');
     
+    const labelPluginRunoff = {
+        id: 'alwaysShowLabelsRunoff',
+        afterDatasetsDraw(chart) {
+            const periode = document.getElementById('filter_tren_runoff').value;
+            if (periode !== 'bulanan') return;
+
+            const { ctx, data } = chart;
+            ctx.save();
+            ctx.font = 'bold 11px sans-serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+
+            const numPoints = data.labels.length;
+            const numDatasets = data.datasets.length;
+
+            for (let i = 0; i < numPoints; i++) {
+                let points = [];
+                for (let j = 0; j < numDatasets; j++) {
+                    const meta = chart.getDatasetMeta(j);
+                    if (!meta.hidden && meta.data[i]) {
+                        const val = data.datasets[j].data[i];
+                        const text = fmtB(val);
+                        const pos = meta.data[i].tooltipPosition();
+                        points.push({ index: j, text: text, color: data.datasets[j].borderColor, x: pos.x, y: pos.y });
+                    }
+                }
+
+                points.sort((a, b) => a.y !== b.y ? a.y - b.y : a.index - b.index);
+
+                for (let k = 0; k < points.length; k++) {
+                    let desiredY = points[k].y - 12; 
+                    if (k > 0) {
+                        if (Math.abs(desiredY - points[k-1].drawY) < 16) {
+                            desiredY = points[k].y + 14; 
+                            if (Math.abs(desiredY - points[k-1].drawY) < 16) {
+                                desiredY = points[k-1].drawY + 16;
+                            }
+                        }
+                    }
+                    points[k].drawY = desiredY;
+                    ctx.fillStyle = points[k].color; 
+                    ctx.fillText(points[k].text, points[k].x, points[k].drawY);
+                }
+            }
+            ctx.restore();
+        }
+    };
+
     chartRunoffInstance = new Chart(ctx, {
       type: 'line',
       data: {
@@ -417,12 +692,17 @@
         ]
       },
       options: {
+        layout: { padding: { top: 30, bottom: 15 } },
         responsive: true, maintainAspectRatio: false, interaction: { mode: 'index', intersect: false },
         plugins: {
           legend: { position: 'top', labels: { usePointStyle: true, boxWidth: 10, font: {family: 'sans-serif', size: 12, weight: 'bold'} } },
           tooltip: {
             backgroundColor: 'rgba(17, 24, 39, 0.95)', padding: 12, titleFont: { size: 13, family: 'sans-serif' }, bodyFont: { size: 12, family: 'sans-serif' },
+            usePointStyle: true,
             callbacks: {
+              labelColor: function(context) {
+                  return { borderColor: context.dataset.borderColor, backgroundColor: context.dataset.borderColor };
+              },
               label: function(c) { return `${c.dataset.label}: Rp ${fmtB(c.raw)}`; },
               afterBody: function(c) {
                 if (c.length > 0) { 
@@ -436,7 +716,8 @@
                   lines.push(`  • Lunas: Rp ${fmtB(lunas)} (${fmt(noaLunas)} NOA)`);
                   lines.push(`  • Angsuran: Rp ${fmtB(angsuran)} (${fmt(noaAngsuran)} NOA)`);
                   lines.push('');
-                  lines.push(`Growth: ${g >= 0 ? '▲ Naik' : '▼ Turun'} (Rp ${fmtB(Math.abs(g))})`);
+                  let isGood = g >= 0;
+                  lines.push(`Growth: ${isGood ? '🟢 ▲' : '🔴 ▼'} Rp ${fmtB(Math.abs(g))}`);
                   return lines;
                 }
               }
@@ -444,41 +725,14 @@
           }
         },
         scales: { x: { grid: { display: false } }, y: { grid: { borderDash: [4,4], color: '#f3f4f6' }, ticks: { callback: function(val) { return fmtB(val); } } } }
-      }
+      },
+      plugins: [labelPluginRunoff]
     });
   }
 
   // ==========================================
-  // 4. FETCH API DASHBOARD UTAMA
+  // 5. FETCH API DASHBOARD UTAMA (KPI)
   // ==========================================
-  async function fetchTrenNPL() {
-    const loadingChart = document.getElementById('loadingChartTren'); loadingChart.classList.remove('hidden');
-    let kantor = document.getElementById('filter_kantor').value;
-    const payload = { type: 'test tren npl', harian_date: document.getElementById('filter_harian').value, periode: document.getElementById('filter_tren').value };
-    if(kantor !== '000') { if(['SEMARANG','SOLO','BANYUMAS','PEKALONGAN'].includes(kantor)) payload.korwil = kantor; else payload.kode_kantor = kantor; } else payload.kode_kantor = "000";
-    try {
-      const res = await apiCall('./api/dashboard/', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
-      const json = await res.json(); renderChartJS(Array.isArray(json.data) ? json.data : (json.data?.tren_npl || []));
-    } catch(e) {} finally { loadingChart.classList.add('hidden'); }
-  }
-
-  function renderChartJS(dataArray) {
-    const canvas = document.getElementById('canvasTrenNPL'); const ctx = canvas.getContext('2d');
-    if(chartTrenInstance) chartTrenInstance.destroy();
-    if(!dataArray || dataArray.length === 0) {
-      ctx.clearRect(0, 0, canvas.width, canvas.height); ctx.font = "14px Arial"; ctx.fillStyle = "#9ca3af"; ctx.textAlign = "center";
-      ctx.fillText("Data tren tidak tersedia untuk periode ini", canvas.width/2, canvas.height/2); return;
-    }
-    const labels = dataArray.map(d => d.label || d.tanggal); const dataNominal = dataArray.map(d => Number(d.npl_amt)); const dataPersen = dataArray.map(d => parseFloat(Number(d.npl_persen).toFixed(2))); 
-    let minVal = Math.min(...dataPersen); let maxVal = Math.max(...dataPersen); let padding = (maxVal - minVal) === 0 ? 0.5 : (maxVal - minVal) * 0.3; let yMin = Math.max(0, minVal - padding); 
-    let gradient = ctx.createLinearGradient(0, 0, 0, 300); gradient.addColorStop(0, 'rgba(239, 68, 68, 0.3)'); gradient.addColorStop(1, 'rgba(239, 68, 68, 0.0)');
-    chartTrenInstance = new Chart(ctx, {
-      type: 'line',
-      data: { labels: labels, datasets: [{ label: 'Persentase NPL', data: dataPersen, borderColor: '#ef4444', backgroundColor: gradient, borderWidth: 3, pointBackgroundColor: '#ffffff', pointBorderColor: '#ef4444', pointBorderWidth: 2, pointRadius: 4, pointHoverRadius: 6, fill: true, tension: 0.4 }] },
-      options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: { backgroundColor: 'rgba(17, 24, 39, 0.9)', callbacks: { label: function(context) { return `NPL: ${Number(context.parsed.y).toFixed(2)}%  (Rp ${fmtB(dataNominal[context.dataIndex])})`; } } } }, scales: { x: { grid: { display: false } }, y: { min: parseFloat(yMin.toFixed(2)), max: parseFloat((maxVal + padding).toFixed(2)), grid: { borderDash: [4, 4], color: '#f3f4f6' }, ticks: { callback: function(value) { return Number(value).toFixed(2) + '%'; } } } } }
-    });
-  }
-
   async function fetchDashboardUtama() {
     document.getElementById('loadingDash').classList.remove('hidden'); document.getElementById('contentDash').classList.add('hidden');
     
@@ -502,70 +756,90 @@
   }
 
   function renderDashboardUtama(d, kantorMode) {
+    // RENDER 5 CARD KPI
     try {
-      const rrG = d.repayment_rate?.grand_total || {}; const tNpl = d.tren_npl || []; let osCurr = rrG.os_total || 0; let osPrev = 0;
+      const rrG = d.repayment_rate?.grand_total || {}; 
+      const tNpl = d.tren_npl || d.tren_portofolio || []; 
+      
+      let osCurr = rrG.os_total || 0; let osPrev = 0;
+      
       if(tNpl.length > 0) {
-        const last = tNpl[tNpl.length - 1]; const prev = tNpl.length > 1 ? tNpl[tNpl.length - 2] : last; osPrev = prev.total_kredit || 0; 
-        document.getElementById('kpi_npl').textContent = `Rp ${fmtB(last.npl_amt)}`;
-        document.getElementById('kpi_npl_pill').innerHTML = `<div class="inline-flex gap-1 bg-gray-100 px-2 py-1 rounded font-bold">Closing: <span class="text-gray-800">${pct(prev.npl_persen)}</span></div><div class="inline-flex gap-1 bg-red-50 text-red-700 px-2 py-1 rounded font-bold border border-red-100">Act: ${pct(last.npl_persen)}</div>${getDeltaHTML(last.npl_persen - prev.npl_persen, true, true)}`;
+        const last = tNpl[tNpl.length - 1]; const prev = tNpl.length > 1 ? tNpl[tNpl.length - 2] : last; osPrev = prev.total_kredit || prev.osc_total || 0; 
+        
+        document.getElementById('kpi_npl').textContent = `Rp ${fmtB(last.npl_amt || last.osc_npl)}`;
+        document.getElementById('kpi_npl_pill').innerHTML = `
+            <div class="flex items-center gap-2 mb-1.5">
+                <div class="bg-gray-100 px-2 py-0.5 rounded font-bold text-[11px] text-gray-600 whitespace-nowrap">Closing: <span class="text-gray-900">${pct(prev.npl_persen)}</span></div>
+                <div class="bg-red-50 text-red-700 border border-red-100 px-2 py-0.5 rounded font-bold text-[11px] whitespace-nowrap">Act: ${pct(last.npl_persen)}</div>
+            </div>
+            <div class="whitespace-nowrap">${getDeltaHTML(last.npl_persen - prev.npl_persen, true, true, true)}</div>`;
       }
       
-      let noaOs = d.top_bottom_realisasi?.grand_total?.noa_realisasi || 0;
       document.getElementById('kpi_os').textContent = `Rp ${fmtB(osCurr)}`;
       document.getElementById('kpi_os_pill').innerHTML = `
         <div class="flex items-center gap-2">
-            <div class="inline-flex gap-1 bg-gray-100 px-2 py-1 rounded font-bold">Closing: <span class="text-gray-800">Rp ${fmtB(osPrev)}</span></div>
-            ${getDeltaHTML(osCurr - osPrev, false, false)}
-        </div>
-        
-      `;
+            <div class="bg-gray-100 px-2 py-0.5 rounded font-bold text-[11px] text-gray-600 whitespace-nowrap">Closing: <span class="text-gray-900">Rp ${fmtB(osPrev)}</span></div>
+            <div class="whitespace-nowrap">${getDeltaHTML(osCurr - osPrev, false, false, true)}</div>
+        </div>`;
 
       document.getElementById('kpi_rr').textContent = pct(rrG.rr_persen_curr);
-      document.getElementById('kpi_rr_pill').innerHTML = `<div class="inline-flex gap-1 bg-gray-100 px-2 py-1 rounded font-bold">Closing: <span class="text-gray-800">${pct(rrG.rr_persen_prev)}</span></div>${getDeltaHTML(rrG.delta_rr, true, false)}`;
+      document.getElementById('kpi_rr_pill').innerHTML = `
+        <div class="flex items-center gap-2">
+            <div class="bg-gray-100 px-2 py-0.5 rounded font-bold text-[11px] text-gray-600 whitespace-nowrap">Closing: <span class="text-gray-900">${pct(rrG.rr_persen_prev)}</span></div>
+            <div class="whitespace-nowrap">${getDeltaHTML(rrG.delta_rr, true, false, true)}</div>
+        </div>`;
       
       const depG = d.perkembangan_deposito?.grand_total || {}; const tabG = d.perkembangan_tabungan?.grand_total || {};
       const dpkCurr = (depG.saldo_curr||0) + (tabG.saldo_curr||0); const dpkPrev = (depG.saldo_prev||0) + (tabG.saldo_prev||0);
       document.getElementById('kpi_dpk').textContent = `Rp ${fmtB(dpkCurr)}`;
-      document.getElementById('kpi_dpk_pill').innerHTML = `<div class="inline-flex gap-1 bg-gray-100 px-2 py-1 rounded font-bold">Closing: <span class="text-gray-800">Rp ${fmtB(dpkPrev)}</span></div>${getDeltaHTML(dpkCurr - dpkPrev, false, false)}`;
+      document.getElementById('kpi_dpk_pill').innerHTML = `
+        <div class="flex items-center gap-2">
+            <div class="bg-gray-100 px-2 py-0.5 rounded font-bold text-[11px] text-gray-600 whitespace-nowrap">Closing: <span class="text-gray-900">Rp ${fmtB(dpkPrev)}</span></div>
+            <div class="whitespace-nowrap">${getDeltaHTML(dpkCurr - dpkPrev, false, false, true)}</div>
+        </div>`;
     } catch(e) {}
 
-    // RENDER REALISASI BY PRODUK
+    // CARD SALDO BANK
+    try {
+      let sb = d.saldo_bank || { actual: 0, closing: 0, delta: 0 };
+      document.getElementById('kpi_saldobank').textContent = `Rp ${fmtB(sb.actual)}`;
+      document.getElementById('kpi_saldobank_pill').innerHTML = `
+        <div class="flex items-center gap-2">
+            <div class="bg-gray-100 px-2 py-0.5 rounded font-bold text-[11px] text-gray-600 whitespace-nowrap">Closing: <span class="text-gray-900">Rp ${fmtB(sb.closing)}</span></div>
+            <div class="whitespace-nowrap">${getDeltaHTML(sb.delta, false, false, true)}</div>
+        </div>`;
+    } catch(e) {}
+
+    // RENDER REALISASI BY PRODUK & GRAND TOTAL
     try {
         let prods = d.realisasi_by_produk?.detail_produk || [];
+        let grandTotal = d.realisasi_by_produk?.grand_total?.total_realisasi || 0;
+        document.getElementById('label_total_realisasi_produk').textContent = `Rp ${fmtB(grandTotal)}`;
         renderUniversalList('box_realisasi_produk', prods, 'nama_produk', 'total_realisasi', 'noa_realisasi', 'bg-indigo-400', false, 'NOA');
     } catch(e) {}
 
-    // RENDER KORWIL BAR DENGAN SCROLL DINAMIS
+    // RENDER KORWIL BAR
     try {
       let hideGrandTotal = (kantorMode !== '000');
       let isKorwilFilter = ['SEMARANG','SOLO','BANYUMAS','PEKALONGAN'].includes(kantorMode);
 
-      // 🔥 Manajemen Scrollbar Dinamis
       const boxRunoff = document.getElementById('box_runoff_realisasi');
       const boxFlow = document.getElementById('box_flow_recovery');
 
       if (isKorwilFilter) {
-          boxRunoff.style.maxHeight = '200px';
-          boxRunoff.classList.add('overflow-y-auto', 'custom-scrollbar', 'pr-1');
-          boxFlow.style.maxHeight = '200px';
-          boxFlow.classList.add('overflow-y-auto', 'custom-scrollbar', 'pr-1');
+          boxRunoff.style.maxHeight = '200px'; boxRunoff.classList.add('overflow-y-auto', 'custom-scrollbar', 'pr-1');
+          boxFlow.style.maxHeight = '200px'; boxFlow.classList.add('overflow-y-auto', 'custom-scrollbar', 'pr-1');
       } else {
-          boxRunoff.style.maxHeight = 'none';
-          boxRunoff.classList.remove('overflow-y-auto', 'custom-scrollbar', 'pr-1');
-          boxFlow.style.maxHeight = 'none';
-          boxFlow.classList.remove('overflow-y-auto', 'custom-scrollbar', 'pr-1');
+          boxRunoff.style.maxHeight = 'none'; boxRunoff.classList.remove('overflow-y-auto', 'custom-scrollbar', 'pr-1');
+          boxFlow.style.maxHeight = 'none'; boxFlow.classList.remove('overflow-y-auto', 'custom-scrollbar', 'pr-1');
       }
       
       let runoffData = [...(d.runoff_vs_realisasi?.detail_korwil || [])]; 
-      if(d.runoff_vs_realisasi?.grand_total && !hideGrandTotal) {
-          runoffData.push(d.runoff_vs_realisasi.grand_total);
-      }
+      if(d.runoff_vs_realisasi?.grand_total && !hideGrandTotal) { runoffData.push(d.runoff_vs_realisasi.grand_total); }
       renderKorwilCompare('box_runoff_realisasi', runoffData, 'realisasi', 'total_runoff', 'bg-green-400', 'bg-red-400');
       
       let flowData = [...(d.flow_vs_recovery_npl?.detail_korwil || [])]; 
-      if(d.flow_vs_recovery_npl?.grand_total && !hideGrandTotal) {
-          flowData.push(d.flow_vs_recovery_npl.grand_total);
-      }
+      if(d.flow_vs_recovery_npl?.grand_total && !hideGrandTotal) { flowData.push(d.flow_vs_recovery_npl.grand_total); }
       renderKorwilCompare('box_flow_recovery', flowData, 'flow_npl', 'total_recovery', 'bg-red-400', 'bg-green-400');
     } catch(e) {}
 
