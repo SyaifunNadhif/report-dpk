@@ -8,10 +8,10 @@
   .row-detail { display: table-row; }
   .hidden-row { display: none; }
   
-  .caret { display: inline-block; transition: transform 0.2s; margin-right: 8px; color: #64748b; }
+  .caret { display: inline-block; transition: transform 0.2s; margin-right: 6px; color: #64748b; font-size: 10px;}
   .rotate { transform: rotate(90deg); }
 
-  /* Penyesuaian Padding Card untuk Mobile */
+  /* Padding Card diperkecil di HP */
   .rekap-card { background: white; border-radius: 10px; padding: 10px 12px; border: 1px solid #e2e8f0; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
   @media (min-width: 768px) { .rekap-card { padding: 12px 16px; } }
 
@@ -21,50 +21,56 @@
   .table-container { border: 1px solid #e2e8f0; border-radius: 12px; background: white; overflow: hidden; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1); }
   
   /* Input & Button Styling */
-  .inp-modern { border: 1px solid #cbd5e1; border-radius: 8px; padding: 0 12px; font-size: 13px; font-weight: 600; background: #fff; width: 100%; height: 40px; color: #334155; transition: all 0.2s; outline: none; }
+  .inp-modern { border: 1px solid #cbd5e1; border-radius: 8px; padding: 0 8px; font-size: 11px; font-weight: 600; background: #fff; width: 100%; height: 34px; color: #334155; transition: all 0.2s; outline: none; }
+  @media (min-width: 768px) { .inp-modern { font-size: 13px; height: 40px; padding: 0 12px; } }
   .inp-modern:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1); }
   .inp-modern:disabled { background-color: #f1f5f9; color: #64748b; cursor: not-allowed; }
+
+  /* Sembunyikan scrollbar di form filter untuk mobile jika ada sisa */
+  #filterForm::-webkit-scrollbar { display: none; }
 </style>
 
-<div class="max-w-7xl mx-auto px-2 md:px-4 py-4 h-screen flex flex-col space-y-3 md:space-y-4 bg-[#f8fafc]">
+<div class="max-w-[1920px] mx-auto px-2 md:px-4 py-2 md:py-4 h-[calc(100vh-10px)] flex flex-col space-y-2 md:space-y-4 bg-[#f8fafc]">
   
-  <div class="flex flex-col lg:flex-row justify-between lg:items-end gap-3 md:gap-4 shrink-0 bg-white p-3 md:p-4 rounded-xl border border-slate-200 shadow-sm">
-    <div class="flex items-center gap-3">
-      <div class="bg-blue-600 text-white p-2.5 rounded-xl shadow-md shrink-0">
-        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18"></path><path d="M5 21V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16"></path><path d="M9 21v-4a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v4"></path></svg>
+  <div class="flex flex-col md:flex-row justify-between md:items-end gap-2 md:gap-4 shrink-0 bg-white p-2.5 md:p-4 rounded-xl border border-slate-200 shadow-sm">
+    
+    <div class="flex items-center gap-2.5 w-full md:w-auto mb-1 md:mb-0">
+      <div class="bg-blue-600 text-white p-2 md:p-2.5 rounded-xl shadow-md shrink-0">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="md:w-[24px] md:h-[24px]"><path d="M3 21h18"></path><path d="M5 21V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16"></path><path d="M9 21v-4a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v4"></path></svg>
       </div> 
       <div class="flex flex-col">
-        <span class="text-lg md:text-xl font-black text-slate-800 tracking-tight leading-tight">LAPORAN KEUANGAN</span>
+        <span class="text-base md:text-xl font-black text-slate-800 tracking-tight leading-tight">LAPORAN KEUANGAN</span>
         <span id="badgeUnit" class="text-[9px] md:text-[10px] bg-blue-100 text-blue-700 px-2 py-0.5 rounded w-fit uppercase font-bold tracking-wider mt-0.5">Memuat...</span>
       </div>
     </div>
 
-    <form id="filterForm" class="flex flex-wrap items-end gap-2 md:gap-3 w-full lg:w-auto">
-      <div class="flex flex-col w-[48%] md:w-[160px] shrink-0">
-        <label class="text-[9px] md:text-[10px] font-bold text-blue-900 uppercase ml-1 mb-1.5 tracking-wider">Laporan</label>
-        <select id="type_report" class="inp-modern text-xs md:text-sm" onchange="fetchRekap()">
+    <form id="filterForm" class="grid grid-cols-2 md:flex md:flex-row items-end gap-2 md:gap-3 w-full md:w-auto">
+      
+      <div class="flex flex-col w-full md:w-[150px]">
+        <label class="text-[9px] md:text-[10px] font-bold text-blue-900 uppercase ml-1 mb-0.5 tracking-wider">Laporan</label>
+        <select id="type_report" class="inp-modern text-[10px] md:text-sm" onchange="fetchRekap()">
           <option value="neraca detail kantor">NERACA</option>
           <option value="laba rugi detail kantor">LABA RUGI</option>
         </select>
       </div>
 
-      <div class="flex flex-col w-[48%] md:w-[220px] shrink-0">
-        <label class="text-[9px] md:text-[10px] font-bold text-blue-900 uppercase ml-1 mb-1.5 tracking-wider">Cabang</label>
-        <select id="opt_kantor_rec" class="inp-modern text-xs md:text-sm truncate"><option value="">Memuat...</option></select>
+      <div class="flex flex-col w-full md:w-[220px]">
+        <label class="text-[9px] md:text-[10px] font-bold text-blue-900 uppercase ml-1 mb-0.5 tracking-wider">Cabang</label>
+        <select id="opt_kantor_rec" class="inp-modern text-[10px] md:text-sm truncate"><option value="">Memuat...</option></select>
       </div>
 
-      <div class="flex flex-col w-[48%] md:w-[150px] shrink-0">
-        <label class="text-[9px] md:text-[10px] font-bold text-blue-900 uppercase ml-1 mb-1.5 tracking-wider">Actual (Harian)</label>
-        <input type="date" id="harian_date" class="inp-modern text-center text-xs md:text-sm">
+      <div class="flex flex-col w-full md:w-[140px]">
+        <label class="text-[9px] md:text-[10px] font-bold text-blue-900 uppercase ml-1 mb-0.5 tracking-wider">Actual (Harian)</label>
+        <input type="date" id="harian_date" class="inp-modern text-center text-[10px] md:text-sm" onclick="try{this.showPicker()}catch(e){}">
       </div>
       
-      <div class="flex gap-2 w-[48%] md:w-auto shrink-0">
-        <button type="submit" class="flex-1 md:flex-none h-[40px] px-3 md:px-5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs md:text-sm font-bold shadow-md transition flex items-center justify-center gap-1.5" title="Cari Data">
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-          <span class="hidden md:inline">CARI</span>
+      <div class="flex gap-1.5 md:gap-2 w-full md:w-auto h-[34px] md:h-[40px]">
+        <button type="submit" class="flex-1 md:px-5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs md:text-sm font-bold shadow-md transition flex items-center justify-center gap-1.5" title="Cari Data">
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" class="md:w-[16px] md:h-[16px]"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+          <span>CARI</span>
         </button>
-        <button type="button" onclick="exportToExcel()" class="h-[40px] w-[40px] shrink-0 bg-[#10b981] hover:bg-[#059669] text-white rounded-lg shadow-md transition flex items-center justify-center" title="Export Excel">
-          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+        <button type="button" onclick="exportToExcel()" class="w-[36px] md:w-[40px] shrink-0 bg-[#10b981] hover:bg-[#059669] text-white rounded-lg shadow-md transition flex items-center justify-center" title="Export Excel">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="md:w-[20px] md:h-[20px]"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
         </button>
       </div>
     </form>
@@ -72,22 +78,22 @@
 
   <div id="rekapContainer" class="grid grid-cols-2 md:grid-cols-3 gap-2 md:gap-4 shrink-0"></div>
 
-  <div class="flex-1 min-h-0 table-container relative bg-white flex flex-col">
-    <div id="loadingFP" class="hidden absolute inset-0 bg-white/80 z-50 flex flex-col items-center justify-center backdrop-blur-sm">
-       <div class="animate-spin h-10 w-10 border-4 border-blue-200 border-t-blue-600 rounded-full mb-2"></div>
-       <span class="text-xs font-bold text-blue-600 tracking-widest uppercase">Menyusun Data...</span>
+  <div class="flex-1 min-h-0 w-full table-container relative bg-white flex flex-col">
+    <div id="loadingFP" class="hidden absolute inset-0 bg-white/90 z-50 flex flex-col items-center justify-center backdrop-blur-sm">
+       <div class="animate-spin h-8 w-8 border-4 border-blue-200 border-t-blue-600 rounded-full mb-2"></div>
+       <span class="text-[10px] md:text-xs font-bold text-blue-600 tracking-widest uppercase">Menyusun Data...</span>
     </div>
 
-    <div class="flex-1 overflow-auto w-full h-full relative">
-      <table class="w-full text-left border-separate border-spacing-0 min-w-[600px]" id="tabelLapKeu">
+    <div class="flex-1 overflow-auto w-full h-full relative custom-scrollbar">
+      <table class="w-full text-left border-separate border-spacing-0 table-fixed min-w-[340px] md:min-w-[600px]" id="tabelLapKeu">
         <thead class="sticky top-0 z-40 bg-slate-50 shadow-[0_1px_0_0_#e2e8f0]">
           <tr>
-            <th class="p-3 md:p-3.5 text-[10px] md:text-[11px] font-bold text-slate-500 uppercase border-b border-slate-200 w-[100px] md:w-[120px]">Kode</th>
-            <th class="p-3 md:p-3.5 text-[10px] md:text-[11px] font-bold text-slate-500 uppercase border-b border-slate-200 w-auto">Uraian Perkiraan</th>
-            <th class="p-3 md:p-3.5 text-[10px] md:text-[11px] font-bold text-slate-500 uppercase border-b border-slate-200 text-right w-[150px] md:w-[200px]">Saldo (IDR)</th>
+            <th class="px-2 md:px-3.5 py-2 text-[9px] md:text-[11px] font-bold text-slate-500 uppercase border-b border-slate-200 w-[50px] md:w-[120px]">Kode</th>
+            <th class="px-1 md:px-3.5 py-2 text-[9px] md:text-[11px] font-bold text-slate-500 uppercase border-b border-slate-200 w-auto">Uraian Perkiraan</th>
+            <th class="px-2 md:px-3.5 py-2 text-[9px] md:text-[11px] font-bold text-slate-500 uppercase border-b border-slate-200 text-right w-[110px] md:w-[180px]">Saldo (IDR)</th>
           </tr>
         </thead>
-        <tbody id="lapBody" class="bg-white"></tbody>
+        <tbody id="lapBody"></tbody>
       </table>
     </div>
   </div>
@@ -100,10 +106,8 @@
   let rawDataResult = [];
   window.currentUser = { kode: '000' };
 
-  // Format Rounding (Bulat Sempurna)
   const fmtNom = n => new Intl.NumberFormat('id-ID').format(Math.round(Number(n||0)));
 
-  // 🔥 FUNGSI SINGKATKAN ANGKA (MILIAR / TRILIUN) 🔥
   const fmtSingkat = (n) => {
       let num = Math.abs(Number(n) || 0);
       let sign = n < 0 ? '-' : '';
@@ -205,7 +209,7 @@
           renderSummary(rawDataResult, payload.type);
       } catch (e) {
           console.error(e);
-          tbody.innerHTML = `<tr><td colspan="3" class="text-center p-10 text-red-500 font-bold">Gagal memuat data laporan!</td></tr>`;
+          tbody.innerHTML = `<tr><td colspan="3" class="text-center p-10 text-red-500 font-bold text-xs">Gagal memuat data laporan!</td></tr>`;
       } finally {
           loader.classList.add('hidden');
       }
@@ -217,7 +221,8 @@
       const kode = d.kode_perk;
       const len = kode.length;
       let cls = 'row-detail';
-      let indent = `&nbsp;`.repeat((len - 1) * 3); // Dikecilkan dikit indent-nya
+      
+      let marginLeft = (len - 1) * 6; // Indentasi diperkecil
       let isParent = (len <= 3);
       
       if (len === 1) cls = 'row-level-1';
@@ -225,13 +230,18 @@
       else if (len === 3) cls = 'row-level-3';
 
       let hiddenCls = (len > 3) ? 'hidden-row' : '';
-      let toggleIcon = isParent ? `<span class="caret">▶</span>` : '';
+      let toggleIcon = isParent ? `<span class="caret shrink-0 mt-0.5">▶</span>` : `<span class="shrink-0 w-2.5 md:w-4 inline-block"></span>`;
 
       return `
         <tr class="${cls} ${hiddenCls} transition-colors hover:bg-slate-50" data-kode="${kode}" data-len="${len}" onclick="toggleRow('${kode}')">
-          <td class="p-3 md:p-3.5 font-mono text-[10.5px] md:text-[11.5px] border-b border-slate-100 text-slate-500">${kode}</td>
-          <td class="p-3 md:p-3.5 text-[11px] md:text-[12px] border-b border-slate-100 text-slate-700 whitespace-nowrap overflow-hidden text-ellipsis">${indent}${toggleIcon}${d.nama_perkiraan}</td>
-          <td class="p-3 md:p-3.5 text-[11.5px] md:text-[13px] border-b border-slate-100 text-right font-bold ${d.total_saldo < 0 ? 'text-red-600' : 'text-slate-800'}">
+          <td class="px-2 md:px-3.5 py-2 font-mono text-[9.5px] md:text-[11.5px] border-b border-slate-100 text-slate-500 align-top">${kode}</td>
+          <td class="px-1 md:px-3.5 py-2 text-[10px] md:text-[12px] border-b border-slate-100 text-slate-700 align-top leading-snug">
+             <div class="flex items-start" style="padding-left: ${marginLeft}px;">
+                ${toggleIcon}
+                <span class="break-words whitespace-normal">${d.nama_perkiraan}</span>
+             </div>
+          </td>
+          <td class="px-2 md:px-3.5 py-2 text-[10.5px] md:text-[13px] border-b border-slate-100 text-right font-bold ${d.total_saldo < 0 ? 'text-red-600' : 'text-slate-800'} align-top">
             ${fmtNom(d.total_saldo)}
           </td>
         </tr>
@@ -265,7 +275,6 @@
     });
   }
   
-  // 🔥 FIX: Angka Disingkat di UI, Title tetep Full Angka 🔥
   function renderSummary(data, type) {
     const container = document.getElementById('rekapContainer');
     const getVal = (p) => Math.round(Number(data.find(x => x.kode_perk === p)?.total_saldo || 0));
@@ -274,32 +283,32 @@
       let a = getVal('1'), k = getVal('2'), e = getVal('3');
       container.innerHTML = `
         <div class="rekap-card flex flex-col justify-center" title="Rp ${fmtNom(a)}">
-           <p class="text-[9px] md:text-[10px] font-bold text-slate-400 uppercase tracking-widest">Total Asset (1)</p>
-           <p class="text-base md:text-2xl mt-0.5 md:mt-1 val-plus">Rp ${fmtSingkat(a)}</p>
+            <p class="text-[9px] md:text-[10px] font-bold text-slate-400 uppercase tracking-widest">Total Asset (1)</p>
+            <p class="text-sm md:text-2xl mt-0.5 val-plus">Rp ${fmtSingkat(a)}</p>
         </div>
         <div class="rekap-card flex flex-col justify-center" title="Rp ${fmtNom(k)}">
-           <p class="text-[9px] md:text-[10px] font-bold text-slate-400 uppercase tracking-widest">Total Kewajiban (2)</p>
-           <p class="text-base md:text-2xl mt-0.5 md:mt-1 text-blue-600 font-bold font-mono">Rp ${fmtSingkat(k)}</p>
+            <p class="text-[9px] md:text-[10px] font-bold text-slate-400 uppercase tracking-widest">Kewajiban (2)</p>
+            <p class="text-sm md:text-2xl mt-0.5 text-blue-600 font-bold font-mono">Rp ${fmtSingkat(k)}</p>
         </div>
         <div class="rekap-card flex flex-col justify-center col-span-2 md:col-span-1" title="Rp ${fmtNom(e)}">
-           <p class="text-[9px] md:text-[10px] font-bold text-slate-400 uppercase tracking-widest">Total Ekuitas (3)</p>
-           <p class="text-base md:text-2xl mt-0.5 md:mt-1 text-orange-500 font-bold font-mono">Rp ${fmtSingkat(e)}</p>
+            <p class="text-[9px] md:text-[10px] font-bold text-slate-400 uppercase tracking-widest">Total Ekuitas (3)</p>
+            <p class="text-sm md:text-2xl mt-0.5 text-orange-500 font-bold font-mono">Rp ${fmtSingkat(e)}</p>
         </div>
       `;
     } else {
       let p = getVal('4'), b = getVal('5'), lr = p - b;
       container.innerHTML = `
         <div class="rekap-card flex flex-col justify-center" title="Rp ${fmtNom(p)}">
-           <p class="text-[9px] md:text-[10px] font-bold text-slate-400 uppercase tracking-widest">Total Pendapatan (4)</p>
-           <p class="text-base md:text-2xl mt-0.5 md:mt-1 val-plus">Rp ${fmtSingkat(p)}</p>
+            <p class="text-[9px] md:text-[10px] font-bold text-slate-400 uppercase tracking-widest">Pendapatan (4)</p>
+            <p class="text-sm md:text-2xl mt-0.5 val-plus">Rp ${fmtSingkat(p)}</p>
         </div>
         <div class="rekap-card flex flex-col justify-center" title="Rp ${fmtNom(b)}">
-           <p class="text-[9px] md:text-[10px] font-bold text-slate-400 uppercase tracking-widest">Total Biaya (5)</p>
-           <p class="text-base md:text-2xl mt-0.5 md:mt-1 val-minus">Rp ${fmtSingkat(b)}</p>
+            <p class="text-[9px] md:text-[10px] font-bold text-slate-400 uppercase tracking-widest">Biaya (5)</p>
+            <p class="text-sm md:text-2xl mt-0.5 val-minus">Rp ${fmtSingkat(b)}</p>
         </div>
         <div class="rekap-card flex flex-col justify-center col-span-2 md:col-span-1" title="Rp ${fmtNom(lr)}">
-           <p class="text-[9px] md:text-[10px] font-bold text-slate-400 uppercase tracking-widest">Laba Rugi Berjalan</p>
-           <p class="text-base md:text-2xl mt-0.5 md:mt-1 ${(lr) >=0 ? 'val-plus' : 'val-minus'}">Rp ${fmtSingkat(lr)}</p>
+            <p class="text-[9px] md:text-[10px] font-bold text-slate-400 uppercase tracking-widest">Laba Rugi Berjalan</p>
+            <p class="text-sm md:text-2xl mt-0.5 ${(lr) >=0 ? 'val-plus' : 'val-minus'}">Rp ${fmtSingkat(lr)}</p>
         </div>
       `;
     }
@@ -323,4 +332,6 @@
     a.download = `Laporan_Keuangan_${namaKantor}_${document.getElementById('harian_date').value}.xls`;
     a.click();
   }
+
+  document.getElementById('filterForm').onsubmit = e => { e.preventDefault(); fetchRekap(); };
 </script>
