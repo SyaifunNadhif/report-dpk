@@ -13,24 +13,38 @@
   @keyframes scaleUp { from { transform: scale(0.95); opacity: 0; } to { transform: scale(1); opacity: 1; } }
   .animate-scale-up { animation: scaleUp 0.2s ease-out forwards; }
 
-  /* Magic Sticky Table */
-  table thead th { position: sticky; box-shadow: inset 0 -1px 0 #cbd5e1; }
-  .head-lapis-1 th { top: 0; z-index: 40; height: 50px; }
-  .head-lapis-2 th { top: 50px; z-index: 38; height: 50px; border-bottom: 2px solid #cbd5e1; box-shadow: inset 0 -1px 0 #cbd5e1; }
-  .head-mod-1 th { top: 0; z-index: 40; height: 46px; }
-  .head-mod-2 th { top: 46px; z-index: 39; height: 44px; border-bottom: 2px solid #cbd5e1; box-shadow: inset 0 -1px 0 #cbd5e1; }
+  /* ========================================================
+     🔥 MAGIC STICKY TABLE 🔥
+     ======================================================== */
+  
+  /* --- Tabel Utama (Growth) --- */
+  #tabelUtama thead { position: sticky; top: 0; z-index: 60; box-shadow: inset 0 -1px 0 #cbd5e1; }
+  .head-lapis-1 th { height: 50px; }
+  .head-lapis-2 th { height: 46px; border-bottom: 2px solid #cbd5e1; box-shadow: inset 0 -1px 0 #cbd5e1; }
 
   .freeze-col-1 { position: sticky; left: 0; z-index: 20; box-shadow: inset -1px 0 0 #e2e8f0; }
   .freeze-col-2 { position: sticky; left: 0; z-index: 20; box-shadow: inset -1px 0 0 #e2e8f0; }
-  @media (min-width: 768px) { .freeze-col-2 { left: 80px; } .mod-freeze-2 { left: 120px; } }
+  @media (min-width: 768px) { .freeze-col-2 { left: 80px; } }
 
-  .head-lapis-1 th.freeze-col-1, .head-mod-1 th.freeze-col-1 { z-index: 50; border-top-left-radius: 8px; }
-  .head-lapis-1 th.freeze-col-2, .head-mod-1 th.mod-freeze-2 { z-index: 49; }
-  .head-lapis-2 th.freeze-col-1, .head-mod-2 th.freeze-col-1 { z-index: 48; }
-  .head-lapis-2 th.freeze-col-2, .head-mod-2 th.mod-freeze-2 { z-index: 47; }
+  #tabelUtama thead th.freeze-col-1 { z-index: 70; border-top-left-radius: 8px; }
+  #tabelUtama thead th.freeze-col-2 { z-index: 69; }
+  .head-lapis-2 th.freeze-col-1 { z-index: 68; }
+  .head-lapis-2 th.freeze-col-2 { z-index: 67; }
+
+  /* --- Tabel Modal Detail --- */
+  .modal-head-1 th { position: sticky; top: 0; z-index: 60; height: 48px; box-shadow: inset 0 -1px 0 #cbd5e1; }
+  .modal-head-2 th { position: sticky; top: 48px; z-index: 59; height: 42px; border-bottom: 2px solid #cbd5e1; }
+
+  .mod-freeze-1 { position: sticky; left: 0; z-index: 20; box-shadow: inset -1px 0 0 #e2e8f0; }
+  .mod-freeze-2 { position: sticky; left: 120px; z-index: 20; box-shadow: inset -1px 0 0 #e2e8f0; }
+
+  .modal-head-1 th.mod-freeze-1 { z-index: 70; }
+  .modal-head-1 th.mod-freeze-2 { z-index: 69; }
+  .modal-head-2 th.mod-freeze-1 { z-index: 68; }
+  .modal-head-2 th.mod-freeze-2 { z-index: 67; }
 
   tbody tr:hover td { cursor: pointer; background-color: #f8fafc !important; }
-  tbody tr:hover td.freeze-col-1, tbody tr:hover td.freeze-col-2, tbody tr:hover td.mod-freeze-2 { filter: brightness(0.98); }
+  tbody tr:hover td.freeze-col-1, tbody tr:hover td.freeze-col-2, tbody tr:hover td.mod-freeze-1, tbody tr:hover td.mod-freeze-2 { filter: brightness(0.98); }
 
   /* Form Inputs */
   .inp { border:1px solid #cbd5e1; border-radius:8px; background:#fff; outline:none; transition: border 0.2s;}
@@ -43,10 +57,6 @@
   input[type="date"]::-webkit-inner-spin-button, input[type="date"]::-webkit-calendar-picker-indicator { display: none; -webkit-appearance: none; }
   input[type="date"] { -moz-appearance: textfield; }
 </style>
-
-<script>
-    window.currentUser = { kode_kantor: (typeof USER_KODE_KANTOR !== 'undefined') ? USER_KODE_KANTOR : '000' };
-</script>
 
 <div class="max-w-[1920px] mx-auto px-2 md:px-4 py-4 md:py-6 h-[calc(100vh-80px)] flex flex-col bg-slate-50 font-sans text-slate-800 overflow-hidden">
   
@@ -152,22 +162,29 @@
 <div id="modalDetail" class="fixed inset-0 z-[9999] hidden items-end md:items-center justify-center p-0 sm:p-4">
   <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity" onclick="closeModal()"></div>
   <div class="relative bg-white w-full h-[95vh] md:h-[92vh] max-w-[1700px] rounded-t-xl md:rounded-2xl shadow-2xl flex flex-col overflow-hidden animate-scale-up">
+    
     <div class="flex justify-between items-center px-3 py-3 md:px-5 md:py-4 border-b bg-slate-50 shrink-0 flex-wrap gap-2">
         <div class="flex-1 min-w-[200px]" id="modal-title-container"></div>
         <div class="flex flex-wrap items-center gap-1.5 ml-auto shrink-0 w-full sm:w-auto mt-2 sm:mt-0 overflow-x-auto no-scrollbar">
             <select id="filter_kankas_modal" class="inp px-2 md:px-3 h-[34px] md:h-10 flex-1 sm:w-[160px] text-xs md:text-sm font-bold text-blue-800 bg-blue-50 outline-none shrink-0 cursor-pointer" onchange="fetchDetail(1)"><option value="">Semua Kankas</option></select>
             <select id="filter_ao_modal" class="inp px-2 md:px-3 h-[34px] md:h-10 flex-1 sm:w-[160px] text-xs md:text-sm font-bold text-slate-700 bg-white outline-none shrink-0 cursor-pointer" onchange="fetchDetail(1)"><option value="">Semua AO</option></select>
+            
             <button id="btn-excel-modal" onclick="exportExcelDetail()" class="btn-icon bg-emerald-600 hover:bg-emerald-700 text-white px-3 md:px-4 h-[34px] md:h-10 rounded-lg shadow-sm text-xs md:text-sm font-bold uppercase tracking-wider shrink-0"><span class="hidden sm:inline ml-1.5">Excel</span></button>
             <button onclick="closeModal()" class="w-[34px] md:w-10 h-[34px] md:h-10 flex items-center justify-center rounded-xl bg-slate-200 hover:bg-red-500 hover:text-white text-slate-600 transition font-bold text-xl md:text-2xl leading-none shrink-0">&times;</button>
         </div>
     </div>
+
     <div class="flex-1 overflow-auto bg-slate-50 relative custom-scrollbar p-0 md:p-3">
-        <div id="loadingModal" class="hidden absolute inset-0 bg-white/90 z-40 flex flex-col items-center justify-center text-blue-600 backdrop-blur-sm transition-colors"></div>
+        <div id="loadingModal" class="hidden absolute inset-0 bg-white/90 z-40 flex flex-col items-center justify-center text-blue-600 backdrop-blur-sm transition-colors">
+            <div class="animate-spin rounded-full h-8 w-8 border-4 border-blue-200 border-t-blue-600 mb-2"></div>
+            <span class="text-xs font-bold uppercase tracking-widest">Memuat...</span>
+        </div>
         <table class="w-max min-w-full text-left text-slate-700 border border-slate-200 md:rounded-xl shadow-sm bg-white table-fixed" id="tableDetail">
-            <thead class="text-slate-600 font-extrabold uppercase tracking-wider text-[10px] md:text-xs head-mod-1" id="headDetail"></thead>
+            <thead class="text-slate-600 font-extrabold uppercase tracking-wider text-[10px] md:text-xs modal-head-1" id="headDetail"></thead>
             <tbody id="bodyDetail" class="divide-y divide-slate-100 bg-white text-[10px] md:text-sm"></tbody>
         </table>
     </div>
+
     <div class="px-3 py-3 md:px-6 md:py-4 border-t bg-white flex justify-between items-center shrink-0">
         <span id="pageInfo" class="text-[10px] md:text-sm font-bold text-slate-600 bg-slate-100 px-3 py-1 rounded-lg">0 Data</span>
         <div class="flex gap-1.5 md:gap-2" id="wrap-paging">
@@ -175,6 +192,7 @@
             <button id="btnNext" onclick="changePage(1)" class="px-3 md:px-4 py-1.5 md:py-2 bg-white border border-slate-300 rounded-lg text-[10px] md:text-sm font-bold text-slate-600 hover:bg-slate-50 disabled:opacity-50 transition shadow-sm">Next »</button>
         </div>
     </div>
+
   </div>
 </div>
 
@@ -184,7 +202,6 @@
   const API_KODE = './api/kode/';
   const API_DATE = './api/date/';
   
-  // DEFAULT AWAL PROMO (Sesuai Arahan)
   const AWAL_PROMO_DATE = '2026-02-23';
 
   const nfID = new Intl.NumberFormat('id-ID');
@@ -201,7 +218,12 @@
   let currentDetailParams = {};
   let currentDetailPage = 1; let currentDetailTotalPages = 1;
   const detailLimit = 20; 
-  let userKodeGlobal = window.currentUser.kode_kantor || '000';
+  
+  // 🔥 FIX 1: ROLE JWT LOGIN 🔥
+  const user = (window.getUser && window.getUser()) || null;
+  let userKodeGlobal = (user && user.kode) ? String(user.kode).padStart(3, '0') : '000';
+  if(userKodeGlobal === '099') userKodeGlobal = '000'; // Pusat / 099 dianggap Konsolidasi (Bebas)
+  
   let defaultClosingGrowth = '';
 
   // --- INIT ---
@@ -224,10 +246,11 @@
 
   async function populateAreaOptions(userKode){
       const el = document.getElementById('opt_area');
+      // Jika user loginnya spesifik Cabang (bukan 000)
       if(userKode !== '000'){
           el.innerHTML = `<option value="CABANG|${userKode}">CABANG ${userKode}</option>`;
           el.value = `CABANG|${userKode}`;
-          el.disabled = true;
+          el.disabled = true; // Kunci Dropdown Cabang
           return;
       }
       try {
@@ -250,7 +273,6 @@
       } catch(e){ el.innerHTML = `<option value="ALL|ALL">Error Load</option>`; }
   }
 
-  // --- TAB SWITCHER LOGIC ---
   function switchTab(tab) {
       activeTab = tab;
       
@@ -262,25 +284,18 @@
       
       const wrapArea = document.getElementById('wrap-area');
       const divider = document.getElementById('divider-filter');
-
-      // Ambil elemen Closing Date
       const elClosing = document.getElementById('closing_date');
 
       if (tab === 'growth') {
-          // --- TAB GROWTH ---
           tabGrowth.className = "pb-2 md:pb-3 font-extrabold text-xs md:text-sm uppercase transition border-b-[3px] border-blue-600 text-blue-700 whitespace-nowrap";
           tabPromo.className  = "pb-2 md:pb-3 font-extrabold text-xs md:text-sm uppercase transition border-b-[3px] border-transparent text-slate-400 hover:text-slate-600 whitespace-nowrap";
           
-          // Sembunyikan Filter Area (Tabel Growth tanpa filter area)
           if(wrapArea) wrapArea.style.display = 'none';       
           if(divider) divider.style.display = 'none';
           
-          // Kembalikan Closing Date ke tanggal normal bulan lalu
           elClosing.value = defaultClosingGrowth;
-
           btnCari.className = "btn-icon h-full flex-1 md:w-[80px] bg-blue-600 hover:bg-blue-700 text-white rounded-lg shadow-sm";
           loaderUtama.className = "hidden absolute inset-0 bg-white/80 z-[100] flex flex-col items-center justify-center text-blue-600 backdrop-blur-sm transition-colors";
-
           document.getElementById('content-promo').style.display = 'none';
           document.getElementById('content-growth').style.display = 'flex';
 
@@ -293,20 +308,15 @@
           `;
           setupHeaderUtama(userKodeGlobal); 
       } else {
-          // --- TAB PROMO ---
           tabPromo.className  = "pb-2 md:pb-3 font-extrabold text-xs md:text-sm uppercase transition border-b-[3px] border-pink-600 text-pink-700 whitespace-nowrap";
           tabGrowth.className = "pb-2 md:pb-3 font-extrabold text-xs md:text-sm uppercase transition border-b-[3px] border-transparent text-slate-400 hover:text-slate-600 whitespace-nowrap";
           
-          // Munculkan Filter Area
           if(wrapArea) wrapArea.style.display = 'flex';       
           if(divider) divider.style.display = 'block';
 
-          // Set Closing Date default Promo: 2026-02-23 (bisa diedit user)
           elClosing.value = AWAL_PROMO_DATE;
-
           btnCari.className = "btn-icon h-full flex-1 md:w-[80px] bg-pink-600 hover:bg-pink-700 text-white rounded-lg shadow-sm";
           loaderUtama.className = "hidden absolute inset-0 bg-white/80 z-[100] flex flex-col items-center justify-center text-pink-600 backdrop-blur-sm transition-colors";
-
           document.getElementById('content-growth').style.display = 'none';
           document.getElementById('content-promo').style.display = 'flex';
 
@@ -321,7 +331,6 @@
       fetchRekap();
   }
 
-  // --- LOGIKA QUICK FILTER PROMO ---
   function quickDatePromo(tipe) {
       const elHarian = document.getElementById('harian_date');
       const elClosing = document.getElementById('closing_date');
@@ -339,14 +348,11 @@
           dateHarian.setDate(dateHarian.getDate() - 30);
           elClosing.value = dateHarian.toISOString().split('T')[0];
       } else if (tipe === 'bulan_ini') {
-          // Tanggal 1 bulan ini
           const firstDay = new Date(dateHarian.getFullYear(), dateHarian.getMonth(), 1);
           elClosing.value = firstDay.toISOString().split('T')[0];
       } else if (tipe === 'awal_promo') {
-          // Hardcode 23 Feb 2026
           elClosing.value = AWAL_PROMO_DATE;
       }
-      
       fetchRekap();
   }
 
@@ -359,7 +365,6 @@
 
       const th = document.getElementById('headUtama');
       let thContent = `<tr>`;
-      th.className = "tracking-wider text-slate-800 font-extrabold text-xs md:text-sm head-lapis-1";
       
       if (userKode === '000') {
           thContent += `
@@ -417,13 +422,13 @@
                   type: 'rekap_realisasi_growth', 
                   closing_date: document.getElementById('closing_date').value, 
                   harian_date: document.getElementById('harian_date').value, 
-                  kode_kantor: userKodeGlobal === '000' ? null : userKodeGlobal,
+                  kode_kantor: userKodeGlobal === '000' ? null : userKodeGlobal, // Filter JWT Cabang
                   korwil: null
               };
           } else {
               payload = { 
                   type: 'chart_promo', 
-                  closing_date: document.getElementById('closing_date').value, // Kirim dari form input yang diedit/diklik
+                  closing_date: document.getElementById('closing_date').value,
                   harian_date: document.getElementById('harian_date').value,
                   kode_kantor: reqCabang, 
                   korwil: reqKorwil 
@@ -652,7 +657,9 @@
       a.click();
   }
 
-  // --- MODAL LOGIC (HANYA UNTUK GROWTH) ---
+  // ==========================================
+  // 🔥 MODAL DETAIL LOGIC (FILTER AO FIXED) 🔥
+  // ==========================================
   function initModalDetail(kode, nama) {
       if (userKodeGlobal !== '000' && String(kode) !== userKodeGlobal) {
           alert(`AKSES DITOLAK!\nAnda tidak memiliki izin untuk melihat detail Cabang ${kode}.`);
@@ -660,9 +667,6 @@
       }
 
       currentDetailParams = { kode_kantor: kode, kode_kankas: null, kode_ao: null };
-
-      const selAO = document.getElementById('filter_ao_modal');
-      selAO.innerHTML = '<option value="">Semua AO</option>';
 
       const modal = document.getElementById('modalDetail');
       modal.classList.remove('hidden'); modal.classList.add('flex');
@@ -676,19 +680,20 @@
       `;
       
       mHead.innerHTML = `
-          <tr class="bg-[#f1f5f9] text-blue-900">
-              <th class="px-3 md:px-4 py-2.5 md:py-4 border-b border-r border-slate-300 w-[120px] mod-sticky-1 rounded-tl-lg md:rounded-tl-xl bg-[#f1f5f9]">REKENING</th>
-              <th class="px-4 md:px-5 py-2.5 md:py-4 border-b border-r border-slate-300 w-[240px] md:w-[300px] mod-freeze-2 bg-[#f1f5f9]">NAMA NASABAH</th>
-              <th class="px-3 md:px-4 py-2.5 md:py-4 border-b border-r border-slate-300 w-[200px] md:w-[250px]">ALAMAT</th>
-              <th class="px-3 md:px-4 py-2.5 md:py-4 border-b border-r border-slate-300 w-[140px] text-center">KANKAS</th>
-              <th class="px-3 md:px-4 py-2.5 md:py-4 border-b border-r border-slate-300 w-[160px]">NAMA AO</th>
-              <th class="px-3 md:px-4 py-2.5 md:py-4 border-b border-r border-slate-300 w-[120px] text-center">TGL REALISASI</th>
-              <th class="px-4 md:px-5 py-2.5 md:py-4 border-b border-slate-300 w-[160px] md:w-[200px] text-right">PLAFON</th>
+          <tr class="modal-head-1 bg-[#f1f5f9] text-blue-900">
+              <th class="px-3 md:px-4 py-2 border-b border-r border-slate-300 w-[120px] mod-freeze-1 rounded-tl-lg md:rounded-tl-xl bg-[#f1f5f9]">REKENING</th>
+              <th class="px-4 md:px-5 py-2 border-b border-r border-slate-300 w-[240px] md:w-[300px] mod-freeze-2 bg-[#f1f5f9]">NAMA NASABAH</th>
+              <th class="px-3 md:px-4 py-2 border-b border-r border-slate-300 w-[200px] md:w-[250px] bg-[#f1f5f9]">ALAMAT</th>
+              <th class="px-3 md:px-4 py-2 border-b border-r border-slate-300 w-[140px] text-center bg-[#f1f5f9]">KANKAS</th>
+              <th class="px-3 md:px-4 py-2 border-b border-r border-slate-300 w-[160px] bg-[#f1f5f9]">NAMA AO</th>
+              <th class="px-3 md:px-4 py-2 border-b border-r border-slate-300 w-[120px] text-center bg-[#f1f5f9]">TGL REALISASI</th>
+              <th class="px-4 md:px-5 py-2 border-b border-slate-300 w-[160px] md:w-[200px] text-right bg-[#f1f5f9]">PLAFON</th>
           </tr>
-          <tr id="rowTotalDetailAtas" class="head-mod-2 bg-[#eff6ff]"></tr>
+          <tr id="rowTotalDetailAtas" class="modal-head-2 bg-[#eff6ff]"></tr>
       `;
       
       loadKankasModal(kode);
+      loadAOModalDropdown(kode); // 🔥 FETCH AO RESMI DARI API KODE 🔥
       fetchDetail(1);
   }
 
@@ -705,6 +710,23 @@
       } catch(e) {}
   }
 
+  // 🔥 FUNGSI BARU: Ambil AO Resmi dari Database biar ID (kode_group2)-nya valid
+  async function loadAOModalDropdown(kode_cabang) {
+      const el = document.getElementById('filter_ao_modal');
+      el.innerHTML = '<option value="">Semua AO</option>';
+      if(!kode_cabang) return;
+      try {
+          const r = await apiCall(API_KODE, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({type: 'kode_ao_kredit', kode_kantor: kode_cabang}) });
+          const j = await r.json();
+          if(j.data && Array.isArray(j.data)) {
+              j.data.forEach(x => { 
+                  const rawName = x.nama_ao || x.kode_group2;
+                  el.add(new Option(rawName, x.kode_group2)); 
+              });
+          }
+      } catch(e) {}
+  }
+
   function changePage(step) {
       const n = currentDetailPage + step;
       if (n > 0 && n <= currentDetailTotalPages) fetchDetail(n);
@@ -715,8 +737,10 @@
       const trTot = document.getElementById('rowTotalDetailAtas');
       
       l.classList.remove('hidden'); tb.innerHTML = ''; trTot.innerHTML = '';
+      
       currentDetailParams.kode_kankas = document.getElementById('filter_kankas_modal').value;
-      currentDetailParams.kode_ao = document.getElementById('filter_ao_modal').value;
+      // AO yang dikirim sekarang murni ID-nya (karena kita load pakai fungsi loadAOModalDropdown di atas)
+      currentDetailParams.kode_ao = document.getElementById('filter_ao_modal').value; 
 
       try {
           const payload = {
@@ -725,7 +749,7 @@
               harian_date: document.getElementById('harian_date').value,
               kode_kantor: currentDetailParams.kode_kantor,
               kode_kankas: currentDetailParams.kode_kankas,
-              kode_ao: currentDetailParams.kode_ao,
+              kode_ao: currentDetailParams.kode_ao, // 🔥 Filter ID AO dikirim ke Backend
               page: page, limit: detailLimit
           };
 
@@ -733,14 +757,8 @@
           const json = await res.json();
           
           let list = Array.isArray(json.data) ? json.data : (json.data?.data || []);
-          
-          const selAO = document.getElementById('filter_ao_modal');
-          if (selAO.options.length === 1 && list.length > 0) {
-              const uniqueAOs = [...new Map(list.filter(x=>x.nama_ao).map(item => [item['nama_ao'], item])).values()];
-              uniqueAOs.forEach(ao => { selAO.add(new Option(ao.nama_ao, ao.nama_ao)); }); 
-          }
-
           const meta = json.data?.pagination || json.pagination || { total_records: list.length, total_pages: 1 };
+          
           currentDetailPage = page; currentDetailTotalPages = meta.total_pages;
 
           if(list.length === 0) {
@@ -755,8 +773,8 @@
               const alamatPendek = alamatLengkap.length > 25 ? alamatLengkap.substring(0, 25) + '...' : alamatLengkap;
 
               html += `<tr class="transition h-[52px] group border-b border-slate-100 hover:bg-slate-50">
-                    <td class="mod-sticky-1 px-3 md:px-4 py-2 font-mono text-sm text-slate-500 bg-white border-r border-slate-100 shadow-[inset_-1px_0_0_#e2e8f0] group-hover:bg-slate-50">${r.no_rekening}</td>
-                    <td class="mod-sticky-2 px-4 md:px-5 py-2 font-bold text-sm text-slate-700 bg-white truncate border-r border-slate-100 max-w-[240px] md:max-w-[300px] shadow-[inset_-1px_0_0_#e2e8f0] group-hover:bg-slate-50" title="${r.nama_nasabah}">${r.nama_nasabah}</td>
+                    <td class="mod-freeze-1 px-3 md:px-4 py-2 font-mono text-sm text-slate-500 bg-white border-r border-slate-100 shadow-[inset_-1px_0_0_#e2e8f0] group-hover:bg-slate-50">${r.no_rekening}</td>
+                    <td class="mod-freeze-2 px-4 md:px-5 py-2 font-bold text-sm text-slate-700 bg-white truncate border-r border-slate-100 max-w-[240px] md:max-w-[300px] shadow-[inset_-1px_0_0_#e2e8f0] group-hover:bg-slate-50" title="${r.nama_nasabah}">${r.nama_nasabah}</td>
                     <td class="px-3 md:px-4 py-2 text-sm text-slate-500 whitespace-nowrap border-r border-slate-100" title="${alamatLengkap}">${alamatPendek}</td>
                     <td class="px-3 md:px-4 py-2 text-center font-mono text-xs md:text-sm text-slate-500 border-r border-slate-100">${r.nama_kankas||'-'}</td>
                     <td class="px-3 md:px-4 py-2 text-sm font-bold text-blue-700 truncate border-r border-slate-100">${r.nama_ao||'-'}</td>
@@ -767,8 +785,8 @@
           tb.innerHTML = html;
 
           trTot.innerHTML = `
-              <th class="mod-sticky-1 px-3 md:px-4 border-r border-b border-blue-200 uppercase tracking-widest text-center text-blue-900 bg-[#eff6ff]">-</th>
-              <th class="mod-sticky-2 px-4 md:px-5 border-r border-b border-blue-200 uppercase tracking-widest font-extrabold text-[10px] md:text-sm text-blue-900 bg-[#eff6ff]">TOTAL HALAMAN INI</th>
+              <th class="mod-freeze-1 px-3 md:px-4 border-r border-b border-blue-200 text-center bg-[#eff6ff]">-</th>
+              <th class="mod-freeze-2 px-4 md:px-5 border-r border-b border-blue-200 uppercase tracking-widest font-extrabold text-[10px] md:text-sm text-blue-900 bg-[#eff6ff]">TOTAL HALAMAN INI</th>
               <th class="px-3 md:px-4 border-r border-b border-blue-200 text-center bg-[#eff6ff]">-</th>
               <th class="px-3 md:px-4 border-r border-b border-blue-200 text-center bg-[#eff6ff]">-</th>
               <th class="px-3 md:px-4 border-r border-b border-blue-200 text-center bg-[#eff6ff]">-</th>
@@ -795,8 +813,8 @@
               closing_date: document.getElementById('closing_date').value,
               harian_date: document.getElementById('harian_date').value,
               kode_kantor: currentDetailParams.kode_kantor,
-              kode_kankas: currentDetailParams.kode_kankas,
-              kode_ao: document.getElementById('filter_ao_modal').value,
+              kode_kankas: document.getElementById('filter_kankas_modal').value,
+              kode_ao: document.getElementById('filter_ao_modal').value, 
               page: 1, limit: 10000 
           };
           

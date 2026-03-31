@@ -509,14 +509,16 @@ class KreditController {
     }
 
     // ===================================================================
-    // 3. FUNGSI DETAIL PROMO (Dengan Filter Tanggal)
+    // 3. FUNGSI DETAIL PROMO (Dengan Filter Tanggal, Kankas, dan AO)
     // ===================================================================
     public function getDetailPromo($input = []) {
         $closing_date = $input['closing_date'] ?? date('Y-m-d', strtotime('last day of previous month'));
         $harian_date  = $input['harian_date']  ?? date('Y-m-d');
         $kode_promo   = $input['kode_promo'] ?? '';
+        
         $kc           = $input['kode_kantor'] ?? null;
         $kankas       = $input['kode_kankas'] ?? null; 
+        $kode_ao      = $input['kode_ao'] ?? null; // 🔥 TAMBAHAN: Tangkap Filter AO
 
         if ($kc === '000' || $kc === '') $kc = null;
 
@@ -539,9 +541,16 @@ class KreditController {
             $params[':kc'] = str_pad((string)$kc, 3, '0', STR_PAD_LEFT);
         }
 
+        // Filter Kankas
         if ($kankas) {
             $filterClause .= " AND t.kode_group1 = :kankas";
             $params[':kankas'] = $kankas;
+        }
+
+        // 🔥 TAMBAHAN: Filter AO (Biar dropdown AO di FE jalan)
+        if ($kode_ao) {
+            $filterClause .= " AND t.kode_group2 = :kode_ao";
+            $params[':kode_ao'] = $kode_ao;
         }
 
         $sql = "SELECT 
@@ -572,7 +581,6 @@ class KreditController {
             sendResponse(500, "Error: " . $e->getMessage());
         }
     }
-
 /**
      * =================================================================
      * HELPER FILTER KORWIL & CABANG
