@@ -262,6 +262,7 @@ async function populateKantorOptionsFP(userKode) {
       }
     });
   }
+  
 
   function renderSummary(data, type) {
     const container = document.getElementById('rekapContainer');
