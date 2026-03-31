@@ -9,8 +9,7 @@
         </span>
         <span>Monitoring Repayment Rate</span>
       </h1>
-      <p class="text-sm text-slate-500 italic ml-10 md:ml-[42px]">*OTP / RR = Total Baki Debet (Hari Menunggak = 0)</p>
-    </div>
+      </div>
 
     <form id="formFilterRR" class="flex flex-wrap md:flex-nowrap items-end gap-2 bg-white p-2 md:p-2.5 rounded-xl border border-slate-200 shadow-sm shrink-0 xl:ml-auto w-full md:w-auto overflow-x-auto no-scrollbar">
       
@@ -53,30 +52,27 @@
 
     <div class="h-full overflow-auto custom-scrollbar relative">
       <table class="min-w-full text-center border-separate border-spacing-0 text-slate-700 table-fixed" id="tabelRekapRR">
-        <thead class="uppercase bg-slate-100 text-slate-600 font-bold sticky top-0 z-50 text-xs md:text-sm tracking-wider">
+        <thead class="uppercase bg-slate-100 text-slate-600 font-bold sticky top-0 z-50 text-[11px] md:text-xs tracking-wider">
           <tr>
             <th rowspan="2" class="head-row px-2 py-3 border-b border-r border-slate-200 bg-slate-100 sticky left-0 z-50 w-[80px] shadow-[1px_0_0_#e2e8f0]">TGL</th>
-            <th colspan="2" class="head-row px-3 py-2 border-b border-r border-blue-200 bg-blue-50 text-blue-800">TARGET (M-1)</th>
-            <th colspan="2" class="head-row px-3 py-2 border-b border-r border-green-200 bg-green-50 text-green-800">OTP (LANCAR)</th>
-            <th colspan="2" class="head-row px-3 py-2 border-b border-r border-red-200 bg-red-50 text-red-800">DITAGIH</th>
-            <th colspan="5" class="head-row px-3 py-2 border-b border-purple-200 bg-purple-50 text-purple-800">RECOVERY / PEMBAYARAN</th>
+            <!-- <th class="head-row px-3 py-2 border-b border-r border-blue-200 bg-blue-50 text-blue-800">TARGET (M-1)</th>
+            <th class="head-row px-3 py-2 border-b border-r border-green-200 bg-green-50 text-green-800">OTP (LANCAR)</th>
+            <th class="head-row px-3 py-2 border-b border-r border-red-200 bg-red-50 text-red-800">DITAGIH</th> -->
+            <th colspan="3" class="head-row px-3 py-2 border-b border-slate-200 bg-slate-100 text-purple-800">TOTAL OUTSTANDING</th>
+            <th colspan="4" class="head-row px-3 py-2 border-b border-purple-200 bg-purple-50 text-purple-800">RECOVERY / PEMBAYARAN</th>
           </tr>
-          <tr class="text-[10px] md:text-xs">
-            <th class="head-row px-2 py-2 border-b border-r border-blue-100 bg-blue-50 text-blue-700 w-[70px]">NOA</th>
-            <th class="head-row px-3 py-2 border-b border-r border-blue-200 bg-blue-50 text-blue-700 w-[140px]">OS</th>
-            <th class="head-row px-2 py-2 border-b border-r border-green-100 bg-green-50 text-green-700 w-[70px]">NOA</th>
-            <th class="head-row px-3 py-2 border-b border-r border-green-200 bg-green-50 text-green-700 w-[140px]">OS</th>
-            <th class="head-row px-2 py-2 border-b border-r border-red-100 bg-red-50 text-red-700 w-[70px]">NOA</th>
-            <th class="head-row px-3 py-2 border-b border-r border-red-200 bg-red-50 text-red-700 w-[140px]">OS</th>
-            <th class="head-row px-2 py-2 border-b border-r border-purple-100 bg-purple-50 text-purple-700 w-[70px]">NOA</th>
-            <th class="head-row px-3 py-2 border-b border-r border-purple-100 bg-purple-50 text-purple-700 w-[130px]">LUNAS</th>
-            <th class="head-row px-3 py-2 border-b border-r border-purple-100 bg-purple-50 text-purple-700 w-[130px]">ANGSURAN</th>
-            <th class="head-row px-3 py-2 border-b border-r border-purple-200 bg-purple-50 text-purple-700 w-[130px]">TOTAL</th>
+          <tr class="text-[10px] md:text-[11px]">
+            <th class="head-row px-3 py-2 border-b border-r border-blue-200 bg-blue-50 text-blue-700 w-[180px]">TARGET (M-1)</th>
+            <th class="head-row px-3 py-2 border-b border-r border-green-200 bg-green-50 text-green-700 w-[180px]">OTP (LANCAR)</th>
+            <th class="head-row px-3 py-2 border-b border-r border-red-200 bg-red-50 text-red-700 w-[180px]">DITAGIH/th>
+            <th class="head-row px-3 py-2 border-b border-r border-purple-100 bg-purple-50 text-purple-700 w-[160px]">LUNAS</th>
+            <th class="head-row px-3 py-2 border-b border-r border-purple-100 bg-purple-50 text-purple-700 w-[160px]">ANGSURAN</th>
+            <th class="head-row px-3 py-2 border-b border-r border-purple-200 bg-purple-50 text-purple-700 w-[160px]">TOTAL BAYAR</th>
             <th class="head-row px-2 py-2 border-b border-purple-200 bg-purple-50 text-purple-700 w-[80px]">%</th>
           </tr>
-          <tr class="sticky-total font-bold text-sm md:text-base" id="rowTotalRRAtas"></tr>
+          <tr class="sticky-total font-bold text-sm" id="rowTotalRRAtas"></tr>
         </thead>
-        <tbody id="bodyRR" class="divide-y divide-slate-100 bg-white group-tbody text-sm"></tbody>
+        <tbody id="bodyRR" class="divide-y divide-slate-100 bg-white group-tbody text-xs md:text-sm"></tbody>
       </table>
     </div>
   </div>
@@ -161,12 +157,26 @@
   .group-tbody tr:hover td { background-color: #f8fafc; }
   .group-tbody tr:hover td.sticky { background-color: #f8fafc !important; }
 
-  /* STICKY TOTAL ATAS */
-  #tabelRekapRR thead th.head-row { z-index: 40; }
-  #tabelRekapRR .sticky-total th {
+  /* 🔥 CSS STICKY MODEREN 🔥 */
+  /* Ganti logika z-index brittle pixel ke thead murni */
+  #tabelRekapRR thead {
       position: sticky;
-      top: 80px; 
-      z-index: 35;
+      top: 0;
+      z-index: 40; /* Z-index dasar untuk kepala tabel */
+  }
+
+  /* Logika Sticky Kiri untuk TGL */
+  #tabelRekapRR thead th.head-row.sticky.left-0 {
+      z-index: 50; /* Z-index tertinggi untuk perempatan atas-kiri */
+      position: sticky;
+      left: 0;
+  }
+
+  /* Logika Baris TOTAL yang di JS diisi */
+  #tabelRekapRR .sticky-total th {
+      /* position: sticky; */ /* Hapus di sini */
+      /* top: 80px; */ /* Hapus di sini (pemicu nabrak tgl 1) */
+      z-index: 35; /* Di bawah Z-index thead utama */
       background: #f1f5f9 !important; 
       color: #1e293b; 
       border-bottom: 2px solid #cbd5e1; 
@@ -174,15 +184,20 @@
       padding-bottom: 12px;
       box-shadow: 0 4px 6px -2px rgba(0,0,0,0.05);
   }
-  #tabelRekapRR thead th.sticky.left-0.head-row { z-index: 50; }
+
+  /* Logika Sticky Kiri untuk TOTAL perempatan bawah-kiri */
   #tabelRekapRR .sticky-total th.sticky.left-0 { 
-      z-index: 45; 
+      z-index: 45; /* Di atas th .sticky-total standar, tapi di bawah th.head-row TGL */
+      position: sticky; /* Keep Melayang Kiri */
+      left: 0; /* Keep Melayang Kiri */
       background: #e2e8f0 !important; 
       border-right: 1px solid #cbd5e1;
   }
-  @media (min-width: 768px) { #tabelRekapRR .sticky-total th { top: 88px; } }
 
-  /* MODAL TABLE: Sticky Columns CSS Logic */
+  /* 🔥 Hapus Media Query Brittle Pixel 🔥 */
+  /* @media (min-width: 768px) { #tabelRekapRR .sticky-total th { top: 88px; } } <- DELETE THIS */
+
+  /* MODAL TABLE: Sticky Columns CSS Logic (Sama Persis) */
   .modal-tbody tr:hover td { background-color: #f8fafc; }
   .modal-tbody tr:hover td.sticky { background-color: #f8fafc !important; }
   #headModalRR th.sticky.left-0 { z-index: 40; }
@@ -287,7 +302,7 @@
     abortRR = new AbortController();
 
     l.classList.remove('hidden'); 
-    tb.innerHTML = `<tr><td colspan="12" class="py-20 text-center text-slate-400 italic text-base">Sedang mengambil data...</td></tr>`;
+    tb.innerHTML = `<tr><td colspan="8" class="py-20 text-center text-slate-400 italic text-base">Sedang mengambil data...</td></tr>`;
     trTotal.innerHTML = '';
     rekapDataRaw = [];
     rekapGtRaw = null;
@@ -313,33 +328,52 @@
         
     } catch(err) {
         if(err.name !== 'AbortError') {
-            tb.innerHTML=`<tr><td colspan="12" class="py-16 text-center text-red-500 font-bold uppercase tracking-widest text-sm">Error: ${err.message}</td></tr>`;
+            tb.innerHTML=`<tr><td colspan="8" class="py-16 text-center text-red-500 font-bold uppercase tracking-widest text-sm">Error: ${err.message}</td></tr>`;
         }
     } finally { l.classList.add('hidden'); }
   }
 
+  /* 🔥 LOGIC RENDER TABEL (NOA DIBUNGKUS KE DALAM OS - SAMA PERSIS) 🔥 */
   function renderTableRR(rows, gt) {
       const tb = document.getElementById('bodyRR'); 
       const trTotal = document.getElementById('rowTotalRRAtas');
       
       tb.innerHTML = '';
-      if(rows.length === 0){ tb.innerHTML = `<tr><td colspan="12" class="py-20 text-center text-slate-500 text-base">Tidak ada data penagihan.</td></tr>`; return; }
+      if(rows.length === 0){ tb.innerHTML = `<tr><td colspan="8" class="py-20 text-center text-slate-500 text-base">Tidak ada data penagihan.</td></tr>`; return; }
 
-      // RENDER GRAND TOTAL BARIS TABEL SAJA (KOTAK SUMMARY DIHAPUS)
       if(gt) {
         trTotal.innerHTML = `
-            <th class="px-2 sticky left-0 text-center uppercase tracking-widest shadow-[1px_0_0_#cbd5e1] text-sm md:text-base">TOTAL</th>
-            <th class="border-r border-slate-300 px-3 text-right font-mono text-sm md:text-base">${fmt(gt.target_noa)}</th>
-            <th class="border-r border-slate-300 px-3 text-right font-mono text-blue-800 text-sm md:text-base">${fmt(gt.target_os)}</th>
-            <th class="border-r border-slate-300 px-3 text-right font-mono text-green-700 text-sm md:text-base">${fmt(gt.lancar_noa)}</th>
-            <th class="border-r border-slate-300 px-3 text-right font-mono text-green-700 text-sm md:text-base">${fmt(gt.lancar_os)}</th>
-            <th class="border-r border-slate-300 px-3 text-right font-mono text-red-600 text-sm md:text-base">${fmt(gt.macet_noa)}</th>
-            <th class="border-r border-slate-300 px-3 text-right font-mono text-red-600 text-sm md:text-base">${fmt(gt.macet_os)}</th>
-            <th class="border-r border-slate-300 px-3 text-right font-mono text-slate-600 text-sm md:text-base">${fmt(gt.lunas_noa)}</th>
-            <th class="border-r border-slate-300 px-3 text-right font-mono text-slate-600 text-sm md:text-base">${fmt(gt.lunas_os)}</th>
-            <th class="border-r border-slate-300 px-3 text-right font-mono text-slate-600 text-sm md:text-base">${fmt(gt.angsuran)}</th>
-            <th class="border-r border-slate-300 px-3 text-right font-mono text-purple-700 text-sm md:text-base">${fmt(gt.total_bayar)}</th>
-            <th class="px-2 text-center text-blue-700 font-extrabold text-base md:text-lg">${gt.persen}%</th>
+            <th class="px-2 sticky left-0 text-center uppercase tracking-widest shadow-[1px_0_0_#cbd5e1] text-sm">TOTAL</th>
+            
+            <th class="border-r border-slate-300 px-3 py-2 text-right">
+                <div class="text-blue-800 font-extrabold text-sm md:text-base mb-0.5">${fmt(gt.target_os)}</div>
+                <div class="text-[10px] text-slate-500 font-normal">NOA: <span class="font-bold text-slate-700">${fmt(gt.target_noa)}</span></div>
+            </th>
+            
+            <th class="border-r border-slate-300 px-3 py-2 text-right">
+                <div class="text-green-700 font-extrabold text-sm md:text-base mb-0.5">${fmt(gt.lancar_os)}</div>
+                <div class="text-[10px] text-slate-500 font-normal">NOA: <span class="font-bold text-slate-700">${fmt(gt.lancar_noa)}</span></div>
+            </th>
+            
+            <th class="border-r border-slate-300 px-3 py-2 text-right">
+                <div class="text-red-600 font-extrabold text-sm md:text-base mb-0.5">${fmt(gt.macet_os)}</div>
+                <div class="text-[10px] text-slate-500 font-normal">NOA: <span class="font-bold text-slate-700">${fmt(gt.macet_noa)}</span></div>
+            </th>
+            
+            <th class="border-r border-slate-300 px-3 py-2 text-right">
+                <div class="text-slate-700 font-extrabold text-sm md:text-base mb-0.5">${fmt(gt.lunas_os)}</div>
+                <div class="text-[10px] text-slate-500 font-normal">NOA: <span class="font-bold text-slate-700">${fmt(gt.lunas_noa)}</span></div>
+            </th>
+            
+            <th class="border-r border-slate-300 px-3 py-2 text-right">
+                <div class="text-slate-700 font-extrabold text-sm md:text-base mb-0.5">${fmt(gt.angsuran)}</div>
+            </th>
+            
+            <th class="border-r border-slate-300 px-3 py-2 text-right">
+                <div class="text-purple-700 font-extrabold text-sm md:text-base mb-0.5">${fmt(gt.total_bayar)}</div>
+            </th>
+            
+            <th class="px-2 text-center text-blue-700 font-black text-base md:text-xl">${gt.persen}%</th>
         `;
       }
 
@@ -347,30 +381,48 @@
       rows.forEach(r => {
           const bg = (r.persen < 50 && r.target_os > 0) ? 'bg-red-50/20' : '';
           
-          const clkAll = `<a href="javascript:void(0)" onclick="initModalDetail('${r.tgl}','ALL')" class="font-bold text-blue-700 hover:text-blue-800 hover:underline cursor-pointer">${fmt(r.target_os)}</a>`;
-          const clkLcr = `<a href="javascript:void(0)" onclick="initModalDetail('${r.tgl}','LANCAR')" class="font-bold text-green-600 hover:text-green-700 hover:underline cursor-pointer">${fmt(r.lancar_os)}</a>`;
-          const clkTgh = `<a href="javascript:void(0)" onclick="initModalDetail('${r.tgl}','MENUNGGAK')" class="font-bold text-red-600 hover:text-red-700 hover:underline cursor-pointer">${fmt(r.macet_os)}</a>`;
-          const clkLns = `<a href="javascript:void(0)" onclick="initModalLunas('${r.tgl}')" class="font-bold text-slate-700 hover:text-blue-700 hover:underline cursor-pointer">${fmt(r.lunas_os)}</a>`;
+          const clkAll = `<a href="javascript:void(0)" onclick="initModalDetail('${r.tgl}','ALL')" class="font-bold text-blue-700 hover:text-blue-800 hover:underline cursor-pointer block mb-0.5 text-sm">${fmt(r.target_os)}</a>`;
+          const clkLcr = `<a href="javascript:void(0)" onclick="initModalDetail('${r.tgl}','LANCAR')" class="font-bold text-green-600 hover:text-green-700 hover:underline cursor-pointer block mb-0.5 text-sm">${fmt(r.lancar_os)}</a>`;
+          const clkTgh = `<a href="javascript:void(0)" onclick="initModalDetail('${r.tgl}','MENUNGGAK')" class="font-bold text-red-600 hover:text-red-700 hover:underline cursor-pointer block mb-0.5 text-sm">${fmt(r.macet_os)}</a>`;
+          const clkLns = `<a href="javascript:void(0)" onclick="initModalLunas('${r.tgl}')" class="font-bold text-slate-700 hover:text-blue-700 hover:underline cursor-pointer block mb-0.5 text-sm">${fmt(r.lunas_os)}</a>`;
 
           h += `
-            <tr class="transition border-b border-slate-100 group h-[48px] ${bg}">
-                <td class="px-2 py-2 sticky left-0 bg-white border-r border-slate-100 font-mono font-bold text-slate-700 text-center shadow-[1px_0_0_#f1f5f9] text-sm md:text-base">${r.tgl}</td>
-                <td class="px-3 py-2 border-r border-slate-100 text-right font-medium text-slate-600 text-sm md:text-base">${fmt(r.target_noa)}</td>
-                <td class="px-3 py-2 border-r border-slate-100 text-right bg-blue-50/30 text-sm md:text-base">${clkAll}</td>
-                <td class="px-3 py-2 border-r border-slate-100 text-right font-medium text-slate-600 text-sm md:text-base">${fmt(r.lancar_noa)}</td>
-                <td class="px-3 py-2 border-r border-slate-100 text-right bg-green-50/30 text-sm md:text-base">${clkLcr}</td>
-                <td class="px-3 py-2 border-r border-slate-100 text-right font-medium text-slate-600 text-sm md:text-base">${fmt(r.macet_noa)}</td>
-                <td class="px-3 py-2 border-r border-slate-100 text-right bg-red-50/30 text-sm md:text-base">${clkTgh}</td>
-                <td class="px-3 py-2 border-r border-slate-100 text-right font-medium text-slate-500 bg-slate-50 text-sm md:text-base">${fmt(r.lunas_noa)}</td>
-                <td class="px-3 py-2 border-r border-slate-100 text-right bg-slate-50 text-sm md:text-base">${clkLns}</td>
-                <td class="px-3 py-2 border-r border-slate-100 text-right font-medium text-slate-600 text-sm md:text-base">${fmt(r.angsuran)}</td>
-                <td class="px-3 py-2 border-r border-slate-100 text-right font-bold text-purple-700 bg-purple-50/20 text-sm md:text-base">${fmt(r.total_bayar)}</td>
-                <td class="px-2 py-2 font-extrabold text-center text-sm md:text-base ${r.persen>=90?'text-green-600':'text-orange-500'}">${r.persen}%</td>
+            <tr class="transition border-b border-slate-100 group h-[52px] ${bg}">
+                <td class="px-2 py-2 sticky left-0 bg-white border-r border-slate-100 font-mono font-bold text-slate-700 text-center shadow-[1px_0_0_#f1f5f9] text-xs md:text-sm">${r.tgl}</td>
+                
+                <td class="px-3 py-2 border-r border-slate-100 text-right bg-blue-50/30 hover:bg-blue-100 transition">
+                    ${clkAll}
+                    <div class="text-[10px] text-slate-500">NOA: <span class="font-bold text-slate-600">${fmt(r.target_noa)}</span></div>
+                </td>
+                
+                <td class="px-3 py-2 border-r border-slate-100 text-right bg-green-50/30 hover:bg-green-100 transition">
+                    ${clkLcr}
+                    <div class="text-[10px] text-slate-500">NOA: <span class="font-bold text-slate-600">${fmt(r.lancar_noa)}</span></div>
+                </td>
+                
+                <td class="px-3 py-2 border-r border-slate-100 text-right bg-red-50/30 hover:bg-red-100 transition">
+                    ${clkTgh}
+                    <div class="text-[10px] text-slate-500">NOA: <span class="font-bold text-slate-600">${fmt(r.macet_noa)}</span></div>
+                </td>
+                
+                <td class="px-3 py-2 border-r border-slate-100 text-right bg-slate-50 hover:bg-slate-100 transition">
+                    ${clkLns}
+                    <div class="text-[10px] text-slate-500">NOA: <span class="font-bold text-slate-600">${fmt(r.lunas_noa)}</span></div>
+                </td>
+                
+                <td class="px-3 py-2 border-r border-slate-100 text-right font-bold text-slate-600 text-sm align-top pt-3">${fmt(r.angsuran)}</td>
+                
+                <td class="px-3 py-2 border-r border-slate-100 text-right font-extrabold text-purple-700 bg-purple-50/20 text-sm align-top pt-3">${fmt(r.total_bayar)}</td>
+                
+                <td class="px-2 py-2 font-extrabold text-center text-sm md:text-lg align-middle ${r.persen>=90?'text-green-600':'text-orange-500'}">${r.persen}%</td>
             </tr>`;
       });
       tb.innerHTML = h;
   }
 
+  // ==========================================
+  // EXPORT EXCEL (RAW NUMBER) - SAMA PERSIS
+  // ==========================================
   window.exportExcelRekapRR = function() {
       if(!rekapDataRaw || rekapDataRaw.length === 0) return alert("Tidak ada data rekap untuk didownload.");
 
@@ -394,7 +446,9 @@
       a.click();
   }
 
-
+  // ==========================================
+  // MODAL DETAIL LOGIC (SAMA PERSIS)
+  // ==========================================
   function formatWA(phone) {
       if (!phone) return null;
       let cleaned = phone.replace(/\D/g, ''); 
