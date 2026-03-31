@@ -141,7 +141,7 @@ class LaporanKeuanganController
             $typeReport = $input['type'] ?? ''; 
             $kodeKantor = $input['kode_kantor'] ?? 'konsolidasi';
 
-            $prefixes = (str_contains($typeReport, 'neraca')) ? ['1', '2', '3'] : ['4', '5'];
+            $prefixes = (strpos($typeReport, 'neraca') !== false) ? ['1', '2', '3'] : ['4', '5'];
             $sqlLike = "";
             foreach ($prefixes as $p) { $sqlLike .= "TRIM(CAST(kode_perk AS CHAR)) LIKE '{$p}%' OR "; }
             $sqlLike = rtrim($sqlLike, " OR ");
