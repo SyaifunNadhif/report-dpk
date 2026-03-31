@@ -1150,75 +1150,82 @@ class KreditController {
 }
 
     public function getTopRealisasi($input = []) {
-        // 1. Setup Variable
+        // 1. Ambil Parameter Tanggal
         $closing_date = $input['closing_date'] ?? date('Y-m-d', strtotime('last day of previous month'));
-        $harian_date  = $input['harian_date'] ?? date('Y-m-d');
+        $harian_date  = $input['harian_date']  ?? date('Y-m-d');
         
-        $kode_kantor = $input['kode_kantor'] ?? null;
-        $kode_ao     = $input['kode_ao'] ?? null;
+        $kc      = $input['kode_kantor'] ?? null;
+        $kode_ao = $input['kode_ao'] ?? null;
 
-        // 2. Query SQL
-        // Perbaikan: Nama parameter dibedakan (:created_date dan :max_realisasi)
-        $sql = "
-            SELECT 
-                t1.kode_cabang,
-                t1.no_rekening,
-                t1.nama_nasabah,
-                t1.jml_pinjaman as plafond,
-                t1.alamat,
-                t1.tgl_realisasi,
-                t1.tgl_jatuh_tempo,
-                t1.kode_group2,
-                COALESCE(ao.nama_ao, t1.kode_group2) as nama_ao
-            FROM nominatif t1
-            LEFT JOIN ao_kredit ao ON t1.kode_group2 = ao.kode_group2
-            
-            WHERE t1.created = :created_date 
-            AND t1.tgl_realisasi > :closing_date 
-            AND t1.tgl_realisasi <= :max_realisasi
-        ";
-
-        // Logic Filter
-        if (!empty($kode_kantor)) {
-            $sql .= " AND t1.kode_cabang = :kode_kantor ";
-        }
-        if (!empty($kode_ao)) {
-            $sql .= " AND t1.kode_group2 = :kode_ao ";
-        }
-
-        $sql .= " ORDER BY t1.jml_pinjaman DESC ";
-
-        // Logic Limit
-        if (empty($kode_kantor) && empty($kode_ao)) {
-            $sql .= " LIMIT 50 ";
-        }
+        // Deteksi apakah ini Konsolidasi
+        $is_konsolidasi = empty($kc) || $kc === '000' || strtolower($kc) === 'konsolidasi';
 
         try {
+            // =======================================================
+            // 🔥 QUERY REKAP PER AO MENGGUNAKAN TABEL UPDATE REALISASI
+            // =======================================================
+            $sql = "
+                SELECT 
+                    LPAD(CAST(t1.kode_kantor AS CHAR), 3, '0') AS kode_cabang,
+                    t1.kode_group2 AS kode_ao,
+                    COALESCE(ao.nama_ao, t1.kode_group2) AS nama_ao,
+                    COUNT(t1.no_rekening) AS total_noa,
+                    SUM(t1.realisasi_pokok) AS total_realisasi
+                FROM update_realisasi_kredit t1
+                LEFT JOIN ao_kredit ao ON t1.kode_group2 = ao.kode_group2
+                WHERE t1.tanggal_realisasi > :closing_date 
+                  AND t1.tanggal_realisasi <= :harian_date
+            ";
+
+            // 2. Filter Cabang (Jika bukan konsolidasi)
+            if (!$is_konsolidasi) {
+                $sql .= " AND LPAD(CAST(t1.kode_kantor AS CHAR), 3, '0') = :kc ";
+            }
+
+            // 3. Filter AO Spesifik (Opsional jika dibutuhkan detail)
+            if (!empty($kode_ao)) {
+                $sql .= " AND t1.kode_group2 = :kode_ao ";
+            }
+
+            // 4. Grouping berdasarkan AO untuk mendapatkan totalnya
+            $sql .= "
+                GROUP BY 
+                    LPAD(CAST(t1.kode_kantor AS CHAR), 3, '0'),
+                    t1.kode_group2,
+                    COALESCE(ao.nama_ao, t1.kode_group2)
+                ORDER BY total_realisasi DESC
+            ";
+
+            // 5. Limit 10 Besar hanya untuk Konsolidasi
+            if ($is_konsolidasi) {
+                $sql .= " LIMIT 10 ";
+            }
+
             $stmt = $this->pdo->prepare($sql);
             
-            // 3. Binding Value (FIXED)
-            // Bind parameter yang namanya sudah dibedakan tadi
-            $stmt->bindValue(':created_date', $harian_date);  // Untuk t1.created
-            $stmt->bindValue(':closing_date', $closing_date); // Untuk > closing
-            $stmt->bindValue(':max_realisasi', $harian_date); // Untuk <= harian
+            // Eksekusi Parameter Tanggal
+            $stmt->bindValue(':closing_date', $closing_date);
+            $stmt->bindValue(':harian_date', $harian_date);
             
-            if (!empty($kode_kantor)) {
-                $stmt->bindValue(':kode_kantor', $kode_kantor);
+            // Eksekusi Parameter Tambahan
+            if (!$is_konsolidasi) {
+                $stmt->bindValue(':kc', str_pad((string)$kc, 3, '0', STR_PAD_LEFT));
             }
             if (!empty($kode_ao)) {
                 $stmt->bindValue(':kode_ao', $kode_ao);
             }
-            
+
             $stmt->execute();
             $data = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+            // Bikin pesan balikan yang dinamis
+            $ket = $is_konsolidasi ? "Top 10 AO Realisasi Terbesar (Konsolidasi)" : "Kinerja AO Cabang " . str_pad($kc, 3, '0', STR_PAD_LEFT);
+
+            sendResponse(200, "$ket Sukses", $data);
             
-            $ket = empty($kode_kantor) ? "Top 50 Realisasi (Konsolidasi)" : "Realisasi Cabang $kode_kantor";
-            
-            // Panggil helper global (tanpa $this->)
-            sendResponse(200, "$ket (Sejak $closing_date s/d $harian_date)", $data);
-            
-        } catch (PDOException $e) {
-            sendResponse(500, "Database Error: " . $e->getMessage());
+        } catch (Exception $e) {
+            error_log("Error getTopRealisasi: " . $e->getMessage());
+            sendResponse(500, "Error Database: " . $e->getMessage());
         }
     }
 
