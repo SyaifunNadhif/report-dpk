@@ -762,7 +762,6 @@ class KolekController {
     ];
 
     // ===== FLOW RATE (Actual, Appetite, INC)
-    // boleh override appetite via $b['fr_appetite'] = [0.05,0.50,0.80,0.20,0.75,0.80,0.85]
     $appDefaults = [0.05,0.50,0.80,0.20,0.75,0.80,0.85];
     $apps = (isset($b['fr_appetite']) && is_array($b['fr_appetite'])) ? $b['fr_appetite'] : $appDefaults;
 
@@ -796,7 +795,6 @@ class KolekController {
       ];
     }
 
-    // ---- Tambahan: FR C→30 = FR 0→30 × FR 30→60 (produk)
     $fr_cx = $flow_rate[0]['actual_pct'] ?? null;
     $fr_x30= $flow_rate[1]['actual_pct'] ?? null;
     $fr_cx_app = $flow_rate[0]['appetite_pct'] ?? null;
@@ -816,9 +814,7 @@ class KolekController {
       'actual_pct'=>$fr_c30_actual,'appetite_pct'=>$fr_c30_app,'inc_pct'=>$fr_c30_inc
     ];
 
-    // ===== Portfolio metrics (VERSI BARU)
-    // DPD 30+ = semua OS bucket >30 (C..N) / GRAND TOTAL
-    // DPD 90+ = semua OS bucket >90 (E..N) / GRAND TOTAL
+    // ===== Portfolio metrics (VERSI BARU) =====
     $codes_gt30 = ['C','D','E','F','G','H','I','J','K','L','M','N'];
     $codes_gt90 = ['E','F','G','H','I','J','K','L','M','N'];
 
@@ -842,12 +838,28 @@ class KolekController {
     $dpd90_act= $gt_os_c>0  ? round($dpd90_act_num / $gt_os_c * 100, 2) : null;
     $dpd90_inc= (!is_null($dpd90_m1) && !is_null($dpd90_act)) ? round($dpd90_act - $dpd90_m1, 2) : null;
 
-    // Repayment Rate biarkan seperti sebelumnya: (A os / grand total), actual menggunakan A_actual + realisasi
-    $osA_m1 = (int)round($M1['perBucket']['A']['os'] ?? 0);
-    $osA_c  = (int)round($CUR['perBucket']['A']['os'] ?? 0);
-    $rr_m1 = $gt_os_m1>0 ? round($osA_m1 / $gt_os_m1 * 100, 2) : null;
-    $rr_act_num = $osA_c + (int)$realisasi['os'];
-    $rr_act = $gt_os_c>0 ? round($rr_act_num / $gt_os_c * 100, 2) : null;
+    // 🔥 PERBAIKAN RR: Ambil dari DB dengan syarat hari_menunggak = 0 AND kolektibilitas = 'L' 🔥
+    [$s1, $e1] = $this->dayRange($closing);
+    [$s2, $e2] = $this->dayRange($harian);
+
+    // Query Nominal RR M-1
+    $sqlRRM1 = "SELECT COALESCE(SUM(baki_debet),0) FROM nominatif WHERE created >= ? AND created < ? AND COALESCE(hari_menunggak, 0) = 0 AND kolektibilitas = 'L' AND baki_debet > 0";
+    $pM1 = [$s1, $e1];
+    if ($kc !== null){ $sqlRRM1 .= " AND LPAD(CAST(kode_cabang AS CHAR),3,'0') = ?"; $pM1[] = $kc; }
+    else { $sqlRRM1 .= " AND LPAD(CAST(kode_cabang AS CHAR),3,'0') <> '000'"; }
+    $stRRM1 = $this->pdo->prepare($sqlRRM1); $stRRM1->execute($pM1);
+    $osA_m1 = (int)$stRRM1->fetchColumn();
+
+    // Query Nominal RR Actual
+    $sqlRRCur = "SELECT COALESCE(SUM(baki_debet),0) FROM nominatif WHERE created >= ? AND created < ? AND COALESCE(hari_menunggak, 0) = 0 AND kolektibilitas = 'L' AND baki_debet > 0";
+    $pCur = [$s2, $e2];
+    if ($kc !== null){ $sqlRRCur .= " AND LPAD(CAST(kode_cabang AS CHAR),3,'0') = ?"; $pCur[] = $kc; }
+    else { $sqlRRCur .= " AND LPAD(CAST(kode_cabang AS CHAR),3,'0') <> '000'"; }
+    $stRRCur = $this->pdo->prepare($sqlRRCur); $stRRCur->execute($pCur);
+    $rr_act_num = (int)$stRRCur->fetchColumn();
+
+    $rr_m1 = $gt_os_m1 > 0 ? round($osA_m1 / $gt_os_m1 * 100, 2) : null;
+    $rr_act = $gt_os_c > 0 ? round($rr_act_num / $gt_os_c * 100, 2) : null;
     $rr_inc = (!is_null($rr_m1) && !is_null($rr_act)) ? round($rr_act - $rr_m1, 2) : null;
 
     $portfolio_metrics = [
@@ -884,7 +896,6 @@ class KolekController {
       'source'=>['closing'=>'nominatif','current'=>'nominatif (exclude realisasi baru)']
     ]);
   }
-
 
 
 

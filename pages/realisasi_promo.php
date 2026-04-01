@@ -2,7 +2,7 @@
 
 <style>
   /* Custom Scrollbar */
-  .custom-scrollbar::-webkit-scrollbar { height: 8px; width: 8px; }
+  .custom-scrollbar::-webkit-scrollbar { height: 6px; width: 6px; }
   .custom-scrollbar::-webkit-scrollbar-track { background: #f8fafc; border-radius: 4px; }
   .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
   .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
@@ -14,43 +14,52 @@
   .animate-scale-up { animation: scaleUp 0.2s ease-out forwards; }
 
   /* ========================================================
-     🔥 MAGIC STICKY TABLE 🔥
+     🔥 MAGIC STICKY TABLE (ANTI NABRAK) 🔥
      ======================================================== */
   
-  /* --- Tabel Utama (Growth) --- */
   #tabelUtama thead { position: sticky; top: 0; z-index: 60; box-shadow: inset 0 -1px 0 #cbd5e1; }
-  .head-lapis-1 th { height: 50px; }
-  .head-lapis-2 th { height: 46px; border-bottom: 2px solid #cbd5e1; box-shadow: inset 0 -1px 0 #cbd5e1; }
+  .head-lapis-1 th { height: 38px; }
+  .head-lapis-2 th { height: 34px; border-bottom: 2px solid #cbd5e1; box-shadow: inset 0 -1px 0 #cbd5e1; }
+  @media (min-width: 768px) {
+      .head-lapis-1 th { height: 50px; }
+      .head-lapis-2 th { height: 46px; }
+  }
 
   .freeze-col-1 { position: sticky; left: 0; z-index: 20; box-shadow: inset -1px 0 0 #e2e8f0; }
   .freeze-col-2 { position: sticky; left: 0; z-index: 20; box-shadow: inset -1px 0 0 #e2e8f0; }
-  @media (min-width: 768px) { .freeze-col-2 { left: 80px; } }
+  @media (min-width: 768px) { .freeze-col-2 { left: 60px; } }
 
   #tabelUtama thead th.freeze-col-1 { z-index: 70; border-top-left-radius: 8px; }
   #tabelUtama thead th.freeze-col-2 { z-index: 69; }
   .head-lapis-2 th.freeze-col-1 { z-index: 68; }
   .head-lapis-2 th.freeze-col-2 { z-index: 67; }
 
-  /* --- Tabel Modal Detail --- */
-  .modal-head-1 th { position: sticky; top: 0; z-index: 60; height: 48px; box-shadow: inset 0 -1px 0 #cbd5e1; }
-  .modal-head-2 th { position: sticky; top: 48px; z-index: 59; height: 42px; border-bottom: 2px solid #cbd5e1; }
+  .modal-head-1 th { position: sticky; top: 0; z-index: 60; height: 40px; box-shadow: inset 0 -1px 0 #cbd5e1; }
+  .modal-head-2 th { position: sticky; top: 40px; z-index: 59; height: 36px; border-bottom: 2px solid #cbd5e1; }
+  @media (min-width: 768px) {
+      .modal-head-1 th { height: 48px; }
+      .modal-head-2 th { top: 48px; height: 42px; }
+  }
 
   .mod-freeze-1 { position: sticky; left: 0; z-index: 20; box-shadow: inset -1px 0 0 #e2e8f0; }
-  .mod-freeze-2 { position: sticky; left: 120px; z-index: 20; box-shadow: inset -1px 0 0 #e2e8f0; }
+  .mod-freeze-2 { position: sticky; left: 100px; z-index: 20; box-shadow: inset -1px 0 0 #e2e8f0; }
+  @media (min-width: 768px) { .mod-freeze-2 { left: 120px; } }
 
   .modal-head-1 th.mod-freeze-1 { z-index: 70; }
   .modal-head-1 th.mod-freeze-2 { z-index: 69; }
   .modal-head-2 th.mod-freeze-1 { z-index: 68; }
   .modal-head-2 th.mod-freeze-2 { z-index: 67; }
 
-  tbody tr:hover td { cursor: pointer; background-color: #f8fafc !important; }
+  tbody tr:hover td { background-color: #f8fafc !important; }
   tbody tr:hover td.freeze-col-1, tbody tr:hover td.freeze-col-2, tbody tr:hover td.mod-freeze-1, tbody tr:hover td.mod-freeze-2 { filter: brightness(0.98); }
 
   /* Form Inputs */
-  .inp { border:1px solid #cbd5e1; border-radius:8px; background:#fff; outline:none; transition: border 0.2s;}
+  #formFilterUtama::-webkit-scrollbar { display: none; }
+  .inp { border:1px solid #cbd5e1; border-radius:6px; background:#fff; outline:none; transition: border 0.2s;}
   .inp:focus { border-color:#2563eb; box-shadow:0 0 0 3px rgba(37,99,235,0.1); }
-  .lbl { font-size:10px; color:#475569; font-weight:800; margin-bottom:4px; text-transform:uppercase; letter-spacing:0.05em; display:block; white-space: nowrap;}
-  @media (min-width: 768px) { .lbl { font-size:11px; } }
+  .lbl { font-size:9px; color:#475569; font-weight:800; margin-bottom:2px; text-transform:uppercase; letter-spacing:0.05em; display:block; white-space: nowrap;}
+  @media (min-width: 768px) { .lbl { font-size:11px; margin-bottom:4px; } .inp { border-radius: 8px; } }
+  
   .field { display:flex; flex-direction:column; }
   .btn-icon { display:inline-flex; align-items:center; justify-content:center; border:none; cursor:pointer; transition: transform 0.2s;}
   .btn-icon:hover { transform:translateY(-1px); box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); }
@@ -58,98 +67,100 @@
   input[type="date"] { -moz-appearance: textfield; }
 </style>
 
-<div class="max-w-[1920px] mx-auto px-2 md:px-4 py-4 md:py-6 h-[calc(100vh-80px)] flex flex-col bg-slate-50 font-sans text-slate-800 overflow-hidden">
+<div class="max-w-[1920px] mx-auto px-2 md:px-4 py-2 md:py-4 min-h-[100dvh] md:h-[calc(100vh-60px)] md:min-h-0 flex flex-col bg-slate-50 font-sans text-slate-800 overflow-y-auto overflow-x-hidden md:overflow-hidden">
   
-  <div class="flex gap-4 md:gap-8 border-b border-slate-300 mb-4 px-2 overflow-x-auto no-scrollbar shrink-0">
-      <button id="tab-growth" onclick="switchTab('growth')" class="pb-2 md:pb-3 font-extrabold text-xs md:text-sm uppercase transition border-b-[3px] border-blue-600 text-blue-700 whitespace-nowrap">REKAP REALISASI & GROWTH</button>
-      <button id="tab-promo" onclick="switchTab('promo')" class="pb-2 md:pb-3 font-extrabold text-xs md:text-sm uppercase transition border-b-[3px] border-transparent text-slate-400 hover:text-slate-600 whitespace-nowrap">ANALITIK PROMO VS NON-PROMO</button>
+  <div class="flex gap-3 md:gap-8 border-b border-slate-300 mb-2 md:mb-3 px-1 md:px-2 overflow-x-auto no-scrollbar shrink-0">
+      <button id="tab-growth" onclick="switchTab('growth')" class="pb-1.5 md:pb-2.5 font-extrabold text-[10px] md:text-sm uppercase transition border-b-[3px] border-blue-600 text-blue-700 whitespace-nowrap">REKAP REALISASI & GROWTH</button>
+      <button id="tab-promo" onclick="switchTab('promo')" class="pb-1.5 md:pb-2.5 font-extrabold text-[10px] md:text-sm uppercase transition border-b-[3px] border-transparent text-slate-400 hover:text-slate-600 whitespace-nowrap">ANALITIK PROMO VS NON-PROMO</button>
   </div>
 
-  <div class="flex-none mb-4 flex flex-col xl:flex-row justify-between xl:items-start gap-4 w-full">
-      <div class="flex flex-col gap-1.5 shrink-0" id="header-title-container"></div>
+  <div class="flex-none mb-2 flex flex-col md:flex-row justify-between md:items-end gap-2 w-full shrink-0">
+      <div class="flex flex-col gap-0.5 shrink-0 mb-1 md:mb-0" id="header-title-container"></div>
 
-      <form id="formFilterUtama" class="bg-white p-2 md:p-3 rounded-xl border border-slate-200 shadow-sm flex flex-wrap md:flex-nowrap items-end gap-2 w-full xl:w-auto shrink-0 xl:ml-auto overflow-x-auto no-scrollbar" onsubmit="event.preventDefault(); fetchRekap();">
+      <form id="formFilterUtama" class="bg-white p-1.5 md:p-2 rounded-lg md:rounded-xl border border-slate-200 shadow-sm flex flex-col md:flex-row md:items-end gap-1.5 md:gap-3 w-full xl:w-auto shrink-0 xl:ml-auto" onsubmit="event.preventDefault(); fetchRekap();">
           
-          <div class="field w-[calc(50%-4px)] md:w-[130px] shrink-0" id="wrap-closing">
-              <label class="lbl">CLOSING</label>
-              <input type="date" id="closing_date" class="inp w-full text-[11px] md:text-sm font-semibold h-[34px] md:h-[38px] px-2 md:px-3 text-slate-700 cursor-pointer" required onclick="try{this.showPicker()}catch(e){}">
-          </div>
-          
-          <div class="field w-[calc(50%-4px)] md:w-[130px] shrink-0">
-              <label class="lbl">HARIAN</label>
-              <input type="date" id="harian_date" class="inp w-full text-[11px] md:text-sm font-semibold h-[34px] md:h-[38px] px-2 md:px-3 text-slate-700 cursor-pointer" required onclick="try{this.showPicker()}catch(e){}">
+          <div class="flex flex-nowrap w-full md:w-auto items-end gap-1 md:gap-2 shrink-0">
+              <div class="field flex-1 min-w-0" id="wrap-closing">
+                  <label class="lbl">CLOSING</label>
+                  <input type="date" id="closing_date" class="inp w-full text-[9px] md:text-sm font-semibold h-[30px] md:h-[36px] px-1 md:px-3 text-slate-700 cursor-pointer" required onclick="try{this.showPicker()}catch(e){}">
+              </div>
+              
+              <div class="field flex-1 min-w-0">
+                  <label class="lbl">HARIAN</label>
+                  <input type="date" id="harian_date" class="inp w-full text-[9px] md:text-sm font-semibold h-[30px] md:h-[36px] px-1 md:px-3 text-slate-700 cursor-pointer" required onclick="try{this.showPicker()}catch(e){}">
+              </div>
+              
+              <div class="w-px h-6 bg-slate-200 shrink-0 mx-1 hidden md:block mb-1.5" id="divider-filter" style="display: none;"></div>
+
+              <button type="submit" id="btn-cari" class="btn-icon h-[30px] md:h-[36px] w-[34px] md:w-[80px] bg-blue-600 hover:bg-blue-700 text-white rounded-md md:rounded-lg shadow-sm shrink-0" title="Cari Data">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" class="md:w-[16px] md:h-[16px]"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                  <span class="hidden md:inline font-bold text-sm uppercase tracking-wider ml-1.5">CARI</span>
+              </button>
+              <button type="button" onclick="exportExcelRekap()" class="btn-icon h-[30px] md:h-[36px] w-[34px] md:w-[40px] bg-emerald-600 hover:bg-emerald-700 text-white rounded-md md:rounded-lg shadow-sm shrink-0" title="Download Excel">
+                  <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="md:w-[18px] md:h-[18px]"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></line></svg>
+              </button>
           </div>
 
-          <div class="w-px h-6 bg-slate-200 shrink-0 mx-1 hidden md:block mt-auto mb-2" id="divider-filter" style="display: none;"></div>
-
-          <div class="field flex-1 min-w-[160px] md:w-[220px] shrink-0 transition-opacity duration-300" id="wrap-area" style="display: none;">
+          <div class="field w-full md:w-[220px] transition-opacity duration-300" id="wrap-area" style="display: none;">
               <label class="lbl text-pink-700">AREA / CABANG</label>
-              <select id="opt_area" class="inp border-pink-200 focus:border-pink-500 bg-pink-50/30 text-[11px] md:text-sm font-bold h-[34px] md:h-[38px] px-2 text-pink-800 cursor-pointer w-full truncate"></select>
+              <select id="opt_area" class="inp border-pink-200 focus:border-pink-500 bg-pink-50/30 text-[10px] md:text-sm font-bold h-[30px] md:h-[36px] px-2 text-pink-800 cursor-pointer w-full truncate"></select>
           </div>
           
-          <div class="flex items-center gap-1.5 shrink-0 h-[34px] md:h-[38px] mt-1 md:mt-0 w-full md:w-auto">
-              <button type="submit" id="btn-cari" class="btn-icon h-full flex-1 md:w-[80px] bg-blue-600 hover:bg-blue-700 text-white rounded-lg shadow-sm">
-                  <span class="font-bold text-xs md:text-sm uppercase tracking-wider">CARI</span>
-              </button>
-              <button type="button" onclick="exportExcelRekap()" class="btn-icon h-full px-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg shadow-sm" title="Download Excel">
-                  <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="md:w-[18px] md:h-[18px]"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></line></svg>
-              </button>
-          </div>
       </form>
   </div>
 
-  <div class="flex-1 min-h-0 flex flex-col relative gap-4">
+  <div class="flex-1 min-h-0 flex flex-col relative gap-2 md:gap-3 pb-4 md:pb-0">
       
-      <div id="content-growth" class="flex-1 min-h-0 bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden flex flex-col relative">
+      <div id="content-growth" class="flex-1 h-[85vh] shrink-0 md:shrink md:h-auto md:min-h-0 bg-white rounded-lg md:rounded-xl shadow-sm border border-slate-200 overflow-hidden flex flex-col relative">
           <div id="loadingUtama" class="hidden absolute inset-0 bg-white/80 z-[100] flex flex-col items-center justify-center text-blue-600 backdrop-blur-sm transition-colors">
-              <div class="animate-spin rounded-full h-10 w-10 border-4 border-current border-t-transparent mb-3"></div>
-              <span class="text-sm font-bold uppercase tracking-widest">Menyiapkan Data...</span>
+              <div class="animate-spin rounded-full h-8 w-8 md:h-10 md:w-10 border-4 border-current border-t-transparent mb-2 md:mb-3"></div>
+              <span class="text-[10px] md:text-sm font-bold uppercase tracking-widest">Menyiapkan Data...</span>
           </div>
           
-          <div class="h-full overflow-auto custom-scrollbar relative flex items-start justify-start">
-              <table class="w-full text-center border-separate border-spacing-0 text-slate-700 table-fixed min-w-full" id="tabelUtama">
-                <thead class="tracking-wider text-slate-700 font-extrabold text-xs md:text-sm head-lapis-1" id="headUtama"></thead>
-                <tbody id="bodyUtama" class="divide-y divide-slate-100 bg-white text-xs md:text-sm"></tbody>
+          <div class="flex-1 w-full h-full overflow-auto custom-scrollbar relative">
+              <table class="w-full text-center border-separate border-spacing-0 text-slate-700 min-w-max" id="tabelUtama">
+                <thead class="tracking-wider text-slate-700 font-extrabold text-[9px] md:text-sm head-lapis-1" id="headUtama"></thead>
+                <tbody id="bodyUtama" class="divide-y divide-slate-100 bg-white text-[9.5px] md:text-sm"></tbody>
               </table>
           </div>
       </div>
 
-      <div id="content-promo" class="hidden flex-1 min-h-0 flex-col gap-3 md:gap-4 overflow-y-auto custom-scrollbar pb-6 relative">
+      <div id="content-promo" class="hidden flex-1 h-auto shrink-0 md:shrink md:min-h-0 flex-col gap-2 md:gap-3 overflow-visible md:overflow-y-auto custom-scrollbar pb-6 relative">
           <div id="loadingPromo" class="hidden absolute inset-0 bg-slate-50/80 z-[100] flex flex-col items-center justify-center text-pink-600 backdrop-blur-sm transition-colors rounded-xl">
-              <div class="animate-spin rounded-full h-10 w-10 border-4 border-current border-t-transparent mb-3"></div>
-              <span class="text-sm font-bold uppercase tracking-widest">Membangun Grafik...</span>
+              <div class="animate-spin rounded-full h-8 w-8 md:h-10 md:w-10 border-4 border-current border-t-transparent mb-2 md:mb-3"></div>
+              <span class="text-[10px] md:text-sm font-bold uppercase tracking-widest">Membangun Grafik...</span>
           </div>
 
-          <div class="flex gap-2 items-center bg-white p-2 rounded-xl shadow-sm border border-slate-200 shrink-0 overflow-x-auto no-scrollbar">
-              <span class="text-xs font-bold text-slate-500 uppercase ml-2 mr-1 shrink-0"><span class="hidden md:inline">Quick</span> Filter:</span>
-              <button type="button" onclick="quickDatePromo('7')" class="px-3 py-1.5 bg-pink-50 hover:bg-pink-100 text-pink-700 text-[10px] md:text-xs font-bold rounded-lg transition shrink-0 border border-pink-100">7 HARI</button>
-              <button type="button" onclick="quickDatePromo('14')" class="px-3 py-1.5 bg-pink-50 hover:bg-pink-100 text-pink-700 text-[10px] md:text-xs font-bold rounded-lg transition shrink-0 border border-pink-100">14 HARI</button>
-              <button type="button" onclick="quickDatePromo('bulan_ini')" class="px-3 py-1.5 bg-pink-50 hover:bg-pink-100 text-pink-700 text-[10px] md:text-xs font-bold rounded-lg transition shrink-0 border border-pink-100">BULAN INI</button>
-              <button type="button" onclick="quickDatePromo('awal_promo')" class="px-3 py-1.5 bg-pink-600 hover:bg-pink-700 text-white text-[10px] md:text-xs font-bold rounded-lg shadow-sm transition shrink-0">AWAL PROMO</button>
+          <div class="flex gap-1.5 md:gap-2 items-center bg-white p-1.5 md:p-2 rounded-lg md:rounded-xl shadow-sm border border-slate-200 shrink-0 overflow-x-auto no-scrollbar">
+              <span class="text-[9px] md:text-xs font-bold text-slate-500 uppercase ml-1 md:ml-2 mr-1 shrink-0"><span class="hidden md:inline">Quick</span> Filter:</span>
+              <button type="button" onclick="quickDatePromo('7')" class="px-2 md:px-3 py-1 md:py-1.5 bg-pink-50 hover:bg-pink-100 text-pink-700 text-[9px] md:text-[11px] font-bold rounded-md md:rounded-lg transition shrink-0 border border-pink-100">7 HARI</button>
+              <button type="button" onclick="quickDatePromo('14')" class="px-2 md:px-3 py-1 md:py-1.5 bg-pink-50 hover:bg-pink-100 text-pink-700 text-[9px] md:text-[11px] font-bold rounded-md md:rounded-lg transition shrink-0 border border-pink-100">14 HARI</button>
+              <button type="button" onclick="quickDatePromo('bulan_ini')" class="px-2 md:px-3 py-1 md:py-1.5 bg-pink-50 hover:bg-pink-100 text-pink-700 text-[9px] md:text-[11px] font-bold rounded-md md:rounded-lg transition shrink-0 border border-pink-100">BULAN INI</button>
+              <button type="button" onclick="quickDatePromo('awal_promo')" class="px-2 md:px-3 py-1 md:py-1.5 bg-pink-600 hover:bg-pink-700 text-white text-[9px] md:text-[11px] font-bold rounded-md md:rounded-lg shadow-sm transition shrink-0">AWAL PROMO</button>
           </div>
 
-          <div class="grid grid-cols-2 gap-3 md:gap-4 shrink-0">
-              <div class="bg-pink-50 border border-pink-200 rounded-xl shadow-sm p-4 md:p-6 text-pink-900 flex flex-col justify-center">
-                  <span class="text-[10px] md:text-sm font-extrabold opacity-80 uppercase tracking-widest mb-1 flex items-center gap-2"><span class="text-base md:text-lg">🎁</span> TOTAL PROMO</span>
-                  <h2 class="text-lg md:text-3xl xl:text-4xl font-black font-mono truncate mt-1 text-pink-700" id="txt-tot-promo">0</h2>
-                  <span class="text-[9px] md:text-xs font-bold bg-pink-200/60 w-max px-2 py-0.5 rounded text-pink-900 mt-1.5" id="txt-noa-promo">0 NOA</span>
+          <div class="grid grid-cols-2 gap-2 md:gap-4 shrink-0">
+              <div class="bg-pink-50 border border-pink-200 rounded-lg md:rounded-xl shadow-sm p-3 md:p-5 text-pink-900 flex flex-col justify-center">
+                  <span class="text-[9px] md:text-sm font-extrabold opacity-80 uppercase tracking-widest mb-0.5 md:mb-1 flex items-center gap-1.5"><span class="text-sm md:text-lg">🎁</span> TOTAL PROMO</span>
+                  <h2 class="text-sm md:text-2xl xl:text-3xl font-black font-mono truncate mt-0.5 text-pink-700" id="txt-tot-promo">0</h2>
+                  <span class="text-[8px] md:text-[10px] font-bold bg-pink-200/60 w-max px-1.5 md:px-2 py-0.5 rounded text-pink-900 mt-1" id="txt-noa-promo">0 NOA</span>
               </div>
-              <div class="bg-slate-50 border border-slate-200 rounded-xl shadow-sm p-4 md:p-6 text-slate-900 flex flex-col justify-center">
-                  <span class="text-[10px] md:text-sm font-extrabold opacity-80 uppercase tracking-widest mb-1 flex items-center gap-2"><span class="text-base md:text-lg">🏢</span> TOTAL NON-PROMO</span>
-                  <h2 class="text-lg md:text-3xl xl:text-4xl font-black font-mono truncate mt-1 text-slate-700" id="txt-tot-nonpromo">0</h2>
-                  <span class="text-[9px] md:text-xs font-bold bg-slate-200/80 w-max px-2 py-0.5 rounded text-slate-800 mt-1.5" id="txt-noa-nonpromo">0 NOA</span>
+              <div class="bg-slate-50 border border-slate-200 rounded-lg md:rounded-xl shadow-sm p-3 md:p-5 text-slate-900 flex flex-col justify-center">
+                  <span class="text-[9px] md:text-sm font-extrabold opacity-80 uppercase tracking-widest mb-0.5 md:mb-1 flex items-center gap-1.5"><span class="text-sm md:text-lg">🏢</span> NON-PROMO</span>
+                  <h2 class="text-sm md:text-2xl xl:text-3xl font-black font-mono truncate mt-0.5 text-slate-700" id="txt-tot-nonpromo">0</h2>
+                  <span class="text-[8px] md:text-[10px] font-bold bg-slate-200/80 w-max px-1.5 md:px-2 py-0.5 rounded text-slate-800 mt-1" id="txt-noa-nonpromo">0 NOA</span>
               </div>
           </div>
 
-          <div class="flex-1 flex flex-col xl:flex-row gap-3 md:gap-4 min-h-[350px]">
-              <div class="w-full xl:w-[30%] bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex flex-col relative h-[300px] xl:h-auto shrink-0">
-                  <h3 class="text-xs font-bold text-slate-500 uppercase tracking-widest mb-4 shrink-0 text-center">Proporsi Nominal</h3>
+          <div class="flex-1 flex flex-col xl:flex-row gap-2 md:gap-3 min-h-[350px]">
+              <div class="w-full xl:w-[30%] bg-white p-3 md:p-4 rounded-lg md:rounded-xl shadow-sm border border-slate-200 flex flex-col relative h-[250px] xl:h-auto shrink-0">
+                  <h3 class="text-[10px] md:text-xs font-bold text-slate-500 uppercase tracking-widest mb-2 md:mb-3 shrink-0 text-center">Proporsi Nominal</h3>
                   <div class="flex-1 relative w-full flex items-center justify-center min-h-0">
                       <canvas id="pieChart"></canvas>
                   </div>
               </div>
-              <div class="w-full xl:flex-1 bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex flex-col relative h-[350px] xl:h-auto shrink-0">
-                  <h3 class="text-xs font-bold text-slate-500 uppercase tracking-widest mb-4 shrink-0 text-center">Trend Harian Promo vs Non-Promo</h3>
+              <div class="w-full xl:flex-1 bg-white p-3 md:p-4 rounded-lg md:rounded-xl shadow-sm border border-slate-200 flex flex-col relative h-[250px] xl:h-auto shrink-0">
+                  <h3 class="text-[10px] md:text-xs font-bold text-slate-500 uppercase tracking-widest mb-2 md:mb-3 shrink-0 text-center">Trend Harian Promo vs Non-Promo</h3>
                   <div class="flex-1 relative w-full min-h-0">
                       <canvas id="barChart"></canvas>
                   </div>
@@ -163,33 +174,38 @@
   <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity" onclick="closeModal()"></div>
   <div class="relative bg-white w-full h-[95vh] md:h-[92vh] max-w-[1700px] rounded-t-xl md:rounded-2xl shadow-2xl flex flex-col overflow-hidden animate-scale-up">
     
-    <div class="flex justify-between items-center px-3 py-3 md:px-5 md:py-4 border-b bg-slate-50 shrink-0 flex-wrap gap-2">
+    <div class="flex justify-between items-center px-3 py-2.5 md:px-5 md:py-3 border-b bg-slate-50 shrink-0 flex-wrap gap-2">
         <div class="flex-1 min-w-[200px]" id="modal-title-container"></div>
-        <div class="flex flex-wrap items-center gap-1.5 ml-auto shrink-0 w-full sm:w-auto mt-2 sm:mt-0 overflow-x-auto no-scrollbar">
-            <select id="filter_kankas_modal" class="inp px-2 md:px-3 h-[34px] md:h-10 flex-1 sm:w-[160px] text-xs md:text-sm font-bold text-blue-800 bg-blue-50 outline-none shrink-0 cursor-pointer" onchange="fetchDetail(1)"><option value="">Semua Kankas</option></select>
-            <select id="filter_ao_modal" class="inp px-2 md:px-3 h-[34px] md:h-10 flex-1 sm:w-[160px] text-xs md:text-sm font-bold text-slate-700 bg-white outline-none shrink-0 cursor-pointer" onchange="fetchDetail(1)"><option value="">Semua AO</option></select>
+        <div class="flex flex-wrap items-center gap-1.5 ml-auto shrink-0 w-full sm:w-auto overflow-x-auto no-scrollbar">
             
-            <button id="btn-excel-modal" onclick="exportExcelDetail()" class="btn-icon bg-emerald-600 hover:bg-emerald-700 text-white px-3 md:px-4 h-[34px] md:h-10 rounded-lg shadow-sm text-xs md:text-sm font-bold uppercase tracking-wider shrink-0"><span class="hidden sm:inline ml-1.5">Excel</span></button>
-            <button onclick="closeModal()" class="w-[34px] md:w-10 h-[34px] md:h-10 flex items-center justify-center rounded-xl bg-slate-200 hover:bg-red-500 hover:text-white text-slate-600 transition font-bold text-xl md:text-2xl leading-none shrink-0">&times;</button>
+            <select id="filter_kankas_modal" class="inp px-2 h-[30px] md:h-9 flex-1 sm:w-[140px] text-[10px] md:text-xs font-bold text-blue-800 bg-blue-50 outline-none shrink-0 cursor-pointer" onchange="onKankasChange()">
+                <option value="">Semua Kankas</option>
+            </select>
+            <select id="filter_ao_modal" class="inp px-2 h-[30px] md:h-9 flex-1 sm:w-[140px] text-[10px] md:text-xs font-bold text-slate-700 bg-white outline-none shrink-0 cursor-pointer" onchange="fetchDetail(1)">
+                <option value="">Semua AO</option>
+            </select>
+            
+            <button id="btn-excel-modal" onclick="exportExcelDetail()" class="btn-icon bg-emerald-600 hover:bg-emerald-700 text-white px-2.5 md:px-3 h-[30px] md:h-9 rounded-md md:rounded-lg shadow-sm text-[10px] md:text-xs font-bold uppercase tracking-wider shrink-0"><span class="hidden sm:inline ml-1.5">Excel</span></button>
+            <button onclick="closeModal()" class="w-[30px] md:w-9 h-[30px] md:h-9 flex items-center justify-center rounded-md md:rounded-xl bg-slate-200 hover:bg-red-500 hover:text-white text-slate-600 transition font-bold text-lg md:text-xl leading-none shrink-0">&times;</button>
         </div>
     </div>
 
     <div class="flex-1 overflow-auto bg-slate-50 relative custom-scrollbar p-0 md:p-3">
         <div id="loadingModal" class="hidden absolute inset-0 bg-white/90 z-40 flex flex-col items-center justify-center text-blue-600 backdrop-blur-sm transition-colors">
             <div class="animate-spin rounded-full h-8 w-8 border-4 border-blue-200 border-t-blue-600 mb-2"></div>
-            <span class="text-xs font-bold uppercase tracking-widest">Memuat...</span>
+            <span class="text-[10px] font-bold uppercase tracking-widest">Memuat...</span>
         </div>
-        <table class="w-max min-w-full text-left text-slate-700 border border-slate-200 md:rounded-xl shadow-sm bg-white table-fixed" id="tableDetail">
-            <thead class="text-slate-600 font-extrabold uppercase tracking-wider text-[10px] md:text-xs modal-head-1" id="headDetail"></thead>
-            <tbody id="bodyDetail" class="divide-y divide-slate-100 bg-white text-[10px] md:text-sm"></tbody>
+        <table class="w-full text-center md:text-left text-slate-700 border-separate border-spacing-0 md:border md:border-slate-200 md:rounded-xl shadow-sm bg-white min-w-max" id="tableDetail">
+            <thead class="text-slate-600 font-extrabold uppercase tracking-wider text-[9px] md:text-[11px] modal-head-1" id="headDetail"></thead>
+            <tbody id="bodyDetail" class="divide-y divide-slate-100 bg-white text-[9.5px] md:text-[12px]"></tbody>
         </table>
     </div>
 
-    <div class="px-3 py-3 md:px-6 md:py-4 border-t bg-white flex justify-between items-center shrink-0">
-        <span id="pageInfo" class="text-[10px] md:text-sm font-bold text-slate-600 bg-slate-100 px-3 py-1 rounded-lg">0 Data</span>
-        <div class="flex gap-1.5 md:gap-2" id="wrap-paging">
-            <button id="btnPrev" onclick="changePage(-1)" class="px-3 md:px-4 py-1.5 md:py-2 bg-white border border-slate-300 rounded-lg text-[10px] md:text-sm font-bold text-slate-600 hover:bg-slate-50 disabled:opacity-50 transition shadow-sm">« Prev</button>
-            <button id="btnNext" onclick="changePage(1)" class="px-3 md:px-4 py-1.5 md:py-2 bg-white border border-slate-300 rounded-lg text-[10px] md:text-sm font-bold text-slate-600 hover:bg-slate-50 disabled:opacity-50 transition shadow-sm">Next »</button>
+    <div class="px-3 py-2.5 md:px-6 md:py-3 border-t bg-white flex justify-between items-center shrink-0">
+        <span id="pageInfo" class="text-[9px] md:text-xs font-bold text-slate-600 bg-slate-100 px-2 md:px-3 py-1 rounded-md md:rounded-lg">0 Data</span>
+        <div class="flex gap-1 md:gap-2" id="wrap-paging">
+            <button id="btnPrev" onclick="changePage(-1)" class="px-2.5 md:px-4 py-1.5 md:py-1.5 bg-white border border-slate-300 rounded-md md:rounded-lg text-[9px] md:text-xs font-bold text-slate-600 hover:bg-slate-50 disabled:opacity-50 transition shadow-sm">« Prev</button>
+            <button id="btnNext" onclick="changePage(1)" class="px-2.5 md:px-4 py-1.5 md:py-1.5 bg-white border border-slate-300 rounded-md md:rounded-lg text-[9px] md:text-xs font-bold text-slate-600 hover:bg-slate-50 disabled:opacity-50 transition shadow-sm">Next »</button>
         </div>
     </div>
 
@@ -218,16 +234,26 @@
   let currentDetailParams = {};
   let currentDetailPage = 1; let currentDetailTotalPages = 1;
   const detailLimit = 20; 
-  
-  // 🔥 FIX 1: ROLE JWT LOGIN 🔥
-  const user = (window.getUser && window.getUser()) || null;
-  let userKodeGlobal = (user && user.kode) ? String(user.kode).padStart(3, '0') : '000';
-  if(userKodeGlobal === '099') userKodeGlobal = '000'; // Pusat / 099 dianggap Konsolidasi (Bebas)
-  
+  let userKodeGlobal = '000';
   let defaultClosingGrowth = '';
 
-  // --- INIT ---
+  const fmtSingkat = (n) => {
+      let num = Math.abs(Number(n) || 0);
+      let sign = n < 0 ? '-' : '';
+      if (num >= 1e12) return sign + (num / 1e12).toFixed(2).replace('.', ',') + ' T';
+      if (num >= 1e9) return sign + (num / 1e9).toFixed(2).replace('.', ',') + ' M';
+      if (num >= 1e6) return sign + (num / 1e6).toFixed(2).replace('.', ',') + ' Jt';
+      return sign + new Intl.NumberFormat('id-ID').format(Math.round(num));
+  };
+
+  // 🔥 FIX 2: LOGIC USER LOGIN JWT PERSIS SESUAI REQUEST 🔥
   window.addEventListener('DOMContentLoaded', async () => {
+      const user = (window.getUser && window.getUser()) || null;
+      const uKode = user?.kode ? String(user.kode).padStart(3,'0') : '000';
+      window.currentUser = { kode: uKode };
+      userKodeGlobal = uKode;
+      if(userKodeGlobal === '099') userKodeGlobal = '000'; // Set HQ ke 000
+
       const d = await getLastHarianData(); 
       if(d) {
           defaultClosingGrowth = d.last_closing;
@@ -246,13 +272,15 @@
 
   async function populateAreaOptions(userKode){
       const el = document.getElementById('opt_area');
-      // Jika user loginnya spesifik Cabang (bukan 000)
+      // Jika user loginnya Cabang, Kunci Dropdown!
       if(userKode !== '000'){
           el.innerHTML = `<option value="CABANG|${userKode}">CABANG ${userKode}</option>`;
           el.value = `CABANG|${userKode}`;
-          el.disabled = true; // Kunci Dropdown Cabang
+          el.disabled = true;
           return;
       }
+
+      // Jika Pusat, bebas pilih
       try {
           const res = await apiCall(API_KODE, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({type:'kode_kantor'}) });
           const json = await res.json();
@@ -280,52 +308,48 @@
       const tabPromo  = document.getElementById('tab-promo');
       const titleContainer = document.getElementById('header-title-container');
       const loaderUtama = document.getElementById('loadingUtama');
-      const btnCari = document.getElementById('btn-cari');
-      
       const wrapArea = document.getElementById('wrap-area');
       const divider = document.getElementById('divider-filter');
       const elClosing = document.getElementById('closing_date');
 
       if (tab === 'growth') {
-          tabGrowth.className = "pb-2 md:pb-3 font-extrabold text-xs md:text-sm uppercase transition border-b-[3px] border-blue-600 text-blue-700 whitespace-nowrap";
-          tabPromo.className  = "pb-2 md:pb-3 font-extrabold text-xs md:text-sm uppercase transition border-b-[3px] border-transparent text-slate-400 hover:text-slate-600 whitespace-nowrap";
+          tabGrowth.className = "pb-1.5 md:pb-2.5 font-extrabold text-[10px] md:text-sm uppercase transition border-b-[3px] border-blue-600 text-blue-700 whitespace-nowrap";
+          tabPromo.className  = "pb-1.5 md:pb-2.5 font-extrabold text-[10px] md:text-sm uppercase transition border-b-[3px] border-transparent text-slate-400 hover:text-slate-600 whitespace-nowrap";
           
           if(wrapArea) wrapArea.style.display = 'none';       
           if(divider) divider.style.display = 'none';
           
           elClosing.value = defaultClosingGrowth;
-          btnCari.className = "btn-icon h-full flex-1 md:w-[80px] bg-blue-600 hover:bg-blue-700 text-white rounded-lg shadow-sm";
           loaderUtama.className = "hidden absolute inset-0 bg-white/80 z-[100] flex flex-col items-center justify-center text-blue-600 backdrop-blur-sm transition-colors";
           document.getElementById('content-promo').style.display = 'none';
           document.getElementById('content-growth').style.display = 'flex';
 
           titleContainer.innerHTML = `
-              <h1 class="text-xl md:text-2xl font-bold text-slate-800 flex items-center gap-2 mb-0.5">
-                  <span class="p-1.5 md:p-2 bg-blue-600 rounded-lg text-white shadow-sm"><svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"></path></svg></span>
+              <h1 class="text-[14px] md:text-xl font-bold text-slate-800 flex items-center gap-1.5 mb-0.5 leading-none px-1 md:px-0">
+                  <span class="p-1 md:p-1.5 bg-blue-600 rounded-md shadow-sm text-white"><svg class="w-3.5 h-3.5 md:w-4 md:h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"></path></svg></span>
                   Rekap Realisasi & Growth
               </h1>
-              <p class="text-[11px] md:text-sm text-slate-500 italic ml-10 md:ml-[44px]">*Data Growth = Realisasi Baru - Run Off</p>
+              <p class="text-[8px] md:text-[10px] text-slate-500 italic ml-6 md:ml-8 px-1 md:px-0">*Data Growth = Realisasi Baru - Run Off</p>
           `;
           setupHeaderUtama(userKodeGlobal); 
       } else {
-          tabPromo.className  = "pb-2 md:pb-3 font-extrabold text-xs md:text-sm uppercase transition border-b-[3px] border-pink-600 text-pink-700 whitespace-nowrap";
-          tabGrowth.className = "pb-2 md:pb-3 font-extrabold text-xs md:text-sm uppercase transition border-b-[3px] border-transparent text-slate-400 hover:text-slate-600 whitespace-nowrap";
+          tabPromo.className  = "pb-1.5 md:pb-2.5 font-extrabold text-[10px] md:text-sm uppercase transition border-b-[3px] border-pink-600 text-pink-700 whitespace-nowrap";
+          tabGrowth.className = "pb-1.5 md:pb-2.5 font-extrabold text-[10px] md:text-sm uppercase transition border-b-[3px] border-transparent text-slate-400 hover:text-slate-600 whitespace-nowrap";
           
           if(wrapArea) wrapArea.style.display = 'flex';       
           if(divider) divider.style.display = 'block';
 
           elClosing.value = AWAL_PROMO_DATE;
-          btnCari.className = "btn-icon h-full flex-1 md:w-[80px] bg-pink-600 hover:bg-pink-700 text-white rounded-lg shadow-sm";
           loaderUtama.className = "hidden absolute inset-0 bg-white/80 z-[100] flex flex-col items-center justify-center text-pink-600 backdrop-blur-sm transition-colors";
           document.getElementById('content-growth').style.display = 'none';
           document.getElementById('content-promo').style.display = 'flex';
 
           titleContainer.innerHTML = `
-              <h1 class="text-xl md:text-2xl font-bold text-slate-800 flex items-center gap-2 mb-0.5">
-                  <span class="p-1.5 md:p-2 bg-pink-600 rounded-lg text-white shadow-sm"><svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v13m0-13V6a2 2 0 112 2h-2zm0 0V5.5A2.5 2.5 0 109.5 8H12zm-7 4h14M5 12a2 2 0 110-4h14a2 2 0 110 4M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7"></path></svg></span>
+              <h1 class="text-[14px] md:text-xl font-bold text-slate-800 flex items-center gap-1.5 mb-0.5 leading-none px-1 md:px-0">
+                  <span class="p-1 md:p-1.5 bg-pink-600 rounded-md shadow-sm text-white"><svg class="w-3.5 h-3.5 md:w-4 md:h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v13m0-13V6a2 2 0 112 2h-2zm0 0V5.5A2.5 2.5 0 109.5 8H12zm-7 4h14M5 12a2 2 0 110-4h14a2 2 0 110 4M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7"></path></svg></span>
                   Analitik Promo vs Non-Promo
               </h1>
-              <p class="text-[11px] md:text-sm text-slate-500 italic ml-10 md:ml-[44px] font-bold text-pink-700">*Promo Kredit Ramadhan Dan Idul Fitri (000011)</p>
+              <p class="text-[8px] md:text-[10px] text-slate-500 italic ml-6 md:ml-8 font-bold text-pink-700 px-1 md:px-0">*Promo Ramadhan Dan Idul Fitri</p>
           `;
       }
       fetchRekap();
@@ -368,22 +392,22 @@
       
       if (userKode === '000') {
           thContent += `
-              <th class="freeze-col-1 w-[60px] md:w-[80px] border-r border-b border-slate-300 align-middle uppercase text-center hidden md:table-cell text-slate-800 bg-[#dcedc8]">KODE</th>
-              <th class="freeze-col-2 min-w-[150px] md:min-w-[250px] border-r border-b border-slate-300 align-middle uppercase pl-4 md:pl-5 text-slate-800 text-left bg-[#dcedc8]">NAMA KANTOR</th>
+              <th class="freeze-col-1 w-[40px] md:w-[60px] border-r border-b border-slate-300 align-middle uppercase text-center hidden md:table-cell text-slate-800 bg-[#dcedc8]">KODE</th>
+              <th class="freeze-col-2 min-w-[120px] md:min-w-[200px] border-r border-b border-slate-300 align-middle uppercase pl-2 md:pl-5 text-slate-800 text-left bg-[#dcedc8]">NAMA KANTOR</th>
           `;
       } else {
-          thContent += `<th class="freeze-col-1 min-w-[160px] md:min-w-[250px] border-r border-b border-slate-300 align-middle uppercase pl-4 md:pl-5 text-slate-800 text-left border-t-0 rounded-tl-lg bg-[#dcedc8]">NAMA KANTOR</th>`;
+          thContent += `<th class="freeze-col-1 min-w-[120px] md:min-w-[200px] border-r border-b border-slate-300 align-middle uppercase pl-2 md:pl-5 text-slate-800 text-left border-t-0 rounded-tl-lg bg-[#dcedc8]">NAMA KANTOR</th>`;
       }
 
       thContent += `
-              <th class="px-3 md:px-4 border-r border-b border-slate-300 align-middle text-center w-[120px] md:w-[150px] uppercase text-slate-800 bg-[#dcedc8]">NOA REALISASI</th>
-              <th class="px-3 md:px-4 border-r border-b border-slate-300 align-middle text-right w-[140px] md:w-[180px] uppercase text-slate-800 bg-[#dcedc8]">TOT REALISASI</th>
-              <th class="px-3 md:px-4 border-r border-b border-slate-300 align-middle text-right w-[140px] md:w-[160px] uppercase text-emerald-800 bg-[#dcedc8]">PELUNASAN</th>
-              <th class="px-3 md:px-4 border-r border-b border-slate-300 align-middle text-right w-[140px] md:w-[180px] uppercase text-blue-800 bg-[#dcedc8]">ANGSURAN MURNI</th>
-              <th class="px-3 md:px-4 border-r border-b border-slate-300 align-middle text-right w-[140px] md:w-[180px] uppercase text-orange-800 bg-[#dcedc8]">TOT RUN OFF</th>
-              <th class="px-3 md:px-4 border-b border-slate-300 align-middle text-right w-[140px] md:w-[180px] uppercase text-slate-800 bg-[#dcedc8]">GROWTH</th>
+              <th class="px-1.5 md:px-3 border-r border-b border-slate-300 align-middle text-center w-[50px] md:w-[80px] uppercase text-slate-800 bg-[#dcedc8]">NOA</th>
+              <th class="px-2 md:px-3 border-r border-b border-slate-300 align-middle text-right w-[100px] md:w-[150px] uppercase text-slate-800 bg-[#dcedc8]">TOT REALISASI</th>
+              <th class="px-2 md:px-3 border-r border-b border-slate-300 align-middle text-right w-[90px] md:w-[140px] uppercase text-emerald-800 bg-[#dcedc8]">PELUNASAN</th>
+              <th class="px-2 md:px-3 border-r border-b border-slate-300 align-middle text-right w-[100px] md:w-[150px] uppercase text-blue-800 bg-[#dcedc8]">ANGSURAN</th>
+              <th class="px-2 md:px-3 border-r border-b border-slate-300 align-middle text-right w-[90px] md:w-[150px] uppercase text-orange-800 bg-[#dcedc8]">TOT RUN OFF</th>
+              <th class="px-2 md:px-3 border-b border-slate-300 align-middle text-right w-[100px] md:w-[150px] uppercase text-slate-800 bg-[#dcedc8]">GROWTH</th>
           </tr>
-          <tr id="rowTotalAtas" class="text-sm md:text-base font-extrabold tracking-wide head-lapis-2 bg-[#eff6ff]"></tr>
+          <tr id="rowTotalAtas" class="text-[10px] md:text-xs font-extrabold tracking-wide head-lapis-2 bg-[#eff6ff]"></tr>
       `;
       th.innerHTML = thContent;
   }
@@ -422,7 +446,7 @@
                   type: 'rekap_realisasi_growth', 
                   closing_date: document.getElementById('closing_date').value, 
                   harian_date: document.getElementById('harian_date').value, 
-                  kode_kantor: userKodeGlobal === '000' ? null : userKodeGlobal, // Filter JWT Cabang
+                  kode_kantor: userKodeGlobal === '000' ? null : userKodeGlobal, // Payload sesuai kode user
                   korwil: null
               };
           } else {
@@ -453,7 +477,7 @@
           if(err.name !== 'AbortError') {
               if (activeTab === 'growth') {
                   const tb = document.getElementById('bodyUtama');
-                  tb.innerHTML=`<tr><td colspan="8" class="py-16 text-center text-red-500 font-bold text-sm">${err.message}</td></tr>`; 
+                  tb.innerHTML=`<tr><td colspan="8" class="py-10 text-center text-red-500 font-bold text-xs">${err.message}</td></tr>`; 
               } else {
                   console.error(err);
               }
@@ -467,7 +491,7 @@
   function renderTableGrowth(rows, gt, userKode) {
       const tb = document.getElementById('bodyUtama'); const trTot = document.getElementById('rowTotalAtas');
       const colSpan = userKode === '000' ? 8 : 7;
-      if(rows.length === 0){ tb.innerHTML = `<tr><td colspan="${colSpan}" class="py-20 text-center text-slate-500 text-base">Tidak ada data.</td></tr>`; return; }
+      if(rows.length === 0){ tb.innerHTML = `<tr><td colspan="${colSpan}" class="py-10 text-center text-slate-500 text-[10px]">Tidak ada data.</td></tr>`; return; }
 
       let html = '';
       rows.forEach(r => {
@@ -479,26 +503,27 @@
           const growth    = parseFloat(r.growth) || 0;
           const growthColor = growth >= 0 ? 'text-blue-700' : 'text-red-600';
 
-          let rowHtml = `<tr class="transition h-[52px] border-b border-slate-100 group hover:bg-slate-50" onclick="initModalDetail('${r.kode_kantor}', '${r.nama_kantor}')">`;
+          let rowHtml = `<tr class="transition h-[40px] md:h-[46px] border-b border-slate-100">`;
           
           if (userKode === '000') {
               rowHtml += `
-                <td class="freeze-col-1 px-2 md:px-4 py-2 text-center font-mono font-bold text-slate-500 hidden md:table-cell bg-white">${r.kode_kantor}</td>
-                <td class="freeze-col-2 px-4 md:px-5 py-2 font-bold text-slate-700 truncate bg-white" title="${r.nama_kantor}">${r.nama_kantor}</td>
+                <td class="freeze-col-1 px-1.5 md:px-4 py-1.5 text-center font-mono font-bold text-slate-500 hidden md:table-cell bg-white">${r.kode_kantor}</td>
+                <td class="freeze-col-2 px-2 md:px-5 py-1.5 font-bold text-slate-700 text-left truncate bg-white" title="${r.nama_kantor}">${r.nama_kantor}</td>
               `;
           } else {
               rowHtml += `
-                <td class="freeze-col-1 px-4 md:px-5 py-2 font-bold text-slate-700 truncate bg-white" title="${r.nama_kantor}">${r.nama_kantor}</td>
+                <td class="freeze-col-1 px-2 md:px-5 py-1.5 font-bold text-slate-700 text-left truncate bg-white" title="${r.nama_kantor}">${r.nama_kantor}</td>
               `;
           }
 
+          // 🔥 FIX 3: Event Klik Detail CUMA di kolom NOA 🔥
           rowHtml += `
-                <td class="px-3 md:px-4 py-2 text-center font-extrabold text-blue-800 border-r border-slate-100 text-sm md:text-base">${fmt(noa_real)}</td>
-                <td class="px-3 md:px-4 py-2 text-right font-mono font-bold text-slate-800 border-r border-slate-100 text-sm md:text-base">${fmt(realisasi)}</td>
-                <td class="px-3 md:px-4 py-2 text-right font-mono font-bold text-emerald-700 border-r border-slate-100 text-sm md:text-base">${fmt(pelunasan)}</td>
-                <td class="px-3 md:px-4 py-2 text-right font-mono font-bold text-blue-700 border-r border-slate-100 text-sm md:text-base">${fmt(ang_murni)}</td>
-                <td class="px-3 md:px-4 py-2 text-right font-mono font-bold text-orange-700 border-r border-slate-100 text-sm md:text-base">${fmt(run_off)}</td>
-                <td class="px-3 md:px-4 py-2 text-right font-mono font-extrabold ${growthColor} text-sm md:text-base">${fmt(growth)}</td>
+                <td class="px-1.5 md:px-4 py-1.5 text-center font-extrabold text-blue-600 cursor-pointer hover:bg-blue-50 hover:text-blue-800 transition border-r border-slate-100" onclick="initModalDetail('${r.kode_kantor}', '${r.nama_kantor}')" title="Klik untuk lihat detail">${fmt(noa_real)}</td>
+                <td class="px-2 md:px-4 py-1.5 text-right font-mono font-bold text-slate-800 border-r border-slate-100">${fmt(realisasi)}</td>
+                <td class="px-2 md:px-4 py-1.5 text-right font-mono font-bold text-emerald-700 border-r border-slate-100">${fmt(pelunasan)}</td>
+                <td class="px-2 md:px-4 py-1.5 text-right font-mono font-bold text-blue-700 border-r border-slate-100">${fmt(ang_murni)}</td>
+                <td class="px-2 md:px-4 py-1.5 text-right font-mono font-bold text-orange-700 border-r border-slate-100">${fmt(run_off)}</td>
+                <td class="px-2 md:px-4 py-1.5 text-right font-mono font-extrabold ${growthColor}">${fmt(growth)}</td>
             </tr>`;
           html += rowHtml;
       });
@@ -510,22 +535,22 @@
 
           if (userKode === '000') {
               trTot.innerHTML = `
-                  <th class="freeze-col-1 px-2 md:px-4 border-r border-blue-300 text-center text-blue-900 font-extrabold hidden md:table-cell bg-[#eff6ff]">ALL</th>
-                  <th class="freeze-col-2 px-4 md:px-5 border-r border-blue-300 text-left uppercase tracking-widest font-extrabold text-xs md:text-sm text-blue-900 bg-[#eff6ff]">GRAND TOTAL</th>
+                  <th class="freeze-col-1 px-1.5 md:px-4 border-r border-blue-300 text-center text-blue-900 font-extrabold hidden md:table-cell bg-[#eff6ff]">ALL</th>
+                  <th class="freeze-col-2 px-2 md:px-5 border-r border-blue-300 text-left uppercase tracking-widest font-extrabold text-[9px] md:text-sm text-blue-900 bg-[#eff6ff]">GRAND TOTAL</th>
               `;
           } else {
               trTot.innerHTML = `
-                  <th class="freeze-col-1 px-4 md:px-5 border-r border-blue-300 text-left uppercase tracking-widest font-extrabold text-xs md:text-sm text-blue-900 bg-[#eff6ff]">GRAND TOTAL</th>
+                  <th class="freeze-col-1 px-2 md:px-5 border-r border-blue-300 text-left uppercase tracking-widest font-extrabold text-[9px] md:text-sm text-blue-900 bg-[#eff6ff]">GRAND TOTAL</th>
               `;
           }
 
           trTot.innerHTML += `
-              <th class="px-3 md:px-4 border-r border-blue-300 text-center font-extrabold text-sm md:text-base text-blue-900 align-middle bg-[#eff6ff]">${fmt(gt.noa_realisasi)}</th>
-              <th class="px-3 md:px-4 border-r border-blue-300 text-right font-mono font-bold text-sm md:text-base text-blue-900 align-middle bg-[#eff6ff]">${fmt(gt.total_realisasi)}</th>
-              <th class="px-3 md:px-4 border-r border-blue-300 text-right font-mono font-bold text-sm md:text-base text-emerald-800 align-middle bg-[#eff6ff]">${fmt(gt.pelunasan)}</th>
-              <th class="px-3 md:px-4 border-r border-blue-300 text-right font-mono font-bold text-sm md:text-base text-blue-800 align-middle bg-[#eff6ff]">${fmt(gt.angsuran_murni)}</th>
-              <th class="px-3 md:px-4 border-r border-blue-300 text-right font-mono font-bold text-sm md:text-base text-orange-800 align-middle bg-[#eff6ff]">${fmt(gt.total_run_off)}</th>
-              <th class="px-3 md:px-4 text-right font-mono font-extrabold text-sm md:text-base ${tGrowthColor} align-middle bg-[#eff6ff]">${fmt(gGrowth)}</th>
+              <th class="px-1.5 md:px-4 border-r border-blue-300 text-center font-extrabold text-blue-900 align-middle bg-[#eff6ff]">${fmt(gt.noa_realisasi)}</th>
+              <th class="px-2 md:px-4 border-r border-blue-300 text-right font-mono font-bold text-blue-900 align-middle bg-[#eff6ff]" title="Rp ${fmt(gt.total_realisasi)}">${fmtSingkat(gt.total_realisasi)}</th>
+              <th class="px-2 md:px-4 border-r border-blue-300 text-right font-mono font-bold text-emerald-800 align-middle bg-[#eff6ff]" title="Rp ${fmt(gt.pelunasan)}">${fmtSingkat(gt.pelunasan)}</th>
+              <th class="px-2 md:px-4 border-r border-blue-300 text-right font-mono font-bold text-blue-800 align-middle bg-[#eff6ff]" title="Rp ${fmt(gt.angsuran_murni)}">${fmtSingkat(gt.angsuran_murni)}</th>
+              <th class="px-2 md:px-4 border-r border-blue-300 text-right font-mono font-bold text-orange-800 align-middle bg-[#eff6ff]" title="Rp ${fmt(gt.total_run_off)}">${fmtSingkat(gt.total_run_off)}</th>
+              <th class="px-2 md:px-4 text-right font-mono font-extrabold ${tGrowthColor} align-middle bg-[#eff6ff]" title="Rp ${fmt(gGrowth)}">${fmtSingkat(gGrowth)}</th>
           `;
       }
   }
@@ -535,11 +560,13 @@
       const totals = data.totals || {promo_nominal:0, non_promo_nominal:0, promo_noa:0, non_promo_noa:0};
       const trend = data.trend || [];
 
-      document.getElementById('txt-tot-promo').innerText = fmt(totals.promo_nominal);
-      document.getElementById('txt-noa-promo').innerText = fmt(totals.promo_noa) + ' Nasabah (NOA)';
+      document.getElementById('txt-tot-promo').innerText = fmtSingkat(totals.promo_nominal);
+      document.getElementById('txt-tot-promo').title = "Rp " + fmt(totals.promo_nominal);
+      document.getElementById('txt-noa-promo').innerText = fmt(totals.promo_noa) + ' NOA';
       
-      document.getElementById('txt-tot-nonpromo').innerText = fmt(totals.non_promo_nominal);
-      document.getElementById('txt-noa-nonpromo').innerText = fmt(totals.non_promo_noa) + ' Nasabah (NOA)';
+      document.getElementById('txt-tot-nonpromo').innerText = fmtSingkat(totals.non_promo_nominal);
+      document.getElementById('txt-tot-nonpromo').title = "Rp " + fmt(totals.non_promo_nominal);
+      document.getElementById('txt-noa-nonpromo').innerText = fmt(totals.non_promo_noa) + ' NOA';
 
       const ctxPie = document.getElementById('pieChart').getContext('2d');
       const ctxBar = document.getElementById('barChart').getContext('2d');
@@ -563,13 +590,13 @@
           options: {
               responsive: true, maintainAspectRatio: false,
               plugins: {
-                  legend: { position: 'bottom', labels: {font:{size:11, family:'monospace'}, usePointStyle: true} },
+                  legend: { position: 'bottom', labels: {font:{size:9, family:'monospace'}, usePointStyle: true, padding: 8} },
                   tooltip: {
                       callbacks: {
                           label: function(ctx) {
                               let label = ctx.label || '';
                               if (label) label += ': ';
-                              label += 'Rp ' + fmt(ctx.raw);
+                              label += 'Rp ' + fmtSingkat(ctx.raw);
                               if(totalSum > 0) {
                                   let pct = ((ctx.raw / totalSum) * 100).toFixed(1) + '%';
                                   label += ' (' + pct + ')';
@@ -593,32 +620,33 @@
           data: {
               labels: labels,
               datasets: [
-                  { label: 'Promo', data: dataPromo, backgroundColor: '#ec4899', borderRadius: 4 },
-                  { label: 'Non-Promo', data: dataNonPromo, backgroundColor: '#cbd5e1', borderRadius: 4 }
+                  { label: 'Promo', data: dataPromo, backgroundColor: '#ec4899', borderRadius: 2 },
+                  { label: 'Non-Promo', data: dataNonPromo, backgroundColor: '#cbd5e1', borderRadius: 2 }
               ]
           },
           options: {
               responsive: true, maintainAspectRatio: false,
               interaction: { mode: 'index', intersect: false },
               scales: {
-                  x: { stacked: false, grid: { display: false } },
+                  x: { stacked: false, grid: { display: false }, ticks: { font: {size: 8} } },
                   y: { 
                       stacked: false, border: { display: false },
                       ticks: {
+                          font: {size: 8},
                           callback: function(value) {
-                              if(value >= 1000000000) return (value/1000000000).toFixed(1) + ' Miliar';
-                              if(value >= 1000000) return (value/1000000).toFixed(1) + ' Juta';
+                              if(value >= 1000000000) return (value/1000000000).toFixed(0) + ' M';
+                              if(value >= 1000000) return (value/1000000).toFixed(0) + ' Jt';
                               return value;
                           }
                       }
                   }
               },
               plugins: {
-                  legend: { position: 'bottom', labels: {font:{size:11, family:'monospace'}, usePointStyle: true} },
+                  legend: { position: 'bottom', labels: {font:{size:9, family:'monospace'}, usePointStyle: true, padding: 8} },
                   tooltip: { 
                       callbacks: { 
                           label: function(ctx) { 
-                              let nominalText = ctx.dataset.label + ': Rp ' + fmt(ctx.raw); 
+                              let nominalText = ctx.dataset.label + ': Rp ' + fmtSingkat(ctx.raw); 
                               let noaVal = ctx.datasetIndex === 0 ? dataPromoNoa[ctx.dataIndex] : dataNonPromoNoa[ctx.dataIndex];
                               return `${nominalText} (${noaVal} NOA)`; 
                           } 
@@ -658,11 +686,12 @@
   }
 
   // ==========================================
-  // 🔥 MODAL DETAIL LOGIC (FILTER AO FIXED) 🔥
+  // 🔥 MODAL DETAIL LOGIC 🔥
   // ==========================================
-  function initModalDetail(kode, nama) {
-      if (userKodeGlobal !== '000' && String(kode) !== userKodeGlobal) {
-          alert(`AKSES DITOLAK!\nAnda tidak memiliki izin untuk melihat detail Cabang ${kode}.`);
+  async function initModalDetail(kode, nama) {
+      // 🔥 FIX 4: Check otentikasi ketat (001 tidak bisa buka 002) 🔥
+      if (userKodeGlobal !== '000' && userKodeGlobal !== '099' && String(kode).padStart(3, '0') !== userKodeGlobal) {
+          alert(`AKSES DITOLAK!\nAnda hanya memiliki izin untuk melihat detail Cabang ${userKodeGlobal}.`);
           return;
       }
 
@@ -675,31 +704,38 @@
       const mHead = document.getElementById('headDetail');
 
       mTitle.innerHTML = `
-          <h3 class="font-bold text-slate-800 flex items-center gap-2 text-sm md:text-base"><span class="bg-blue-100 text-blue-600 p-1 md:p-1.5 rounded-lg shadow-sm text-xs">👥</span> Detail Realisasi</h3>
-          <p class="text-[10px] md:text-xs text-slate-500 mt-0.5 ml-1 md:ml-8 font-mono">Cabang: ${nama}</p>
+          <h3 class="font-bold text-slate-800 flex items-center gap-1.5 text-[11px] md:text-sm leading-none px-2 md:px-0">
+              <span class="p-1 md:p-1.5 bg-blue-100 text-blue-600 rounded-md shadow-sm">👥</span> Detail Realisasi
+          </h3>
+          <p class="text-[8px] md:text-[10px] text-slate-500 mt-0.5 ml-6 md:ml-8 font-mono px-2 md:px-0">Cabang: ${nama}</p>
       `;
       
       mHead.innerHTML = `
-          <tr class="modal-head-1 bg-[#f1f5f9] text-blue-900">
-              <th class="px-3 md:px-4 py-2 border-b border-r border-slate-300 w-[120px] mod-freeze-1 rounded-tl-lg md:rounded-tl-xl bg-[#f1f5f9]">REKENING</th>
-              <th class="px-4 md:px-5 py-2 border-b border-r border-slate-300 w-[240px] md:w-[300px] mod-freeze-2 bg-[#f1f5f9]">NAMA NASABAH</th>
-              <th class="px-3 md:px-4 py-2 border-b border-r border-slate-300 w-[200px] md:w-[250px] bg-[#f1f5f9]">ALAMAT</th>
-              <th class="px-3 md:px-4 py-2 border-b border-r border-slate-300 w-[140px] text-center bg-[#f1f5f9]">KANKAS</th>
-              <th class="px-3 md:px-4 py-2 border-b border-r border-slate-300 w-[160px] bg-[#f1f5f9]">NAMA AO</th>
-              <th class="px-3 md:px-4 py-2 border-b border-r border-slate-300 w-[120px] text-center bg-[#f1f5f9]">TGL REALISASI</th>
-              <th class="px-4 md:px-5 py-2 border-b border-slate-300 w-[160px] md:w-[200px] text-right bg-[#f1f5f9]">PLAFON</th>
+          <tr class="modal-head-1 bg-[#f1f5f9] text-blue-900 text-left md:text-center">
+              <th class="px-2 md:px-3 py-1.5 md:py-2 border-b border-r border-slate-300 w-[100px] md:w-[120px] mod-freeze-1 rounded-tl-lg bg-[#f1f5f9]">REKENING</th>
+              <th class="px-2 md:px-4 py-1.5 md:py-2 border-b border-r border-slate-300 w-[160px] md:w-[250px] mod-freeze-2 bg-[#f1f5f9]">NAMA NASABAH</th>
+              <th class="px-2 md:px-3 py-1.5 md:py-2 border-b border-r border-slate-300 w-[140px] md:w-[200px] bg-[#f1f5f9]">ALAMAT</th>
+              <th class="px-2 md:px-3 py-1.5 md:py-2 border-b border-r border-slate-300 w-[80px] md:w-[120px] text-center bg-[#f1f5f9]">KANKAS</th>
+              <th class="px-2 md:px-3 py-1.5 md:py-2 border-b border-r border-slate-300 w-[100px] md:w-[140px] bg-[#f1f5f9]">NAMA AO</th>
+              <th class="px-2 md:px-3 py-1.5 md:py-2 border-b border-r border-slate-300 w-[80px] md:w-[100px] text-center bg-[#f1f5f9]">TGL REK</th>
+              <th class="px-2 md:px-4 py-1.5 md:py-2 border-b border-slate-300 w-[100px] md:w-[160px] text-right bg-[#f1f5f9]">PLAFON</th>
           </tr>
           <tr id="rowTotalDetailAtas" class="modal-head-2 bg-[#eff6ff]"></tr>
       `;
       
-      loadKankasModal(kode);
-      loadAOModalDropdown(kode); // 🔥 FETCH AO RESMI DARI API KODE 🔥
+      document.getElementById('filter_kankas_modal').innerHTML = '<option value="">Semua Kankas</option>';
+      document.getElementById('filter_ao_modal').innerHTML = '<option value="">Semua AO</option>';
+
+      await Promise.all([
+          loadKankasModal(kode),
+          loadAOModalDropdown(kode)
+      ]);
+
       fetchDetail(1);
   }
 
   async function loadKankasModal(kode_cabang) {
       const el = document.getElementById('filter_kankas_modal');
-      el.innerHTML = '<option value="">Semua Kankas</option>';
       if(!kode_cabang) return;
       try {
           const r = await apiCall(API_KODE, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({type: 'kode_kankas', kode_kantor: kode_cabang}) });
@@ -710,10 +746,8 @@
       } catch(e) {}
   }
 
-  // 🔥 FUNGSI BARU: Ambil AO Resmi dari Database biar ID (kode_group2)-nya valid
   async function loadAOModalDropdown(kode_cabang) {
       const el = document.getElementById('filter_ao_modal');
-      el.innerHTML = '<option value="">Semua AO</option>';
       if(!kode_cabang) return;
       try {
           const r = await apiCall(API_KODE, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({type: 'kode_ao_kredit', kode_kantor: kode_cabang}) });
@@ -725,6 +759,16 @@
               });
           }
       } catch(e) {}
+  }
+
+  window.onKankasChange = async function() {
+      const kodeCabang = currentDetailParams.kode_kantor;
+      const elAO = document.getElementById('filter_ao_modal');
+      elAO.innerHTML = '<option value="">Semua AO</option>';
+      elAO.value = '';
+      
+      await loadAOModalDropdown(kodeCabang); 
+      fetchDetail(1);
   }
 
   function changePage(step) {
@@ -739,7 +783,6 @@
       l.classList.remove('hidden'); tb.innerHTML = ''; trTot.innerHTML = '';
       
       currentDetailParams.kode_kankas = document.getElementById('filter_kankas_modal').value;
-      // AO yang dikirim sekarang murni ID-nya (karena kita load pakai fungsi loadAOModalDropdown di atas)
       currentDetailParams.kode_ao = document.getElementById('filter_ao_modal').value; 
 
       try {
@@ -749,7 +792,7 @@
               harian_date: document.getElementById('harian_date').value,
               kode_kantor: currentDetailParams.kode_kantor,
               kode_kankas: currentDetailParams.kode_kankas,
-              kode_ao: currentDetailParams.kode_ao, // 🔥 Filter ID AO dikirim ke Backend
+              kode_ao: currentDetailParams.kode_ao,
               page: page, limit: detailLimit
           };
 
@@ -762,7 +805,7 @@
           currentDetailPage = page; currentDetailTotalPages = meta.total_pages;
 
           if(list.length === 0) {
-              tb.innerHTML = `<tr><td colspan="7" class="py-20 text-center text-slate-400 italic text-base">Tidak ada data detail.</td></tr>`;
+              tb.innerHTML = `<tr><td colspan="7" class="py-10 text-center text-slate-400 italic text-[10px] md:text-sm">Tidak ada data detail.</td></tr>`;
               info.innerText = `0 data`; return;
           }
 
@@ -770,28 +813,28 @@
           list.forEach(r => {
               t_plafond += parseFloat(r.plafond||0);
               const alamatLengkap = r.alamat || '-';
-              const alamatPendek = alamatLengkap.length > 25 ? alamatLengkap.substring(0, 25) + '...' : alamatLengkap;
+              const alamatPendek = alamatLengkap.length > 20 ? alamatLengkap.substring(0, 20) + '...' : alamatLengkap;
 
-              html += `<tr class="transition h-[52px] group border-b border-slate-100 hover:bg-slate-50">
-                    <td class="mod-freeze-1 px-3 md:px-4 py-2 font-mono text-sm text-slate-500 bg-white border-r border-slate-100 shadow-[inset_-1px_0_0_#e2e8f0] group-hover:bg-slate-50">${r.no_rekening}</td>
-                    <td class="mod-freeze-2 px-4 md:px-5 py-2 font-bold text-sm text-slate-700 bg-white truncate border-r border-slate-100 max-w-[240px] md:max-w-[300px] shadow-[inset_-1px_0_0_#e2e8f0] group-hover:bg-slate-50" title="${r.nama_nasabah}">${r.nama_nasabah}</td>
-                    <td class="px-3 md:px-4 py-2 text-sm text-slate-500 whitespace-nowrap border-r border-slate-100" title="${alamatLengkap}">${alamatPendek}</td>
-                    <td class="px-3 md:px-4 py-2 text-center font-mono text-xs md:text-sm text-slate-500 border-r border-slate-100">${r.nama_kankas||'-'}</td>
-                    <td class="px-3 md:px-4 py-2 text-sm font-bold text-blue-700 truncate border-r border-slate-100">${r.nama_ao||'-'}</td>
-                    <td class="px-3 md:px-4 py-2 text-center font-mono text-xs md:text-sm text-slate-600 border-r border-slate-100">${r.tgl_realisasi}</td>
-                    <td class="px-4 md:px-5 py-2 text-right font-mono font-bold text-slate-800 text-sm md:text-base">${fmt(r.plafond)}</td>
+              html += `<tr class="transition h-[40px] md:h-[46px] border-b border-slate-100 hover:bg-slate-50 text-left md:text-center">
+                    <td class="mod-freeze-1 px-2 md:px-3 py-1.5 font-mono text-[9px] md:text-[11px] text-slate-500 bg-white border-r border-slate-100 shadow-[inset_-1px_0_0_#e2e8f0] hover:bg-slate-50 text-left">${r.no_rekening}</td>
+                    <td class="mod-freeze-2 px-2 md:px-4 py-1.5 font-bold text-[9.5px] md:text-[11px] text-slate-700 bg-white truncate border-r border-slate-100 max-w-[160px] md:max-w-[250px] shadow-[inset_-1px_0_0_#e2e8f0] hover:bg-slate-50 text-left" title="${r.nama_nasabah}">${r.nama_nasabah}</td>
+                    <td class="px-2 md:px-3 py-1.5 text-[9px] md:text-[11px] text-slate-500 whitespace-nowrap border-r border-slate-100 text-left" title="${alamatLengkap}">${alamatPendek}</td>
+                    <td class="px-2 md:px-3 py-1.5 text-center font-mono text-[9px] md:text-[11px] text-slate-500 border-r border-slate-100">${r.nama_kankas||'-'}</td>
+                    <td class="px-2 md:px-3 py-1.5 text-[9px] md:text-[11px] font-bold text-blue-700 truncate border-r border-slate-100 text-left md:text-center">${r.nama_ao||'-'}</td>
+                    <td class="px-2 md:px-3 py-1.5 text-center font-mono text-[9px] md:text-[11px] text-slate-600 border-r border-slate-100">${r.tgl_realisasi}</td>
+                    <td class="px-2 md:px-4 py-1.5 text-right font-mono font-bold text-slate-800 text-[9.5px] md:text-[12px]">${fmt(r.plafond)}</td>
                 </tr>`;
           });
           tb.innerHTML = html;
 
           trTot.innerHTML = `
-              <th class="mod-freeze-1 px-3 md:px-4 border-r border-b border-blue-200 text-center bg-[#eff6ff]">-</th>
-              <th class="mod-freeze-2 px-4 md:px-5 border-r border-b border-blue-200 uppercase tracking-widest font-extrabold text-[10px] md:text-sm text-blue-900 bg-[#eff6ff]">TOTAL HALAMAN INI</th>
-              <th class="px-3 md:px-4 border-r border-b border-blue-200 text-center bg-[#eff6ff]">-</th>
-              <th class="px-3 md:px-4 border-r border-b border-blue-200 text-center bg-[#eff6ff]">-</th>
-              <th class="px-3 md:px-4 border-r border-b border-blue-200 text-center bg-[#eff6ff]">-</th>
-              <th class="px-3 md:px-4 border-r border-b border-blue-200 text-center bg-[#eff6ff]">-</th>
-              <th class="px-4 md:px-5 border-b border-blue-300 text-right font-mono font-extrabold text-sm md:text-base text-blue-900 bg-blue-100/60">${fmt(t_plafond)}</th>
+              <th class="mod-freeze-1 px-2 md:px-3 border-r border-b border-blue-200 text-center bg-[#eff6ff]">-</th>
+              <th class="mod-freeze-2 px-2 md:px-4 border-r border-b border-blue-200 uppercase tracking-widest font-extrabold text-[9px] md:text-[11px] text-blue-900 bg-[#eff6ff] text-left md:text-center">TOTAL HALAMAN INI</th>
+              <th class="px-2 md:px-3 border-r border-b border-blue-200 text-center bg-[#eff6ff]">-</th>
+              <th class="px-2 md:px-3 border-r border-b border-blue-200 text-center bg-[#eff6ff]">-</th>
+              <th class="px-2 md:px-3 border-r border-b border-blue-200 text-center bg-[#eff6ff]">-</th>
+              <th class="px-2 md:px-3 border-r border-b border-blue-200 text-center bg-[#eff6ff]">-</th>
+              <th class="px-2 md:px-4 border-b border-blue-300 text-right font-mono font-extrabold text-[9.5px] md:text-[12px] text-blue-900 bg-blue-100/60">${fmt(t_plafond)}</th>
           `;
 
           const start = ((page-1)*detailLimit)+1; const end = Math.min(page*detailLimit, meta.total_records);
@@ -804,7 +847,7 @@
 
   async function exportExcelDetail() {
       const btn = document.getElementById('btn-excel-modal'); const txt = btn.innerHTML;
-      btn.innerHTML = `<span class="animate-spin inline-block h-3 w-3 md:h-4 md:w-4 border-2 border-white border-t-transparent rounded-full mr-1 md:mr-2"></span>...`;
+      btn.innerHTML = `<span class="animate-spin inline-block h-3 w-3 border-2 border-white border-t-transparent rounded-full"></span>`;
       btn.disabled = true;
 
       try {

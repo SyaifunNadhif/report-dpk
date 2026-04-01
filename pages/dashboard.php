@@ -1,86 +1,93 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-<div class="max-w-[1400px] mx-auto px-4 py-6 bg-gray-50 min-h-screen font-sans">
+<div class="max-w-[1400px] mx-auto px-2 md:px-4 py-4 md:py-6 bg-gray-50 min-h-screen font-sans">
   
-  <div class="flex flex-col md:flex-row justify-between items-end mb-6">
+  <div class="flex flex-col md:flex-row justify-between md:items-end mb-4 md:mb-6 gap-3">
     <div>
-      <h1 class="text-2xl md:text-3xl font-extrabold text-gray-800 tracking-tight">📊 Executive Dashboard</h1>
-      <p class="text-sm text-gray-500 mt-1 font-medium">Pusat Komando Portofolio & Kinerja Bisnis</p>
+      <h1 class="text-xl md:text-3xl font-extrabold text-gray-800 tracking-tight flex items-center gap-2">📊 Executive Dashboard</h1>
+      <p class="text-xs md:text-sm text-gray-500 mt-0.5 md:mt-1 font-medium">Pusat Komando Portofolio & Kinerja Bisnis</p>
     </div>
 
-    <form id="formFilterMaster" class="flex flex-wrap items-end gap-3 mt-4 md:mt-0 bg-white p-3 rounded-xl shadow-sm border border-gray-200">
-      <div class="flex flex-col">
-        <label class="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Closing M-1</label>
-        <input type="date" id="filter_closing" class="border-b-2 border-transparent hover:border-gray-300 px-1 py-1 text-sm outline-none focus:border-blue-500 transition-colors font-medium">
+    <form id="formFilterMaster" class="flex flex-col md:flex-row items-end gap-2.5 md:gap-3 bg-white p-2.5 md:p-3 rounded-xl shadow-sm border border-gray-200 w-full md:w-auto">
+      
+      <div class="flex w-full md:w-auto gap-2 shrink-0">
+          <div class="flex flex-col flex-1 min-w-0 md:w-[130px]">
+            <label class="text-[9px] md:text-[10px] font-bold text-gray-500 uppercase tracking-wider">Closing M-1</label>
+            <input type="date" id="filter_closing" class="border-b-2 border-transparent hover:border-gray-300 px-1 py-1 text-[10px] md:text-sm outline-none focus:border-blue-500 transition-colors font-semibold cursor-pointer w-full bg-transparent">
+          </div>
+          <div class="flex flex-col flex-1 min-w-0 md:w-[130px]">
+            <label class="text-[9px] md:text-[10px] font-bold text-gray-500 uppercase tracking-wider">Harian/Actual</label>
+            <input type="date" id="filter_harian" class="border-b-2 border-transparent hover:border-gray-300 px-1 py-1 text-[10px] md:text-sm outline-none focus:border-blue-500 transition-colors font-semibold cursor-pointer w-full bg-transparent">
+          </div>
       </div>
-      <div class="flex flex-col">
-        <label class="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Harian/Actual</label>
-        <input type="date" id="filter_harian" class="border-b-2 border-transparent hover:border-gray-300 px-1 py-1 text-sm outline-none focus:border-blue-500 transition-colors font-medium">
+
+      <div class="flex w-full md:w-auto items-end gap-2 shrink-0 mt-0.5 md:mt-0">
+          <div class="flex flex-col flex-1 min-w-0 md:w-[180px]">
+            <label class="text-[9px] md:text-[10px] font-bold text-gray-500 uppercase tracking-wider">Area/Cabang</label>
+            <select id="filter_kantor" class="border-b-2 border-transparent hover:border-gray-300 px-1 py-1 text-[10px] md:text-sm outline-none focus:border-blue-500 bg-transparent transition-colors font-bold text-gray-700 cursor-pointer w-full truncate"></select>
+          </div>
+          <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white w-[34px] md:w-auto h-[32px] md:h-[36px] md:px-5 rounded-lg text-sm font-bold transition-all flex items-center justify-center gap-2 shadow-md transform active:scale-95 shrink-0 mb-[1px]">
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" class="md:hidden"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+            <span class="hidden md:inline">Tampilkan</span>
+          </button>
       </div>
-      <div class="flex flex-col">
-        <label class="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Area/Cabang</label>
-        <select id="filter_kantor" class="border-b-2 border-transparent hover:border-gray-300 px-1 py-1 text-sm min-w-[180px] outline-none focus:border-blue-500 bg-transparent transition-colors font-bold text-gray-700">
-          </select>
-      </div>
-      <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded-lg text-sm font-bold transition-all flex items-center gap-2 shadow-md transform active:scale-95">
-        Tampilkan
-      </button>
+
     </form>
   </div>
 
   <div id="loadingDash" class="hidden flex flex-col justify-center items-center py-32">
-    <div class="animate-spin rounded-full h-14 w-14 border-t-4 border-b-4 border-blue-600 mb-4"></div>
-    <span class="text-gray-500 font-semibold animate-pulse">Loading data dari database...</span>
+    <div class="animate-spin rounded-full h-10 w-10 md:h-14 md:w-14 border-t-4 border-b-4 border-blue-600 mb-4"></div>
+    <span class="text-xs md:text-sm text-gray-500 font-semibold animate-pulse">Loading data dari database...</span>
   </div>
 
-  <div id="contentDash" class="hidden space-y-6 overflow-x-hidden">
+  <div id="contentDash" class="hidden space-y-4 md:space-y-6 overflow-x-hidden">
     
-    <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">
-      <div class="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 relative overflow-hidden">
+    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 md:gap-4">
+      <div class="bg-white p-3.5 md:p-4 rounded-xl md:rounded-2xl shadow-sm border border-gray-100 relative overflow-hidden col-span-2 md:col-span-1">
         <div class="absolute top-0 left-0 w-1.5 h-full bg-blue-500 rounded-l-2xl"></div>
-        <p class="text-[10px] text-gray-500 font-bold uppercase tracking-wider mb-1 truncate">Total Baki Debet (OS)</p>
-        <h3 id="kpi_os" class="text-xl xl:text-2xl font-black text-gray-900 tracking-tight whitespace-nowrap mb-2.5">Rp 0</h3>
+        <p class="text-[9px] md:text-[10px] text-gray-500 font-bold uppercase tracking-wider mb-0.5 md:mb-1 truncate">Total Baki Debet (OS)</p>
+        <h3 id="kpi_os" class="text-lg md:text-xl xl:text-2xl font-black text-gray-900 tracking-tight whitespace-nowrap mb-1.5 md:mb-2.5">Rp 0</h3>
         <div id="kpi_os_pill"></div>
       </div>
-      <div class="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 relative overflow-hidden">
+      <div class="bg-white p-3.5 md:p-4 rounded-xl md:rounded-2xl shadow-sm border border-gray-100 relative overflow-hidden col-span-1">
         <div class="absolute top-0 left-0 w-1.5 h-full bg-cyan-500 rounded-l-2xl"></div>
-        <p class="text-[10px] text-gray-500 font-bold uppercase tracking-wider mb-1 truncate">Saldo Bank</p>
-        <h3 id="kpi_saldobank" class="text-xl xl:text-2xl font-black text-cyan-600 tracking-tight whitespace-nowrap mb-2.5">Rp 0</h3>
+        <p class="text-[9px] md:text-[10px] text-gray-500 font-bold uppercase tracking-wider mb-0.5 md:mb-1 truncate">Saldo Bank</p>
+        <h3 id="kpi_saldobank" class="text-lg md:text-xl xl:text-2xl font-black text-cyan-600 tracking-tight whitespace-nowrap mb-1.5 md:mb-2.5">Rp 0</h3>
         <div id="kpi_saldobank_pill"></div>
       </div>
-      <div class="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 relative overflow-hidden">
+      <div class="bg-white p-3.5 md:p-4 rounded-xl md:rounded-2xl shadow-sm border border-gray-100 relative overflow-hidden col-span-1">
         <div class="absolute top-0 left-0 w-1.5 h-full bg-red-500 rounded-l-2xl"></div>
-        <p class="text-[10px] text-gray-500 font-bold uppercase tracking-wider mb-1 truncate">Total OSC NPL</p>
-        <h3 id="kpi_npl" class="text-xl xl:text-2xl font-black text-red-600 tracking-tight whitespace-nowrap mb-2.5">Rp 0</h3>
+        <p class="text-[9px] md:text-[10px] text-gray-500 font-bold uppercase tracking-wider mb-0.5 md:mb-1 truncate">Total OSC NPL</p>
+        <h3 id="kpi_npl" class="text-lg md:text-xl xl:text-2xl font-black text-red-600 tracking-tight whitespace-nowrap mb-1.5 md:mb-2.5">Rp 0</h3>
         <div id="kpi_npl_pill"></div>
       </div>
-      <div class="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 relative overflow-hidden">
+      <div class="bg-white p-3.5 md:p-4 rounded-xl md:rounded-2xl shadow-sm border border-gray-100 relative overflow-hidden col-span-1">
         <div class="absolute top-0 left-0 w-1.5 h-full bg-green-500 rounded-l-2xl"></div>
-        <p class="text-[10px] text-gray-500 font-bold uppercase tracking-wider mb-1 truncate">Repayment Rate (RR)</p>
-        <h3 id="kpi_rr" class="text-xl xl:text-2xl font-black text-green-600 tracking-tight whitespace-nowrap mb-2.5">0%</h3>
+        <p class="text-[9px] md:text-[10px] text-gray-500 font-bold uppercase tracking-wider mb-0.5 md:mb-1 truncate">Repayment Rate (RR)</p>
+        <h3 id="kpi_rr" class="text-lg md:text-xl xl:text-2xl font-black text-green-600 tracking-tight whitespace-nowrap mb-1.5 md:mb-2.5">Rp 0</h3>
         <div id="kpi_rr_pill"></div>
       </div>
-      <div class="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 relative overflow-hidden">
+      <div class="bg-white p-3.5 md:p-4 rounded-xl md:rounded-2xl shadow-sm border border-gray-100 relative overflow-hidden col-span-1 md:col-span-1">
         <div class="absolute top-0 left-0 w-1.5 h-full bg-purple-500 rounded-l-2xl"></div>
-        <p class="text-[10px] text-gray-500 font-bold uppercase tracking-wider mb-1 truncate">Total DPK (Depo + Tab) H-1</p>
-        <h3 id="kpi_dpk" class="text-xl xl:text-2xl font-black text-purple-700 tracking-tight whitespace-nowrap mb-2.5">Rp 0</h3>
+        <p class="text-[9px] md:text-[10px] text-gray-500 font-bold uppercase tracking-wider mb-0.5 md:mb-1 truncate">Total DPK (H-1)</p>
+        <h3 id="kpi_dpk" class="text-lg md:text-xl xl:text-2xl font-black text-purple-700 tracking-tight whitespace-nowrap mb-1.5 md:mb-2.5">Rp 0</h3>
         <div id="kpi_dpk_pill"></div>
       </div>
     </div>
 
-    <div class="grid lg:grid-cols-3 gap-4">
-      <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 lg:col-span-2 flex flex-col">
-        <div class="flex justify-between items-center mb-2 border-b border-gray-100 pb-3">
-          <h3 class="font-bold text-gray-800 flex items-center gap-2">
+    <div class="grid lg:grid-cols-3 gap-3 md:gap-4">
+      <div class="bg-white p-4 md:p-5 rounded-xl md:rounded-2xl shadow-sm border border-gray-100 lg:col-span-2 flex flex-col">
+        <div class="flex flex-col md:flex-row justify-between md:items-center gap-2 md:gap-0 mb-2 border-b border-gray-100 pb-3">
+          <h3 class="font-bold text-gray-800 flex items-center gap-1.5 md:gap-2 text-[13px] md:text-base">
             <span class="text-blue-500">📈</span> Tren Portofolio Kredit
           </h3>
-          <div class="flex gap-2">
-            <select id="filter_tren_tipe" class="border border-gray-200 rounded-md px-2 py-1 text-xs font-semibold text-gray-600 outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer bg-white shadow-sm">
+          <div class="flex flex-wrap md:flex-nowrap gap-1.5 md:gap-2 w-full md:w-auto">
+            <select id="filter_tren_tipe" class="border border-gray-200 rounded-md px-2 py-1 text-[10px] md:text-xs font-semibold text-gray-600 outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer bg-white shadow-sm flex-1 md:flex-none">
                 <option value="nom">Nominal (Rp)</option>
                 <option value="pct">Persentase (%)</option>
                 <option value="npl" selected>NPL</option>
             </select>
-            <select id="filter_tren" class="border border-gray-200 rounded-md px-2 py-1 text-xs font-semibold text-gray-600 outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer bg-white shadow-sm">
+            <select id="filter_tren" class="border border-gray-200 rounded-md px-2 py-1 text-[10px] md:text-xs font-semibold text-gray-600 outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer bg-white shadow-sm flex-1 md:flex-none">
                 <option value="tahunan">Periode Tahunan</option>
                 <option value="bulanan" selected>Periode Bulanan</option>
                 <option value="mingguan">Periode Mingguan</option>
@@ -92,73 +99,73 @@
         </div>
         <div class="relative flex-grow min-h-[220px] w-full mt-2">
           <div id="loadingChartTren" class="absolute inset-0 flex justify-center items-center bg-white bg-opacity-80 z-10 hidden">
-            <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+            <div class="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500"></div>
           </div>
           <canvas id="canvasTrenPortofolio"></canvas>
         </div>
       </div>
 
-      <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 flex flex-col">
+      <div class="bg-white p-4 md:p-5 rounded-xl md:rounded-2xl shadow-sm border border-gray-100 flex flex-col">
         <div class="flex items-center justify-between mb-3 border-b border-gray-100 pb-2">
-          <h3 class="font-bold text-gray-800 flex items-center gap-2 text-sm">
+          <h3 class="font-bold text-gray-800 flex items-center gap-1.5 md:gap-2 text-[13px] md:text-sm">
             <span class="text-indigo-500">📦</span> Realisasi by Produk
           </h3>
           <div class="text-right flex flex-col items-end">
-            <span class="text-[9px] text-gray-400 font-bold uppercase tracking-wider">Total Realisasi</span>
-            <span id="label_total_realisasi_produk" class="text-sm font-black text-indigo-600">Rp 0</span>
+            <span class="text-[8px] md:text-[9px] text-gray-400 font-bold uppercase tracking-wider">Total Realisasi</span>
+            <span id="label_total_realisasi_produk" class="text-xs md:text-sm font-black text-indigo-600">Rp 0</span>
           </div>
         </div>
         <div id="box_realisasi_produk" class="space-y-3 flex-grow"></div>
       </div>
     </div>
 
-    <div class="grid lg:grid-cols-12 gap-4 mt-6">
+    <div class="grid lg:grid-cols-12 gap-3 md:gap-4 mt-4 md:mt-6">
       
-      <div class="bg-white p-5 rounded-3xl shadow-sm border border-gray-100 lg:col-span-3 flex flex-col">
-        <h3 class="font-bold text-gray-800 mb-3 border-b border-gray-100 pb-2 text-[12px] flex items-center gap-1.5 leading-tight shrink-0">
+      <div class="bg-white p-4 md:p-5 rounded-xl md:rounded-3xl shadow-sm border border-gray-100 lg:col-span-3 flex flex-col">
+        <h3 class="font-bold text-gray-800 mb-2.5 md:mb-3 border-b border-gray-100 pb-2 text-[11px] md:text-[12px] flex items-center gap-1.5 leading-tight shrink-0">
           <span>🔄</span> Realisasi vs Run Off
         </h3>
         <div id="box_runoff_realisasi" class="space-y-3 flex-grow mb-3"></div>
         
-        <div class="mt-auto pt-3 border-t border-gray-50 flex items-center justify-center gap-4 text-[10px] font-bold text-gray-500 shrink-0">
-            <div class="flex items-center gap-1.5">
-                <span class="w-3 h-1.5 rounded-full bg-green-400"></span> Realisasi
+        <div class="mt-auto pt-2 md:pt-3 border-t border-gray-50 flex items-center justify-center gap-3 md:gap-4 text-[9px] md:text-[10px] font-bold text-gray-500 shrink-0">
+            <div class="flex items-center gap-1 md:gap-1.5">
+                <span class="w-2.5 h-1.5 md:w-3 md:h-1.5 rounded-full bg-green-400"></span> Realisasi
             </div>
-            <div class="flex items-center gap-1.5">
-                <span class="w-3 h-1.5 rounded-full bg-red-400"></span> Run Off
+            <div class="flex items-center gap-1 md:gap-1.5">
+                <span class="w-2.5 h-1.5 md:w-3 md:h-1.5 rounded-full bg-red-400"></span> Run Off
             </div>
         </div>
       </div>
 
-      <div class="bg-white p-5 rounded-3xl shadow-sm border border-gray-100 lg:col-span-3 flex flex-col">
-        <h3 class="font-bold text-gray-800 mb-3 border-b border-gray-100 pb-2 text-[12px] flex items-center gap-1.5 leading-tight shrink-0">
+      <div class="bg-white p-4 md:p-5 rounded-xl md:rounded-3xl shadow-sm border border-gray-100 lg:col-span-3 flex flex-col">
+        <h3 class="font-bold text-gray-800 mb-2.5 md:mb-3 border-b border-gray-100 pb-2 text-[11px] md:text-[12px] flex items-center gap-1.5 leading-tight shrink-0">
           <span>🛡️</span> Flow NPL vs Recovery
         </h3>
         <div id="box_flow_recovery" class="space-y-3 flex-grow mb-3"></div>
         
-        <div class="mt-auto pt-3 border-t border-gray-50 flex items-center justify-center gap-4 text-[10px] font-bold text-gray-500 shrink-0">
-            <div class="flex items-center gap-1.5">
-                <span class="w-3 h-1.5 rounded-full bg-red-400"></span> Flow NPL
+        <div class="mt-auto pt-2 md:pt-3 border-t border-gray-50 flex items-center justify-center gap-3 md:gap-4 text-[9px] md:text-[10px] font-bold text-gray-500 shrink-0">
+            <div class="flex items-center gap-1 md:gap-1.5">
+                <span class="w-2.5 h-1.5 md:w-3 md:h-1.5 rounded-full bg-red-400"></span> Flow NPL
             </div>
-            <div class="flex items-center gap-1.5">
-                <span class="w-3 h-1.5 rounded-full bg-green-400"></span> Recovery
+            <div class="flex items-center gap-1 md:gap-1.5">
+                <span class="w-2.5 h-1.5 md:w-3 md:h-1.5 rounded-full bg-green-400"></span> Recovery
             </div>
         </div>
       </div>
 
-      <div class="bg-white p-6 rounded-3xl shadow-sm border border-gray-100 lg:col-span-6 relative flex flex-col">
-        <div id="loadingChartRunoff" class="absolute inset-0 flex justify-center items-center bg-white bg-opacity-90 z-10 hidden rounded-3xl">
-           <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+      <div class="bg-white p-4 md:p-6 rounded-xl md:rounded-3xl shadow-sm border border-gray-100 lg:col-span-6 relative flex flex-col">
+        <div id="loadingChartRunoff" class="absolute inset-0 flex justify-center items-center bg-white bg-opacity-90 z-10 hidden rounded-xl md:rounded-3xl">
+           <div class="animate-spin rounded-full h-6 w-6 md:h-8 md:w-8 border-b-2 border-blue-500"></div>
         </div>
-        <div class="flex items-center justify-between mb-4 border-b border-gray-100 pb-3 shrink-0">
+        <div class="flex flex-col md:flex-row md:items-center justify-between mb-3 md:mb-4 border-b border-gray-100 pb-2 md:pb-3 shrink-0 gap-2 md:gap-0">
           <div>
-            <h3 class="font-bold text-gray-800 flex items-center gap-2 text-lg">
+            <h3 class="font-bold text-gray-800 flex items-center gap-1.5 md:gap-2 text-[13px] md:text-lg">
               <span class="text-blue-500">📊</span> Tren Realisasi vs Run Off
             </h3>
-            <span class="text-xs text-gray-400 font-medium" id="label_runoff_date">Berdasarkan Tanggal: -</span>
+            <span class="text-[9px] md:text-xs text-gray-400 font-medium" id="label_runoff_date">Berdasarkan Tanggal: -</span>
           </div>
           
-          <select id="filter_tren_runoff" class="border border-gray-200 rounded-md px-3 py-1.5 text-sm font-semibold text-gray-600 outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer bg-white shadow-sm">
+          <select id="filter_tren_runoff" class="border border-gray-200 rounded-md px-2 md:px-3 py-1 md:py-1.5 text-[10px] md:text-sm font-semibold text-gray-600 outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer bg-white shadow-sm w-full md:w-auto">
               <option value="tahunan">Periode Tahunan</option>
               <option value="bulanan" selected>Periode Bulanan</option>
               <option value="mingguan">Periode Mingguan</option>
@@ -167,82 +174,82 @@
               <option value="7_hari">7 Hari Terakhir</option>
           </select>
         </div>
-        <div class="relative w-full flex-grow min-h-[250px]">
+        <div class="relative w-full flex-grow min-h-[220px] md:min-h-[250px]">
           <canvas id="canvasTrenRunoff"></canvas>
         </div>
       </div>
 
     </div>
 
-    <div class="bg-white p-6 rounded-3xl shadow-sm border border-gray-100 mt-10">
-      <div class="flex items-center gap-3 mb-6 border-b border-gray-100 pb-4">
-        <div class="bg-yellow-100 p-2 rounded-lg"><span class="text-3xl">🏆</span></div>
+    <div class="bg-white p-4 md:p-6 rounded-xl md:rounded-3xl shadow-sm border border-gray-100 mt-6 md:mt-10">
+      <div class="flex items-center gap-2.5 md:gap-3 mb-4 md:mb-6 border-b border-gray-100 pb-3 md:pb-4">
+        <div class="bg-yellow-100 p-1.5 md:p-2 rounded-lg"><span class="text-xl md:text-3xl">🏆</span></div>
         <div>
-          <h2 class="text-2xl font-extrabold text-gray-900 tracking-tight">5 Best Performance</h2>
-          <p class="text-sm text-gray-500 font-medium">Jajaran Cabang dan Pegawai Terbaik</p>
+          <h2 class="text-lg md:text-2xl font-extrabold text-gray-900 tracking-tight">5 Best Performance</h2>
+          <p class="text-[10px] md:text-sm text-gray-500 font-medium">Jajaran Cabang dan Pegawai Terbaik</p>
         </div>
       </div>
-      <div class="grid lg:grid-cols-4 gap-5">
-        <div class="space-y-5">
-          <div><h3 class="font-bold text-gray-800 mb-3 text-[13px] flex items-center gap-2"><span class="text-blue-500">📈</span> Top Realisasi Cabang</h3><div id="best_realisasi" class="space-y-3"></div></div>
-          <div class="pt-4 border-t border-dashed border-gray-200"><h3 class="font-bold text-gray-800 mb-3 text-[13px] flex items-center gap-2"><span class="text-orange-500">🥇</span> Top Realisasi AO</h3><div id="best_realisasi_ao" class="space-y-3"></div></div>
+      <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-5">
+        <div class="space-y-4 md:space-y-5">
+          <div><h3 class="font-bold text-gray-800 mb-2.5 md:mb-3 text-[11px] md:text-[13px] flex items-center gap-1.5 md:gap-2"><span class="text-blue-500">📈</span> Top Realisasi Cabang</h3><div id="best_realisasi" class="space-y-3"></div></div>
+          <div class="pt-3 md:pt-4 border-t border-dashed border-gray-200"><h3 class="font-bold text-gray-800 mb-2.5 md:mb-3 text-[11px] md:text-[13px] flex items-center gap-1.5 md:gap-2"><span class="text-orange-500">🥇</span> Top Realisasi AO</h3><div id="best_realisasi_ao" class="space-y-3"></div></div>
         </div>
-        <div class="space-y-5">
-          <div><h3 class="font-bold text-gray-800 mb-3 text-[13px] flex items-center gap-2"><span class="text-red-500">🛡️</span> Top NPL Terendah (Terbaik)</h3><div id="best_npl" class="space-y-3"></div></div>
-          <div class="pt-4 border-t border-dashed border-gray-200"><h3 class="font-bold text-gray-800 mb-3 text-[13px] flex items-center gap-2"><span class="text-yellow-500">🏆</span> Top Repayment Rate (RR)</h3><div id="best_rr" class="space-y-3"></div></div>
+        <div class="space-y-4 md:space-y-5">
+          <div><h3 class="font-bold text-gray-800 mb-2.5 md:mb-3 text-[11px] md:text-[13px] flex items-center gap-1.5 md:gap-2"><span class="text-red-500">🛡️</span> Top NPL Terendah (Terbaik)</h3><div id="best_npl" class="space-y-3"></div></div>
+          <div class="pt-3 md:pt-4 border-t border-dashed border-gray-200"><h3 class="font-bold text-gray-800 mb-2.5 md:mb-3 text-[11px] md:text-[13px] flex items-center gap-1.5 md:gap-2"><span class="text-yellow-500">🏆</span> Top Repayment Rate (RR)</h3><div id="best_rr" class="space-y-3"></div></div>
         </div>
-        <div class="space-y-5">
-            <h3 class="font-bold text-gray-800 mb-3 text-[13px] flex items-center gap-2"><span class="text-teal-500">🎉</span> NPL Membaik (Penurunan)</h3>
+        <div class="space-y-4 md:space-y-5">
+            <h3 class="font-bold text-gray-800 mb-2.5 md:mb-3 text-[11px] md:text-[13px] flex items-center gap-1.5 md:gap-2"><span class="text-teal-500">🎉</span> NPL Membaik (Penurunan)</h3>
             <div id="best_npl_turun" class="space-y-3"></div>
         </div>
-        <div class="bg-[#1e293b] p-5 rounded-2xl shadow-md h-fit border border-gray-700">
-           <h3 class="font-bold text-yellow-300 mb-4 text-lg border-b border-gray-600 pb-3 flex items-center gap-2"><span class="text-2xl">💡</span> Key Insights</h3>
-           <div id="dynamic_insights" class="space-y-4 text-sm text-gray-300 font-medium"></div>
+        <div class="bg-[#1e293b] p-4 md:p-5 rounded-xl md:rounded-2xl shadow-md h-fit border border-gray-700">
+           <h3 class="font-bold text-yellow-300 mb-3 md:mb-4 text-sm md:text-lg border-b border-gray-600 pb-2 md:pb-3 flex items-center gap-1.5 md:gap-2"><span class="text-lg md:text-2xl">💡</span> Key Insights</h3>
+           <div id="dynamic_insights" class="space-y-3 md:space-y-4 text-[11px] md:text-sm text-gray-300 font-medium"></div>
         </div>
       </div>
     </div>
 
-    <div class="bg-white p-6 rounded-3xl shadow-sm border border-gray-100 mt-8">
-      <div class="flex items-center gap-3 mb-6 border-b border-gray-100 pb-4">
-        <div class="bg-red-100 p-2 rounded-lg"><span class="text-3xl">🚨</span></div>
+    <div class="bg-white p-4 md:p-6 rounded-xl md:rounded-3xl shadow-sm border border-gray-100 mt-6 md:mt-8">
+      <div class="flex items-center gap-2.5 md:gap-3 mb-4 md:mb-6 border-b border-gray-100 pb-3 md:pb-4">
+        <div class="bg-red-100 p-1.5 md:p-2 rounded-lg"><span class="text-xl md:text-3xl">🚨</span></div>
         <div>
-          <h2 class="text-2xl font-extrabold text-gray-900 tracking-tight">Kredit Non Perform</h2>
-          <p class="text-sm text-gray-500 font-medium">Peringatan Kinerja & Cabang Terburuk</p>
+          <h2 class="text-lg md:text-2xl font-extrabold text-gray-900 tracking-tight">Kredit Non Perform</h2>
+          <p class="text-[10px] md:text-sm text-gray-500 font-medium">Peringatan Kinerja & Cabang Terburuk</p>
         </div>
       </div>
-      <div class="grid md:grid-cols-3 gap-6">
-        <div><h3 class="font-bold text-gray-800 mb-3 text-[13px] flex items-center gap-2"><span class="text-red-500">🚨</span> Top NPL Terburuk (Highest)</h3><div id="list_npl_top" class="space-y-3"></div></div>
-        <div><h3 class="font-bold text-gray-800 mb-3 text-[13px] flex items-center gap-2"><span class="text-orange-500">⚠️</span> NPL Memburuk (Naik)</h3><div id="list_npl_naik" class="space-y-3"></div></div>
-        <div><h3 class="font-bold text-gray-800 mb-3 text-[13px] flex items-center gap-2"><span class="text-gray-500">📉</span> Bottom Realisasi Cabang</h3><div id="list_realisasi_bottom" class="space-y-3"></div></div>
+      <div class="grid md:grid-cols-3 gap-4 md:gap-6">
+        <div><h3 class="font-bold text-gray-800 mb-2.5 md:mb-3 text-[11px] md:text-[13px] flex items-center gap-1.5 md:gap-2"><span class="text-red-500">🚨</span> Top NPL Terburuk (Highest)</h3><div id="list_npl_top" class="space-y-3"></div></div>
+        <div><h3 class="font-bold text-gray-800 mb-2.5 md:mb-3 text-[11px] md:text-[13px] flex items-center gap-1.5 md:gap-2"><span class="text-orange-500">⚠️</span> NPL Memburuk (Naik)</h3><div id="list_npl_naik" class="space-y-3"></div></div>
+        <div><h3 class="font-bold text-gray-800 mb-2.5 md:mb-3 text-[11px] md:text-[13px] flex items-center gap-1.5 md:gap-2"><span class="text-gray-500">📉</span> Bottom Realisasi Cabang</h3><div id="list_realisasi_bottom" class="space-y-3"></div></div>
       </div>
     </div>
 
-    <div class="bg-white p-6 rounded-3xl shadow-sm border border-gray-100 mt-8">
-      <div class="flex items-center gap-3 mb-6 border-b border-gray-100 pb-4">
-        <div class="bg-purple-100 p-2 rounded-lg"><span class="text-3xl">💰</span></div>
+    <div class="bg-white p-4 md:p-6 rounded-xl md:rounded-3xl shadow-sm border border-gray-100 mt-6 md:mt-8">
+      <div class="flex items-center gap-2.5 md:gap-3 mb-4 md:mb-6 border-b border-gray-100 pb-3 md:pb-4">
+        <div class="bg-purple-100 p-1.5 md:p-2 rounded-lg"><span class="text-xl md:text-3xl">💰</span></div>
         <div>
-          <h2 class="text-2xl font-extrabold text-gray-900 tracking-tight">Dana Pihak Ketiga (DPK)</h2>
-          <p class="text-sm text-gray-500 font-medium">Rekapitulasi Deposito & Tabungan (H-1)</p>
+          <h2 class="text-lg md:text-2xl font-extrabold text-gray-900 tracking-tight">Dana Pihak Ketiga (DPK)</h2>
+          <p class="text-[10px] md:text-sm text-gray-500 font-medium">Rekapitulasi Deposito & Tabungan (H-1)</p>
         </div>
       </div>
-      <div class="space-y-8">
+      <div class="space-y-6 md:space-y-8">
         <div>
-          <h3 class="font-extrabold text-gray-800 mb-4 tracking-tight flex items-center gap-2 text-lg"><span>🏦</span> Deposito (H-1)</h3>
-          <div class="grid md:grid-cols-4 gap-6">
-            <div><h3 class="font-bold text-gray-700 mb-3 text-xs uppercase tracking-wider">Top Saldo Deposito</h3><div id="list_dep_saldo_top" class="space-y-2.5"></div></div>
-            <div><h3 class="font-bold text-gray-700 mb-3 text-xs uppercase tracking-wider">Bottom Saldo Deposito</h3><div id="list_dep_saldo_bot" class="space-y-2.5"></div></div>
-            <div><h3 class="font-bold text-green-700 mb-3 text-xs uppercase tracking-wider">Deposito Baru Masuk</h3><div id="list_dep_baru" class="space-y-2.5"></div></div>
-            <div><h3 class="font-bold text-red-700 mb-3 text-xs uppercase tracking-wider">Deposito Keluar</h3><div id="list_dep_cair" class="space-y-2.5"></div></div>
+          <h3 class="font-extrabold text-gray-800 mb-3 md:mb-4 tracking-tight flex items-center gap-1.5 md:gap-2 text-[13px] md:text-lg"><span>🏦</span> Deposito (H-1)</h3>
+          <div class="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
+            <div><h3 class="font-bold text-gray-700 mb-2 md:mb-3 text-[9px] md:text-xs uppercase tracking-wider">Top Saldo Deposito</h3><div id="list_dep_saldo_top" class="space-y-2 md:space-y-2.5"></div></div>
+            <div><h3 class="font-bold text-gray-700 mb-2 md:mb-3 text-[9px] md:text-xs uppercase tracking-wider">Bottom Saldo Deposito</h3><div id="list_dep_saldo_bot" class="space-y-2 md:space-y-2.5"></div></div>
+            <div><h3 class="font-bold text-green-700 mb-2 md:mb-3 text-[9px] md:text-xs uppercase tracking-wider">Deposito Baru Masuk</h3><div id="list_dep_baru" class="space-y-2 md:space-y-2.5"></div></div>
+            <div><h3 class="font-bold text-red-700 mb-2 md:mb-3 text-[9px] md:text-xs uppercase tracking-wider">Deposito Keluar</h3><div id="list_dep_cair" class="space-y-2 md:space-y-2.5"></div></div>
           </div>
         </div>
         <div class="border-t border-dashed border-gray-200"></div>
         <div>
-          <h3 class="font-extrabold text-gray-800 mb-4 tracking-tight flex items-center gap-2 text-lg"><span>💳</span> Tabungan (H-1)</h3>
-          <div class="grid md:grid-cols-4 gap-6">
-            <div><h3 class="font-bold text-gray-700 mb-3 text-xs uppercase tracking-wider">Top Saldo Tabungan</h3><div id="list_tab_saldo_top" class="space-y-2.5"></div></div>
-            <div><h3 class="font-bold text-gray-700 mb-3 text-xs uppercase tracking-wider">Bottom Saldo Tabungan</h3><div id="list_tab_saldo_bot" class="space-y-2.5"></div></div>
-            <div><h3 class="font-bold text-blue-700 mb-3 text-xs uppercase tracking-wider">Tabungan Baru Masuk</h3><div id="list_tab_baru" class="space-y-2.5"></div></div>
-            <div><h3 class="font-bold text-red-700 mb-3 text-xs uppercase tracking-wider">Tabungan Kaluar</h3><div id="list_tab_cair" class="space-y-2.5"></div></div>
+          <h3 class="font-extrabold text-gray-800 mb-3 md:mb-4 tracking-tight flex items-center gap-1.5 md:gap-2 text-[13px] md:text-lg"><span>💳</span> Tabungan (H-1)</h3>
+          <div class="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
+            <div><h3 class="font-bold text-gray-700 mb-2 md:mb-3 text-[9px] md:text-xs uppercase tracking-wider">Top Saldo Tabungan</h3><div id="list_tab_saldo_top" class="space-y-2 md:space-y-2.5"></div></div>
+            <div><h3 class="font-bold text-gray-700 mb-2 md:mb-3 text-[9px] md:text-xs uppercase tracking-wider">Bottom Saldo Tabungan</h3><div id="list_tab_saldo_bot" class="space-y-2 md:space-y-2.5"></div></div>
+            <div><h3 class="font-bold text-blue-700 mb-2 md:mb-3 text-[9px] md:text-xs uppercase tracking-wider">Tabungan Baru Masuk</h3><div id="list_tab_baru" class="space-y-2 md:space-y-2.5"></div></div>
+            <div><h3 class="font-bold text-red-700 mb-2 md:mb-3 text-[9px] md:text-xs uppercase tracking-wider">Tabungan Keluar</h3><div id="list_tab_cair" class="space-y-2 md:space-y-2.5"></div></div>
           </div>
         </div>
       </div>
@@ -278,7 +285,7 @@
   
   const getDeltaHTML = (val, isPercent = false, invertGoodBad = false, tight = false) => {
     let numVal = Number(val || 0);
-    let sizeClass = tight ? 'text-[11px]' : 'text-sm';
+    let sizeClass = tight ? 'text-[9px] md:text-[11px]' : 'text-xs md:text-sm';
     if(numVal === 0) return `<span class="text-gray-400 font-bold ${sizeClass}">Tetap 0</span>`;
     
     let isGood = invertGoodBad ? numVal < 0 : numVal > 0;
@@ -322,12 +329,18 @@
       const res = await apiCall('./api/kode/', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({type:'kode_kantor'}) });
       const j = await res.json();
       let html = `<option value="000">Konsolidasi</option><option value="SEMARANG">Korwil Semarang</option><option value="SOLO">Korwil Solo</option><option value="BANYUMAS">Korwil Banyumas</option><option value="PEKALONGAN">Korwil Pekalongan</option>`;
-      if(j.data) j.data.filter(x => x.kode_kantor !== '000').forEach(k => html += `<option value="${k.kode_kantor}">${k.kode_kantor} - ${k.nama_kantor}</option>`);
+      if(j.data) j.data.filter(x => x.kode_kantor !== '000').forEach(k => html += `<option value="${k.kode_kantor}">${k.kode_kantor} - ${k.nama_kantor || k.nama_cabang || ''}</option>`);
       optKantor.innerHTML = html; optKantor.disabled = false;
-    } catch(e) {}
+    } catch(e) {
+        optKantor.innerHTML=`<option value="000">Konsolidasi (Semua Cabang)</option>`; optKantor.disabled = false;
+    }
   }
 
   window.addEventListener('DOMContentLoaded', async () => {
+    const user = (window.getUser && window.getUser()) || null;
+    const uKode = (user?.kode ? String(user.kode).padStart(3,'0') : null);
+    await populateKantorOptions(uKode);
+
     const d = await getLastHarianData(); 
     if(d) {
       document.getElementById('filter_closing').value = d.last_closing;
@@ -339,20 +352,21 @@
 
     initialHarianDate = document.getElementById('filter_harian').value;
 
-    const user = (window.getUser && window.getUser()) || null;
-    const userKode = (user?.kode ? String(user.kode).padStart(3,'0') : null);
-    await populateKantorOptions(userKode);
-
     fetchDashboardUtama();
-    fetchTrenPortofolio();
-    fetchTrenRunoff(); 
+    // 🔥 OPTIMASI: Fetch secara paralel agar lebih NGEBUT! 🔥
+    Promise.all([
+        fetchTrenPortofolio(),
+        fetchTrenRunoff()
+    ]);
   });
 
   document.getElementById('formFilterMaster').addEventListener('submit', e => {
     e.preventDefault();
     fetchDashboardUtama();
-    fetchTrenPortofolio();
-    fetchTrenRunoff(); 
+    Promise.all([
+        fetchTrenPortofolio(),
+        fetchTrenRunoff()
+    ]);
   });
 
   document.getElementById('filter_tren').addEventListener('change', () => { fetchTrenPortofolio(); });
@@ -422,9 +436,9 @@
         let gradNPL = ctx.createLinearGradient(0, 0, 0, 300); gradNPL.addColorStop(0, 'rgba(239, 68, 68, 0.1)'); gradNPL.addColorStop(1, 'rgba(239, 68, 68, 0.0)');
 
         datasets = [
-            { label: 'OSC Total', data: dataTotal, borderColor: '#3b82f6', backgroundColor: gradTotal, borderWidth: 3, pointBackgroundColor: '#ffffff', pointBorderColor: '#3b82f6', pointRadius: 4, pointHoverRadius: 6, fill: true, tension: 0.4 },
-            { label: 'OSC RR', data: dataRR, borderColor: '#10b981', backgroundColor: gradRR, borderWidth: 3, pointBackgroundColor: '#ffffff', pointBorderColor: '#10b981', pointRadius: 4, pointHoverRadius: 6, fill: true, tension: 0.4 },
-            { label: 'OSC NPL', data: dataNPL, borderColor: '#ef4444', backgroundColor: gradNPL, borderWidth: 3, pointBackgroundColor: '#ffffff', pointBorderColor: '#ef4444', pointRadius: 4, pointHoverRadius: 6, fill: true, tension: 0.4 }
+            { label: 'OSC Total', data: dataTotal, borderColor: '#3b82f6', backgroundColor: gradTotal, borderWidth: 3, pointBackgroundColor: '#ffffff', pointBorderColor: '#3b82f6', pointRadius: 3, pointHoverRadius: 5, fill: true, tension: 0.4 },
+            { label: 'OSC RR', data: dataRR, borderColor: '#10b981', backgroundColor: gradRR, borderWidth: 3, pointBackgroundColor: '#ffffff', pointBorderColor: '#10b981', pointRadius: 3, pointHoverRadius: 5, fill: true, tension: 0.4 },
+            { label: 'OSC NPL', data: dataNPL, borderColor: '#ef4444', backgroundColor: gradNPL, borderWidth: 3, pointBackgroundColor: '#ffffff', pointBorderColor: '#ef4444', pointRadius: 3, pointHoverRadius: 5, fill: true, tension: 0.4 }
         ];
         yAxisCallback = function(value) { return fmtB(value); };
     } else if (tipe === 'pct') {
@@ -435,8 +449,8 @@
         let gradNPL = ctx.createLinearGradient(0, 0, 0, 300); gradNPL.addColorStop(0, 'rgba(239, 68, 68, 0.2)'); gradNPL.addColorStop(1, 'rgba(239, 68, 68, 0.0)');
 
         datasets = [
-            { label: 'RR (%)', data: dataRRPct, borderColor: '#10b981', backgroundColor: gradRR, borderWidth: 3, pointBackgroundColor: '#ffffff', pointBorderColor: '#10b981', pointRadius: 4, pointHoverRadius: 6, fill: true, tension: 0.4 },
-            { label: 'NPL (%)', data: dataNPLPct, borderColor: '#ef4444', backgroundColor: gradNPL, borderWidth: 3, pointBackgroundColor: '#ffffff', pointBorderColor: '#ef4444', pointRadius: 4, pointHoverRadius: 6, fill: true, tension: 0.4 }
+            { label: 'RR (%)', data: dataRRPct, borderColor: '#10b981', backgroundColor: gradRR, borderWidth: 3, pointBackgroundColor: '#ffffff', pointBorderColor: '#10b981', pointRadius: 3, pointHoverRadius: 5, fill: true, tension: 0.4 },
+            { label: 'NPL (%)', data: dataNPLPct, borderColor: '#ef4444', backgroundColor: gradNPL, borderWidth: 3, pointBackgroundColor: '#ffffff', pointBorderColor: '#ef4444', pointRadius: 3, pointHoverRadius: 5, fill: true, tension: 0.4 }
         ];
         yAxisCallback = function(value) { return value + '%'; };
     } else if (tipe === 'npl') {
@@ -459,7 +473,7 @@
 
             const { ctx, data } = chart;
             ctx.save();
-            ctx.font = 'bold 11px sans-serif';
+            ctx.font = window.innerWidth < 768 ? 'bold 9px sans-serif' : 'bold 11px sans-serif';
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
 
@@ -503,12 +517,12 @@
       type: 'line',
       data: { labels: labels, datasets: datasets },
       options: { 
-          layout: { padding: { top: 30, bottom: 15 } },
+          layout: { padding: { top: 30, bottom: 10, left: window.innerWidth < 768 ? -5 : 10, right: 10 } },
           responsive: true, 
           maintainAspectRatio: false, 
           interaction: { mode: 'index', intersect: false },
           plugins: { 
-              legend: { position: 'top', labels: { usePointStyle: true, boxWidth: 10, font: {family: 'sans-serif', size: 11, weight: 'bold'} } }, 
+              legend: { position: 'top', labels: { usePointStyle: true, boxWidth: 10, font: {family: 'sans-serif', size: window.innerWidth < 768 ? 9 : 11, weight: 'bold'} } }, 
               tooltip: { 
                   backgroundColor: 'rgba(17, 24, 39, 0.95)', 
                   padding: 10,
@@ -559,8 +573,8 @@
               } 
           }, 
           scales: { 
-              x: { grid: { display: false } }, 
-              y: { beginAtZero: false, grid: { borderDash: [4, 4], color: '#f3f4f6' }, ticks: { callback: yAxisCallback } } 
+              x: { grid: { display: false }, ticks: {font: {size: window.innerWidth < 768 ? 8 : 10}} }, 
+              y: { beginAtZero: false, grid: { borderDash: [4, 4], color: '#f3f4f6' }, ticks: { font: {size: window.innerWidth < 768 ? 8 : 10}, callback: yAxisCallback } } 
           } 
       },
       plugins: [labelPlugin] 
@@ -642,7 +656,7 @@
 
             const { ctx, data } = chart;
             ctx.save();
-            ctx.font = 'bold 11px sans-serif';
+            ctx.font = window.innerWidth < 768 ? 'bold 9px sans-serif' : 'bold 11px sans-serif';
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
 
@@ -687,15 +701,15 @@
       data: {
         labels: labels,
         datasets: [
-          { label: 'Realisasi', data: dataRealisasi, borderColor: '#10b981', backgroundColor: gradReal, borderWidth: 3, pointBackgroundColor: '#ffffff', pointBorderColor: '#10b981', pointBorderWidth: 2, pointRadius: 4, pointHoverRadius: 6, fill: true, tension: 0.4 },
-          { label: 'Run Off', data: dataRunoff, borderColor: '#ef4444', backgroundColor: gradRunoff, borderWidth: 3, pointBackgroundColor: '#ffffff', pointBorderColor: '#ef4444', pointBorderWidth: 2, pointRadius: 4, pointHoverRadius: 6, fill: true, tension: 0.4 }
+          { label: 'Realisasi', data: dataRealisasi, borderColor: '#10b981', backgroundColor: gradReal, borderWidth: 3, pointBackgroundColor: '#ffffff', pointBorderColor: '#10b981', pointBorderWidth: 2, pointRadius: 3, pointHoverRadius: 5, fill: true, tension: 0.4 },
+          { label: 'Run Off', data: dataRunoff, borderColor: '#ef4444', backgroundColor: gradRunoff, borderWidth: 3, pointBackgroundColor: '#ffffff', pointBorderColor: '#ef4444', pointBorderWidth: 2, pointRadius: 3, pointHoverRadius: 5, fill: true, tension: 0.4 }
         ]
       },
       options: {
-        layout: { padding: { top: 30, bottom: 15 } },
+        layout: { padding: { top: 30, bottom: 15, left: window.innerWidth < 768 ? -5 : 10, right: 10 } },
         responsive: true, maintainAspectRatio: false, interaction: { mode: 'index', intersect: false },
         plugins: {
-          legend: { position: 'top', labels: { usePointStyle: true, boxWidth: 10, font: {family: 'sans-serif', size: 12, weight: 'bold'} } },
+          legend: { position: 'top', labels: { usePointStyle: true, boxWidth: 10, font: {family: 'sans-serif', size: window.innerWidth < 768 ? 9 : 12, weight: 'bold'} } },
           tooltip: {
             backgroundColor: 'rgba(17, 24, 39, 0.95)', padding: 12, titleFont: { size: 13, family: 'sans-serif' }, bodyFont: { size: 12, family: 'sans-serif' },
             usePointStyle: true,
@@ -724,7 +738,10 @@
             }
           }
         },
-        scales: { x: { grid: { display: false } }, y: { grid: { borderDash: [4,4], color: '#f3f4f6' }, ticks: { callback: function(val) { return fmtB(val); } } } }
+        scales: { 
+            x: { grid: { display: false }, ticks: {font: {size: window.innerWidth < 768 ? 8 : 10}} }, 
+            y: { grid: { borderDash: [4,4], color: '#f3f4f6' }, ticks: { font: {size: window.innerWidth < 768 ? 8 : 10}, callback: function(val) { return fmtB(val); } } } 
+        }
       },
       plugins: [labelPluginRunoff]
     });
@@ -768,33 +785,36 @@
         
         document.getElementById('kpi_npl').textContent = `Rp ${fmtB(last.npl_amt || last.osc_npl)}`;
         document.getElementById('kpi_npl_pill').innerHTML = `
-            <div class="flex items-center gap-2 mb-1.5">
-                <div class="bg-gray-100 px-2 py-0.5 rounded font-bold text-[11px] text-gray-600 whitespace-nowrap">Closing: <span class="text-gray-900">${pct(prev.npl_persen)}</span></div>
-                <div class="bg-red-50 text-red-700 border border-red-100 px-2 py-0.5 rounded font-bold text-[11px] whitespace-nowrap">Act: ${pct(last.npl_persen)}</div>
+            <div class="flex items-center gap-1 md:gap-2 mb-1.5">
+                <div class="bg-gray-100 px-1.5 md:px-2 py-0.5 rounded font-bold text-[9px] md:text-[11px] text-gray-600 whitespace-nowrap">Closing: <span class="text-gray-900">${pct(prev.npl_persen)}</span></div>
+                <div class="bg-red-50 text-red-700 border border-red-100 px-1.5 md:px-2 py-0.5 rounded font-bold text-[9px] md:text-[11px] whitespace-nowrap">Act: ${pct(last.npl_persen)}</div>
             </div>
             <div class="whitespace-nowrap">${getDeltaHTML(last.npl_persen - prev.npl_persen, true, true, true)}</div>`;
       }
       
       document.getElementById('kpi_os').textContent = `Rp ${fmtB(osCurr)}`;
       document.getElementById('kpi_os_pill').innerHTML = `
-        <div class="flex items-center gap-2">
-            <div class="bg-gray-100 px-2 py-0.5 rounded font-bold text-[11px] text-gray-600 whitespace-nowrap">Closing: <span class="text-gray-900">Rp ${fmtB(osPrev)}</span></div>
+        <div class="flex items-center gap-1.5 md:gap-2">
+            <div class="bg-gray-100 px-1.5 md:px-2 py-0.5 rounded font-bold text-[9px] md:text-[11px] text-gray-600 whitespace-nowrap">Closing: <span class="text-gray-900">Rp ${fmtB(osPrev)}</span></div>
             <div class="whitespace-nowrap">${getDeltaHTML(osCurr - osPrev, false, false, true)}</div>
         </div>`;
 
-      document.getElementById('kpi_rr').textContent = pct(rrG.rr_persen_curr);
+      // 🔥 FIX: Tambah Nominal di Card RR 🔥
+      const rrAmt = rrG.os_lancar;
+      document.getElementById('kpi_rr').textContent = `Rp ${fmtB(rrAmt)}`;
       document.getElementById('kpi_rr_pill').innerHTML = `
-        <div class="flex items-center gap-2">
-            <div class="bg-gray-100 px-2 py-0.5 rounded font-bold text-[11px] text-gray-600 whitespace-nowrap">Closing: <span class="text-gray-900">${pct(rrG.rr_persen_prev)}</span></div>
-            <div class="whitespace-nowrap">${getDeltaHTML(rrG.delta_rr, true, false, true)}</div>
-        </div>`;
+        <div class="flex items-center gap-1 md:gap-2 mb-1.5">
+            <div class="bg-gray-100 px-1.5 md:px-2 py-0.5 rounded font-bold text-[9px] md:text-[11px] text-gray-600 whitespace-nowrap">Closing: <span class="text-gray-900">${pct(rrG.rr_persen_prev)}</span></div>
+            <div class="bg-green-50 text-green-700 border border-green-100 px-1.5 md:px-2 py-0.5 rounded font-bold text-[9px] md:text-[11px] whitespace-nowrap">Act: ${pct(rrG.rr_persen_curr)}</div>
+        </div>
+        <div class="whitespace-nowrap">${getDeltaHTML(rrG.delta_rr, true, false, true)}</div>`;
       
       const depG = d.perkembangan_deposito?.grand_total || {}; const tabG = d.perkembangan_tabungan?.grand_total || {};
       const dpkCurr = (depG.saldo_curr||0) + (tabG.saldo_curr||0); const dpkPrev = (depG.saldo_prev||0) + (tabG.saldo_prev||0);
       document.getElementById('kpi_dpk').textContent = `Rp ${fmtB(dpkCurr)}`;
       document.getElementById('kpi_dpk_pill').innerHTML = `
-        <div class="flex items-center gap-2">
-            <div class="bg-gray-100 px-2 py-0.5 rounded font-bold text-[11px] text-gray-600 whitespace-nowrap">Closing: <span class="text-gray-900">Rp ${fmtB(dpkPrev)}</span></div>
+        <div class="flex items-center gap-1.5 md:gap-2">
+            <div class="bg-gray-100 px-1.5 md:px-2 py-0.5 rounded font-bold text-[9px] md:text-[11px] text-gray-600 whitespace-nowrap">Closing: <span class="text-gray-900">Rp ${fmtB(dpkPrev)}</span></div>
             <div class="whitespace-nowrap">${getDeltaHTML(dpkCurr - dpkPrev, false, false, true)}</div>
         </div>`;
     } catch(e) {}
@@ -804,8 +824,8 @@
       let sb = d.saldo_bank || { actual: 0, closing: 0, delta: 0 };
       document.getElementById('kpi_saldobank').textContent = `Rp ${fmtB(sb.actual)}`;
       document.getElementById('kpi_saldobank_pill').innerHTML = `
-        <div class="flex items-center gap-2">
-            <div class="bg-gray-100 px-2 py-0.5 rounded font-bold text-[11px] text-gray-600 whitespace-nowrap">Closing: <span class="text-gray-900">Rp ${fmtB(sb.closing)}</span></div>
+        <div class="flex items-center gap-1.5 md:gap-2">
+            <div class="bg-gray-100 px-1.5 md:px-2 py-0.5 rounded font-bold text-[9px] md:text-[11px] text-gray-600 whitespace-nowrap">Closing: <span class="text-gray-900">Rp ${fmtB(sb.closing)}</span></div>
             <div class="whitespace-nowrap">${getDeltaHTML(sb.delta, false, false, true)}</div>
         </div>`;
     } catch(e) {}
@@ -843,20 +863,32 @@
       renderKorwilCompare('box_flow_recovery', flowData, 'flow_npl', 'total_recovery', 'bg-red-400', 'bg-green-400');
     } catch(e) {}
 
+    // 🔥 FIX: Tampilkan Nama Cabang + Nama AO di TOP REALISASI AO 🔥
     try {
       renderUniversalList('best_realisasi', d.top_bottom_realisasi?.top_cabang, 'nama_cabang', 'total_realisasi', 'noa_realisasi', 'bg-blue-500', false, 'NOA');
-      renderUniversalList('best_realisasi_ao', d.top_bottom_realisasi?.top_ao, 'nama_ao', 'total_realisasi', 'noa_realisasi', 'bg-indigo-500', false, 'NOA');
+      
+      // Khusus AO, kita tambahkan info cabangnya
+      let topAOCustom = (d.top_bottom_realisasi?.top_ao || []).map(ao => {
+          let namaCustom = ao.nama_ao;
+          if (ao.nama_cabang && ao.nama_cabang.toLowerCase() !== 'unknown') {
+              let cabangShort = ao.nama_cabang.replace(/Kc\. /gi, '');
+              namaCustom = `[${cabangShort}] - ${ao.nama_ao}`;
+          }
+          return { ...ao, nama_custom: namaCustom };
+      });
+      renderUniversalList('best_realisasi_ao', topAOCustom, 'nama_custom', 'total_realisasi', 'noa_realisasi', 'bg-indigo-500', false, 'NOA');
+      
       renderUniversalList('best_npl', d.top_bottom_npl?.bottom, 'nama_cabang', 'npl_persen', 'npl_amt', 'bg-emerald-400', true, 'Rp');
       renderUniversalList('best_rr', d.repayment_rate?.top_rr, 'nama_cabang', 'rr_persen_curr', 'os_total', 'bg-green-500', true, 'Rp');
       renderUniversalList('best_npl_turun', d.kenaikan_penurunan_npl?.top_penurunan, 'nama_cabang', 'delta_npl', 'npl_persen_curr', 'bg-teal-400', true, 'NPL Now');
 
-      const tReal = d.top_bottom_realisasi?.top_cabang[0]; const tAo = d.top_bottom_realisasi?.top_ao[0]; const tRR = d.repayment_rate?.top_rr[0]; const tNplBest = d.top_bottom_npl?.bottom[0]; const tTurun = d.kenaikan_penurunan_npl?.top_penurunan[0];
+      const tReal = d.top_bottom_realisasi?.top_cabang[0]; const tAo = topAOCustom[0]; const tRR = d.repayment_rate?.top_rr[0]; const tNplBest = d.top_bottom_npl?.bottom[0]; const tTurun = d.kenaikan_penurunan_npl?.top_penurunan[0];
       let html = '';
-      if(tReal) html += `<div class="mb-4"><span class="text-blue-400 font-bold">1. Realisasi Tertinggi:</span> <span class="text-white">${tReal.nama_cabang.replace('Kc. ','')} (${fmtB(tReal.total_realisasi)})</span></div>`;
-      if(tAo) html += `<div class="mb-4"><span class="text-indigo-400 font-bold">2. AO Terbaik:</span> <span class="text-white">${tAo.nama_ao} (${fmtB(tAo.total_realisasi)})</span></div>`;
-      if(tRR) html += `<div class="mb-4"><span class="text-green-400 font-bold">3. RR Terbaik:</span> <span class="text-white">${tRR.nama_cabang.replace('Kc. ','')} (${pct(tRR.rr_persen_curr)})</span></div>`;
-      if(tNplBest) html += `<div class="mb-4"><span class="text-emerald-400 font-bold">4. NPL Terbaik:</span> <span class="text-white">${tNplBest.nama_cabang.replace('Kc. ','')} (${pct(tNplBest.npl_persen)})</span></div>`;
-      if(tTurun) html += `<div class="mb-4"><span class="text-teal-400 font-bold">5. Penurunan NPL Terbesar:</span> <span class="text-white">${tTurun.nama_cabang.replace('Kc. ','')} (Δ ${pct(Math.abs(tTurun.delta_npl))})</span></div>`;
+      if(tReal) html += `<div class="mb-3 md:mb-4"><span class="text-blue-400 font-bold">1. Realisasi Tertinggi:</span> <span class="text-white block md:inline mt-0.5 md:mt-0">${tReal.nama_cabang.replace('Kc. ','')} (${fmtB(tReal.total_realisasi)})</span></div>`;
+      if(tAo) html += `<div class="mb-3 md:mb-4"><span class="text-indigo-400 font-bold">2. AO Terbaik:</span> <span class="text-white block md:inline mt-0.5 md:mt-0">${tAo.nama_ao} (${fmtB(tAo.total_realisasi)})</span></div>`;
+      if(tRR) html += `<div class="mb-3 md:mb-4"><span class="text-green-400 font-bold">3. RR Terbaik:</span> <span class="text-white block md:inline mt-0.5 md:mt-0">${tRR.nama_cabang.replace('Kc. ','')} (${pct(tRR.rr_persen_curr)})</span></div>`;
+      if(tNplBest) html += `<div class="mb-3 md:mb-4"><span class="text-emerald-400 font-bold">4. NPL Terbaik:</span> <span class="text-white block md:inline mt-0.5 md:mt-0">${tNplBest.nama_cabang.replace('Kc. ','')} (${pct(tNplBest.npl_persen)})</span></div>`;
+      if(tTurun) html += `<div class="mb-3 md:mb-4"><span class="text-teal-400 font-bold">5. Penurunan Terbesar:</span> <span class="text-white block md:inline mt-0.5 md:mt-0">${tTurun.nama_cabang.replace('Kc. ','')} (Δ ${pct(Math.abs(tTurun.delta_npl))})</span></div>`;
       document.getElementById('dynamic_insights').innerHTML = html;
     } catch(e) {}
 
@@ -885,20 +917,20 @@
     dataArray.forEach(k => {
       let vA = Number(k[keyA]); let vB = Number(k[keyB]); let pctA = (vA / maxVal) * 100; let pctB = (vB / maxVal) * 100;
       let titleClass = k.nama_korwil.includes("KONSOLIDASI") ? "text-gray-900 font-black" : "text-gray-700 font-bold";
-      box.innerHTML += `<div class="mb-2"><div class="flex justify-between text-[11px] ${titleClass} mb-0.5"><span>${k.nama_korwil}</span></div><div class="flex flex-col gap-0.5 relative"><div class="w-full bg-gray-100 h-1.5 rounded-r-full flex relative"><div class="${colorA} h-1.5 rounded-r-full bar-fill z-10" style="width: ${pctA}%"></div><span class="absolute right-0 -top-3.5 text-[9px] text-gray-500 font-medium">${fmtB(vA)}</span></div><div class="w-full bg-gray-100 h-1.5 rounded-r-full flex relative"><div class="${colorB} h-1.5 rounded-r-full bar-fill z-10" style="width: ${pctB}%"></div><span class="absolute right-0 -bottom-3.5 text-[9px] text-gray-500 font-medium">${fmtB(vB)}</span></div></div></div>`;
+      box.innerHTML += `<div class="mb-2 md:mb-3"><div class="flex justify-between text-[10px] md:text-[11px] ${titleClass} mb-1"><span>${k.nama_korwil}</span></div><div class="flex flex-col gap-1 md:gap-0.5 relative"><div class="w-full bg-gray-100 h-1.5 md:h-2 rounded-r-full flex relative"><div class="${colorA} h-1.5 md:h-2 rounded-r-full bar-fill z-10" style="width: ${pctA}%"></div><span class="absolute right-0 -top-3.5 md:-top-4 text-[9px] md:text-[10px] text-gray-500 font-medium">${fmtB(vA)}</span></div><div class="w-full bg-gray-100 h-1.5 md:h-2 rounded-r-full flex relative"><div class="${colorB} h-1.5 md:h-2 rounded-r-full bar-fill z-10" style="width: ${pctB}%"></div><span class="absolute right-0 -bottom-3.5 md:-bottom-4 text-[9px] md:text-[10px] text-gray-500 font-medium">${fmtB(vB)}</span></div></div></div>`;
     });
   }
 
   function renderUniversalList(elId, dataArray, nameKey, valKey, subKey, colorClass, isPercent, subLabel = 'Rp') {
     const box = document.getElementById(elId); box.innerHTML = '';
-    if(!dataArray || !Array.isArray(dataArray) || dataArray.length === 0) { box.innerHTML = `<p class="text-[11px] text-gray-400 italic py-2 text-center">Tidak ada data.</p>`; return; }
+    if(!dataArray || !Array.isArray(dataArray) || dataArray.length === 0) { box.innerHTML = `<p class="text-[10px] md:text-[11px] text-gray-400 italic py-2 text-center">Tidak ada data.</p>`; return; }
     let maxVal = Math.max(...dataArray.map(o => Math.abs(Number(o[valKey]) || 0))); if(maxVal === 0) maxVal = 1;
     dataArray.forEach(item => {
       let val = Number(item[valKey] || 0); let sub = Number(item[subKey] || 0); let wPct = Math.abs((val / maxVal) * 100);
       let displayVal = isPercent ? pct(Math.abs(val)) : fmtB(Math.abs(val));
       let displaySub = subLabel === 'Rp' ? `Rp ${fmtB(sub)}` : (subLabel === 'NPL Now' ? `NPL saat ini: ${pct(sub)}` : `${fmt(sub)} ${subLabel}`);
       let name = (item[nameKey] || '-').replace(/Kc\. /gi, '');
-      box.innerHTML += `<div class="mb-3 group cursor-default relative z-0"><div class="flex justify-between items-end mb-1.5 relative z-10"><div class="flex flex-col w-2/3"><span class="text-xs font-bold text-gray-800 truncate" title="${name}">${name}</span><span class="text-[10px] text-gray-500 font-medium leading-tight">${displaySub}</span></div><span class="text-xs font-black text-gray-900">${val < 0 ? '-' : ''}${displayVal}</span></div><div class="w-full bg-gray-100 h-1.5 rounded-full overflow-hidden relative z-0"><div class="${colorClass} h-1.5 rounded-full bar-fill" style="width: ${Math.max(2, wPct)}%"></div></div></div>`;
+      box.innerHTML += `<div class="mb-2.5 md:mb-3 group cursor-default relative z-0"><div class="flex justify-between items-end mb-1 md:mb-1.5 relative z-10"><div class="flex flex-col w-2/3"><span class="text-[11px] md:text-xs font-bold text-gray-800 truncate" title="${name}">${name}</span><span class="text-[9px] md:text-[10px] text-gray-500 font-medium leading-tight">${displaySub}</span></div><span class="text-[11px] md:text-xs font-black text-gray-900">${val < 0 ? '-' : ''}${displayVal}</span></div><div class="w-full bg-gray-100 h-1.5 md:h-2 rounded-full overflow-hidden relative z-0"><div class="${colorClass} h-1.5 md:h-2 rounded-full bar-fill" style="width: ${Math.max(2, wPct)}%"></div></div></div>`;
     });
   }
 </script>

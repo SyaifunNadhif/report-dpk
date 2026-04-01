@@ -335,6 +335,8 @@ class KreditController {
         
         $kc           = $input['kode_kantor'] ?? null;
         $kankas       = $input['kode_kankas'] ?? null; 
+        // 🔥 FIX: Tangkap parameter kode_ao dari Frontend 🔥
+        $kode_ao      = $input['kode_ao'] ?? null; 
 
         if ($kc === '000' || $kc === '') $kc = null;
 
@@ -358,6 +360,12 @@ class KreditController {
         if ($kankas) {
             $where .= " AND t1.kode_group1 = :kankas";
             $params[':kankas'] = $kankas;
+        }
+
+        // 🔥 4.5. Filter AO (Biar dropdown AO di modal fungsi) 🔥
+        if ($kode_ao) {
+            $where .= " AND t1.kode_group2 = :kode_ao";
+            $params[':kode_ao'] = $kode_ao;
         }
 
         // 5. Query Builder (Alias Kolom agar FE tidak Error)

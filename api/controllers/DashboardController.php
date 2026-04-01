@@ -77,7 +77,7 @@ class DashboardController{
                 'saldo_bank'              => $this->getSaldoBank($input),
                 
                 // 3. Metrik DPK (Dana Pihak Ketiga) (🔥 Pakai $inputH1 -> Pasti H-1)
-                'perkembangan_deposito'   => $this->getPerkembanganDeposito($inputH1),
+                'perkembangan_deposito'   => $this->getPerkembanganDeposito($input),
                 'perkembangan_tabungan'   => $this->getPerkembanganTabungan($inputH1),
                 'tren_portofolio_kredit'  => $this->getTrenPortofolioKredit($input)
             ];
@@ -380,7 +380,7 @@ class DashboardController{
         }
     }
 
-    /**
+/**
      * =================================================================
      * FUNGSI TREN PORTOFOLIO KREDIT (OSC TOTAL, NPL, RR)
      * =================================================================
@@ -440,12 +440,13 @@ class DashboardController{
         $filter = $this->buildFilterQuery($input, 't'); 
 
         // 4. Query Super Ngebut (1 Tabel untuk semua metrik)
+        // 🔥 FIX: Hitung RR berdasarkan hari_menunggak = 0 DAN kolektibilitas = 'L' 🔥
         $sql = "
             SELECT 
                 t.created AS tanggal,
                 SUM(t.baki_debet) AS osc_total,
                 SUM(CASE WHEN t.kolektibilitas IN ('KL','D','M') THEN t.baki_debet ELSE 0 END) AS osc_npl,
-                SUM(CASE WHEN t.hari_menunggak = 0 THEN t.baki_debet ELSE 0 END) AS osc_rr
+                SUM(CASE WHEN t.hari_menunggak = 0 AND t.kolektibilitas = 'L' THEN t.baki_debet ELSE 0 END) AS osc_rr
             FROM nominatif t
             WHERE t.created IN ($inString)
             {$filter['sql']}
@@ -504,7 +505,7 @@ class DashboardController{
                     $last_osc_rr    = (float) $dbIndexed[$expectedDate]['osc_rr'];
                 }
 
-                // Kalkulasi Persentase
+                // Kalkulasi Persentase (Otomatis RR = osc_rr / osc_total)
                 $npl_persen = $last_osc_total > 0 ? round(($last_osc_npl / $last_osc_total) * 100, 2) : 0;
                 $rr_persen  = $last_osc_total > 0 ? round(($last_osc_rr / $last_osc_total) * 100, 2) : 0;
 
@@ -551,6 +552,142 @@ class DashboardController{
 
         } catch (PDOException $e) {
             error_log("Error getTrenPortofolioKredit: " . $e->getMessage());
+            return [];
+        }
+    }
+    public function getRepaymentRateCabang($input) {
+        $harian_date  = $input['harian_date'] ?? date('Y-m-d');
+        $closing_date = $input['closing_date'] ?? date('Y-m-d', strtotime('last day of previous month'));
+        
+        $filter = $this->buildFilterQuery($input, 't');
+
+        // 🔥 FIX: Tambahkan kriteria AND t.kolektibilitas = 'L' di perhitungan baki_lancar 🔥
+        $sql = "
+            SELECT 
+                t.kode_cabang,
+                COALESCE(k.nama_kantor, CONCAT('CABANG ', t.kode_cabang)) AS nama_cabang,
+                
+                -- Data Current (Harian)
+                SUM(CASE WHEN t.created = :harian_date_1 AND t.hari_menunggak = 0 AND t.kolektibilitas = 'L' THEN t.baki_debet ELSE 0 END) AS baki_lancar_curr,
+                SUM(CASE WHEN t.created = :harian_date_2 THEN t.baki_debet ELSE 0 END) AS baki_total_curr,
+                
+                -- Data Previous (Closing Bulan Lalu)
+                SUM(CASE WHEN t.created = :closing_date_1 AND t.hari_menunggak = 0 AND t.kolektibilitas = 'L' THEN t.baki_debet ELSE 0 END) AS baki_lancar_prev,
+                SUM(CASE WHEN t.created = :closing_date_2 THEN t.baki_debet ELSE 0 END) AS baki_total_prev
+                
+            FROM nominatif t
+            LEFT JOIN kode_kantor k ON t.kode_cabang = k.kode_kantor
+            WHERE t.created IN (:harian_date_3, :closing_date_3)
+            {$filter['sql']}
+            GROUP BY t.kode_cabang, k.nama_kantor
+        ";
+
+        try {
+            $stmt = $this->pdo->prepare($sql);
+            
+            $stmt->bindValue(':harian_date_1', $harian_date);
+            $stmt->bindValue(':harian_date_2', $harian_date);
+            $stmt->bindValue(':harian_date_3', $harian_date);
+            
+            $stmt->bindValue(':closing_date_1', $closing_date);
+            $stmt->bindValue(':closing_date_2', $closing_date);
+            $stmt->bindValue(':closing_date_3', $closing_date);
+            
+            foreach ($filter['params'] as $key => $val) {
+                $stmt->bindValue($key, $val);
+            }
+            
+            $stmt->execute();
+            $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+            $semua_cabang = [];
+            $kenaikan_rr  = [];
+            $penurunan_rr = [];
+
+            // Variabel untuk Grand Total (OS ALL)
+            $grand_baki_total_curr  = 0;
+            $grand_baki_lancar_curr = 0;
+            $grand_baki_total_prev  = 0;
+            $grand_baki_lancar_prev = 0;
+
+            foreach ($rows as $r) {
+                $baki_total_curr  = (float) $r['baki_total_curr'];
+                $baki_lancar_curr = (float) $r['baki_lancar_curr'];
+                $baki_total_prev  = (float) $r['baki_total_prev'];
+                $baki_lancar_prev = (float) $r['baki_lancar_prev'];
+
+                if ($baki_total_curr <= 0) continue;
+
+                // Akumulasi ke Grand Total
+                $grand_baki_total_curr  += $baki_total_curr;
+                $grand_baki_lancar_curr += $baki_lancar_curr;
+                $grand_baki_total_prev  += $baki_total_prev;
+                $grand_baki_lancar_prev += $baki_lancar_prev;
+
+                $rr_curr = ($baki_lancar_curr / $baki_total_curr) * 100;
+                $rr_prev = $baki_total_prev > 0 ? ($baki_lancar_prev / $baki_total_prev) * 100 : 0;
+                $delta = $rr_curr - $rr_prev;
+
+                $dataCabang = [
+                    'kode_cabang'    => $r['kode_cabang'],
+                    'nama_cabang'    => $r['nama_cabang'],
+                    'os_total'       => $baki_total_curr,
+                    'os_lancar'      => $baki_lancar_curr,
+                    'rr_persen_prev' => round($rr_prev, 2),
+                    'rr_persen_curr' => round($rr_curr, 2),
+                    'delta_rr'       => round($delta, 2)
+                ];
+
+                $semua_cabang[] = $dataCabang;
+
+                if ($delta > 0) {
+                    $kenaikan_rr[] = $dataCabang;
+                } elseif ($delta < 0) {
+                    $penurunan_rr[] = $dataCabang;
+                }
+            }
+
+            // Hitung RR untuk Grand Total Nasional/Konsolidasi
+            $grand_rr_curr = $grand_baki_total_curr > 0 ? ($grand_baki_lancar_curr / $grand_baki_total_curr) * 100 : 0;
+            $grand_rr_prev = $grand_baki_total_prev > 0 ? ($grand_baki_lancar_prev / $grand_baki_total_prev) * 100 : 0;
+            $grand_delta   = $grand_rr_curr - $grand_rr_prev;
+
+            $grand_total = [
+                'nama_cabang'    => 'TOTAL KONSOLIDASI',
+                'os_total'       => $grand_baki_total_curr,    // <-- Ini dia OS ALL nya!
+                'os_lancar'      => $grand_baki_lancar_curr,
+                'rr_persen_prev' => round($grand_rr_prev, 2),
+                'rr_persen_curr' => round($grand_rr_curr, 2),
+                'delta_rr'       => round($grand_delta, 2)
+            ];
+
+            usort($semua_cabang, function($a, $b) { return $b['rr_persen_curr'] <=> $a['rr_persen_curr']; });
+            $top_rr = array_slice($semua_cabang, 0, 5);
+
+            usort($semua_cabang, function($a, $b) { return $a['rr_persen_curr'] <=> $b['rr_persen_curr']; });
+            $bottom_rr = array_slice($semua_cabang, 0, 5);
+
+            usort($kenaikan_rr, function($a, $b) { return $b['delta_rr'] <=> $a['delta_rr']; });
+            $top_kenaikan = array_slice($kenaikan_rr, 0, 5);
+
+            usort($penurunan_rr, function($a, $b) { return $a['delta_rr'] <=> $b['delta_rr']; });
+            $top_penurunan = array_slice($penurunan_rr, 0, 5);
+
+            // Sort berdasarkan OS Total Terbesar
+            usort($semua_cabang, function($a, $b) { return $b['os_total'] <=> $a['os_total']; });
+            $top_os_terbesar = array_slice($semua_cabang, 0, 5);
+
+            return [
+                'grand_total'     => $grand_total,    // OS All dan RR All Nasional
+                'top_os_terbesar' => $top_os_terbesar, // Top 5 OS dan RR-nya
+                'top_rr'          => $top_rr,
+                'bottom_rr'       => $bottom_rr,
+                'top_kenaikan'    => $top_kenaikan,
+                'top_penurunan'   => $top_penurunan
+            ];
+
+        } catch (PDOException $e) {
+            error_log("Error getRepaymentRateCabang: " . $e->getMessage());
             return [];
         }
     }
@@ -744,6 +881,8 @@ class DashboardController{
             return [];
         }
     }
+
+
 
     public function getRealisasiRealtimeByProduk($input) {
         $closing_date = $input['closing_date'] ?? date('Y-m-d', strtotime('last day of previous month'));
@@ -1559,141 +1698,7 @@ class DashboardController{
     }
 
 
-    public function getRepaymentRateCabang($input) {
-        $harian_date  = $input['harian_date'] ?? date('Y-m-d');
-        $closing_date = $input['closing_date'] ?? date('Y-m-d', strtotime('last day of previous month'));
-        
-        $filter = $this->buildFilterQuery($input, 't');
 
-        $sql = "
-            SELECT 
-                t.kode_cabang,
-                COALESCE(k.nama_kantor, CONCAT('CABANG ', t.kode_cabang)) AS nama_cabang,
-                
-                -- Data Current (Harian)
-                SUM(CASE WHEN t.created = :harian_date_1 AND t.hari_menunggak = 0 THEN t.baki_debet ELSE 0 END) AS baki_lancar_curr,
-                SUM(CASE WHEN t.created = :harian_date_2 THEN t.baki_debet ELSE 0 END) AS baki_total_curr,
-                
-                -- Data Previous (Closing Bulan Lalu)
-                SUM(CASE WHEN t.created = :closing_date_1 AND t.hari_menunggak = 0 THEN t.baki_debet ELSE 0 END) AS baki_lancar_prev,
-                SUM(CASE WHEN t.created = :closing_date_2 THEN t.baki_debet ELSE 0 END) AS baki_total_prev
-                
-            FROM nominatif t
-            LEFT JOIN kode_kantor k ON t.kode_cabang = k.kode_kantor
-            WHERE t.created IN (:harian_date_3, :closing_date_3)
-            {$filter['sql']}
-            GROUP BY t.kode_cabang, k.nama_kantor
-        ";
-
-        try {
-            $stmt = $this->pdo->prepare($sql);
-            
-            $stmt->bindValue(':harian_date_1', $harian_date);
-            $stmt->bindValue(':harian_date_2', $harian_date);
-            $stmt->bindValue(':harian_date_3', $harian_date);
-            
-            $stmt->bindValue(':closing_date_1', $closing_date);
-            $stmt->bindValue(':closing_date_2', $closing_date);
-            $stmt->bindValue(':closing_date_3', $closing_date);
-            
-            foreach ($filter['params'] as $key => $val) {
-                $stmt->bindValue($key, $val);
-            }
-            
-            $stmt->execute();
-            $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-            $semua_cabang = [];
-            $kenaikan_rr  = [];
-            $penurunan_rr = [];
-
-            // Variabel untuk Grand Total (OS ALL)
-            $grand_baki_total_curr  = 0;
-            $grand_baki_lancar_curr = 0;
-            $grand_baki_total_prev  = 0;
-            $grand_baki_lancar_prev = 0;
-
-            foreach ($rows as $r) {
-                $baki_total_curr  = (float) $r['baki_total_curr'];
-                $baki_lancar_curr = (float) $r['baki_lancar_curr'];
-                $baki_total_prev  = (float) $r['baki_total_prev'];
-                $baki_lancar_prev = (float) $r['baki_lancar_prev'];
-
-                if ($baki_total_curr <= 0) continue;
-
-                // Akumulasi ke Grand Total
-                $grand_baki_total_curr  += $baki_total_curr;
-                $grand_baki_lancar_curr += $baki_lancar_curr;
-                $grand_baki_total_prev  += $baki_total_prev;
-                $grand_baki_lancar_prev += $baki_lancar_prev;
-
-                $rr_curr = ($baki_lancar_curr / $baki_total_curr) * 100;
-                $rr_prev = $baki_total_prev > 0 ? ($baki_lancar_prev / $baki_total_prev) * 100 : 0;
-                $delta = $rr_curr - $rr_prev;
-
-                $dataCabang = [
-                    'kode_cabang'    => $r['kode_cabang'],
-                    'nama_cabang'    => $r['nama_cabang'],
-                    'os_total'       => $baki_total_curr,
-                    'os_lancar'      => $baki_lancar_curr,
-                    'rr_persen_prev' => round($rr_prev, 2),
-                    'rr_persen_curr' => round($rr_curr, 2),
-                    'delta_rr'       => round($delta, 2)
-                ];
-
-                $semua_cabang[] = $dataCabang;
-
-                if ($delta > 0) {
-                    $kenaikan_rr[] = $dataCabang;
-                } elseif ($delta < 0) {
-                    $penurunan_rr[] = $dataCabang;
-                }
-            }
-
-            // Hitung RR untuk Grand Total Nasional/Konsolidasi
-            $grand_rr_curr = $grand_baki_total_curr > 0 ? ($grand_baki_lancar_curr / $grand_baki_total_curr) * 100 : 0;
-            $grand_rr_prev = $grand_baki_total_prev > 0 ? ($grand_baki_lancar_prev / $grand_baki_total_prev) * 100 : 0;
-            $grand_delta   = $grand_rr_curr - $grand_rr_prev;
-
-            $grand_total = [
-                'nama_cabang'    => 'TOTAL KONSOLIDASI',
-                'os_total'       => $grand_baki_total_curr,    // <-- Ini dia OS ALL nya!
-                'os_lancar'      => $grand_baki_lancar_curr,
-                'rr_persen_prev' => round($grand_rr_prev, 2),
-                'rr_persen_curr' => round($grand_rr_curr, 2),
-                'delta_rr'       => round($grand_delta, 2)
-            ];
-
-            usort($semua_cabang, function($a, $b) { return $b['rr_persen_curr'] <=> $a['rr_persen_curr']; });
-            $top_rr = array_slice($semua_cabang, 0, 5);
-
-            usort($semua_cabang, function($a, $b) { return $a['rr_persen_curr'] <=> $b['rr_persen_curr']; });
-            $bottom_rr = array_slice($semua_cabang, 0, 5);
-
-            usort($kenaikan_rr, function($a, $b) { return $b['delta_rr'] <=> $a['delta_rr']; });
-            $top_kenaikan = array_slice($kenaikan_rr, 0, 5);
-
-            usort($penurunan_rr, function($a, $b) { return $a['delta_rr'] <=> $b['delta_rr']; });
-            $top_penurunan = array_slice($penurunan_rr, 0, 5);
-
-            // Sort berdasarkan OS Total Terbesar
-            usort($semua_cabang, function($a, $b) { return $b['os_total'] <=> $a['os_total']; });
-            $top_os_terbesar = array_slice($semua_cabang, 0, 5);
-
-            return [
-                'grand_total'     => $grand_total,    // OS All dan RR All Nasional
-                'top_os_terbesar' => $top_os_terbesar, // Top 5 OS dan RR-nya
-                'top_rr'          => $top_rr,
-                'bottom_rr'       => $bottom_rr,
-                'top_kenaikan'    => $top_kenaikan,
-                'top_penurunan'   => $top_penurunan
-            ];
-
-        } catch (PDOException $e) {
-            error_log("Error getRepaymentRateCabang: " . $e->getMessage());
-            return [];
-        }
-    }
 
     public function getPerkembanganDeposito($input) {
         $closing_date = $input['closing_date'] ?? date('Y-m-d', strtotime('last day of previous month'));

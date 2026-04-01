@@ -384,7 +384,7 @@ class RepaymentRateController {
         ]);
     }
 
-    /*
+/*
      * 4. REKAP RR (Summary M-1 vs Actual)
      * Kolom: Total OS, Total NOA.
      * Persen: (OS DPD=0 / Total OS) * 100
@@ -406,11 +406,12 @@ class RepaymentRateController {
         $groupByCol = $isPusat ? 'kode_cabang' : 'kode_group1';
 
         // 1. QUERY M-1 (CLOSING)
+        // 🔥 FIX: Tambahkan kolektibilitas = 'L' di perhitungan lancar_os 🔥
         $sqlM1 = "SELECT 
                     $groupByCol as grp,
                     COUNT(no_rekening) as all_noa,
                     SUM(baki_debet) as all_os,
-                    SUM(CASE WHEN COALESCE(hari_menunggak, 0) = 0 THEN baki_debet ELSE 0 END) as lancar_os
+                    SUM(CASE WHEN COALESCE(hari_menunggak, 0) = 0 AND kolektibilitas = 'L' THEN baki_debet ELSE 0 END) as lancar_os
                   FROM nominatif
                   WHERE created BETWEEN :s1 AND :e1 
                   AND baki_debet > 0";
@@ -425,11 +426,12 @@ class RepaymentRateController {
         $dataM1 = $stmt1->fetchAll(PDO::FETCH_UNIQUE | PDO::FETCH_ASSOC);
 
         // 2. QUERY ACTUAL (HARIAN)
+        // 🔥 FIX: Tambahkan kolektibilitas = 'L' di perhitungan lancar_os 🔥
         $sqlCur = "SELECT 
                     $groupByCol as grp,
                     COUNT(no_rekening) as all_noa,
                     SUM(baki_debet) as all_os,
-                    SUM(CASE WHEN COALESCE(hari_menunggak, 0) = 0 THEN baki_debet ELSE 0 END) as lancar_os
+                    SUM(CASE WHEN COALESCE(hari_menunggak, 0) = 0 AND kolektibilitas = 'L' THEN baki_debet ELSE 0 END) as lancar_os
                    FROM nominatif
                    WHERE created BETWEEN :s2 AND :e2 
                    AND baki_debet > 0";
