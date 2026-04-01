@@ -62,7 +62,7 @@
       </div>
       <div class="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 relative overflow-hidden">
         <div class="absolute top-0 left-0 w-1.5 h-full bg-purple-500 rounded-l-2xl"></div>
-        <p class="text-[10px] text-gray-500 font-bold uppercase tracking-wider mb-1 truncate">Total DPK (Depo + Tab)</p>
+        <p class="text-[10px] text-gray-500 font-bold uppercase tracking-wider mb-1 truncate">Total DPK (Depo + Tab) H-1</p>
         <h3 id="kpi_dpk" class="text-xl xl:text-2xl font-black text-purple-700 tracking-tight whitespace-nowrap mb-2.5">Rp 0</h3>
         <div id="kpi_dpk_pill"></div>
       </div>
@@ -222,12 +222,12 @@
         <div class="bg-purple-100 p-2 rounded-lg"><span class="text-3xl">💰</span></div>
         <div>
           <h2 class="text-2xl font-extrabold text-gray-900 tracking-tight">Dana Pihak Ketiga (DPK)</h2>
-          <p class="text-sm text-gray-500 font-medium">Rekapitulasi Deposito & Tabungan</p>
+          <p class="text-sm text-gray-500 font-medium">Rekapitulasi Deposito & Tabungan (H-1)</p>
         </div>
       </div>
       <div class="space-y-8">
         <div>
-          <h3 class="font-extrabold text-gray-800 mb-4 tracking-tight flex items-center gap-2 text-lg"><span>🏦</span> Deposito</h3>
+          <h3 class="font-extrabold text-gray-800 mb-4 tracking-tight flex items-center gap-2 text-lg"><span>🏦</span> Deposito (H-1)</h3>
           <div class="grid md:grid-cols-4 gap-6">
             <div><h3 class="font-bold text-gray-700 mb-3 text-xs uppercase tracking-wider">Top Saldo Deposito</h3><div id="list_dep_saldo_top" class="space-y-2.5"></div></div>
             <div><h3 class="font-bold text-gray-700 mb-3 text-xs uppercase tracking-wider">Bottom Saldo Deposito</h3><div id="list_dep_saldo_bot" class="space-y-2.5"></div></div>
@@ -237,7 +237,7 @@
         </div>
         <div class="border-t border-dashed border-gray-200"></div>
         <div>
-          <h3 class="font-extrabold text-gray-800 mb-4 tracking-tight flex items-center gap-2 text-lg"><span>💳</span> Tabungan</h3>
+          <h3 class="font-extrabold text-gray-800 mb-4 tracking-tight flex items-center gap-2 text-lg"><span>💳</span> Tabungan (H-1)</h3>
           <div class="grid md:grid-cols-4 gap-6">
             <div><h3 class="font-bold text-gray-700 mb-3 text-xs uppercase tracking-wider">Top Saldo Tabungan</h3><div id="list_tab_saldo_top" class="space-y-2.5"></div></div>
             <div><h3 class="font-bold text-gray-700 mb-3 text-xs uppercase tracking-wider">Bottom Saldo Tabungan</h3><div id="list_tab_saldo_bot" class="space-y-2.5"></div></div>
