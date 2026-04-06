@@ -353,7 +353,6 @@
     initialHarianDate = document.getElementById('filter_harian').value;
 
     fetchDashboardUtama();
-    // 🔥 OPTIMASI: Fetch secara paralel agar lebih NGEBUT! 🔥
     Promise.all([
         fetchTrenPortofolio(),
         fetchTrenRunoff()
@@ -748,40 +747,111 @@
   }
 
   // ==========================================
-  // 5. FETCH API DASHBOARD UTAMA (KPI)
+  // Helper Mundur 1 Hari
   // ==========================================
-  async function fetchDashboardUtama() {
-    document.getElementById('loadingDash').classList.remove('hidden'); document.getElementById('contentDash').classList.add('hidden');
-    
+  function getH1Date(dateString) {
+    let d = new Date(dateString);
+    d.setDate(d.getDate() - 1);
+    return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+  }
+
+  // ==========================================
+  // 5. FETCH API MODULAR (WIDGET-BASED / PARALEL)
+  // ==========================================
+  async function fetchWidgetData(type, isH1 = false) {
     let kantor = document.getElementById('filter_kantor').value;
     let currDate = document.getElementById('filter_harian').value;
+    
+    // 🔥 TRIK SAKTI H-1 Pindah ke sini
+    if (isH1) {
+        currDate = getH1Date(currDate);
+    }
+
     let targetRealisasiDate = (currDate === initialHarianDate) ? getTodayRealtime() : currDate;
 
     const payload = { 
-      type: 'executive dashboard', 
+      type: type, 
       closing_date: document.getElementById('filter_closing').value, 
       harian_date: currDate,
       harian_date_realisasi: targetRealisasiDate
     };
     
-    if(kantor !== '000') { if(['SEMARANG','SOLO','BANYUMAS','PEKALONGAN'].includes(kantor)) payload.korwil = kantor; else payload.kode_kantor = kantor; }
-    
+    if(kantor !== '000') { 
+        if(['SEMARANG','SOLO','BANYUMAS','PEKALONGAN'].includes(kantor)) payload.korwil = kantor; 
+        else payload.kode_kantor = kantor; 
+    }
+
     try {
-      const res = await apiCall('./api/dashboard/', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
-      const json = await res.json(); if(json.status === 200 && json.data) renderDashboardUtama(json.data, kantor); else alert("Gagal memuat: " + (json.message || "Data Kosong"));
-    } catch(e) {} finally { document.getElementById('loadingDash').classList.add('hidden'); document.getElementById('contentDash').classList.remove('hidden'); }
+      const res = await apiCall('./api/dashboard/', { 
+          method: 'POST', 
+          headers: { 'Content-Type': 'application/json' }, 
+          body: JSON.stringify(payload) 
+      });
+      const json = await res.json();
+      return json.data || null;
+    } catch(e) {
+      console.error(`Gagal memuat widget ${type}:`, e);
+      return null;
+    }
   }
 
-  function renderDashboardUtama(d, kantorMode) {
-    // RENDER 5 CARD KPI
-    try {
-      const rrG = d.repayment_rate?.grand_total || {}; 
-      const tNpl = d.tren_npl || d.tren_portofolio || []; 
+  function fetchDashboardUtama() {
+    // 1. Langsung tampilkan kerangka dashboard, sembunyikan spinner raksasa
+    document.getElementById('loadingDash').classList.add('hidden'); 
+    document.getElementById('contentDash').classList.remove('hidden');
+
+    let kantorMode = document.getElementById('filter_kantor').value;
+
+    // 2. TEMBAK SEMUA REQUEST SECARA BERSAMAAN (PARALEL)
+    const pSaldoBank    = fetchWidgetData('saldo_bank');
+    const pRealProduk   = fetchWidgetData('realisasi_by_produk');
+    const pTrenNpl      = fetchWidgetData('test tren npl');
+    const pRrCabang     = fetchWidgetData('test rr cabang');
+    const pRunoffKorwil = fetchWidgetData('test runoff korwil');
+    const pFlowKorwil   = fetchWidgetData('test flow recovery npl');
+    const pTopReal      = fetchWidgetData('test top realisasi');
+    const pTopNpl       = fetchWidgetData('test top bottom npl');
+    const pDeltaNpl     = fetchWidgetData('test delta npl');
+    
+    // 🔥 Panggil fungsi dengan parameter tambahan `true` khusus DPK agar dikurangi 1 hari
+    const pDeposito     = fetchWidgetData('test perkembangan deposito');
+    const pTabungan     = fetchWidgetData('test perkembangan tabungan', true);
+
+    // =========================================================
+    // 3. RENDER WIDGET BEGITU DATANYA SELESAI (TIDAK SALING TUNGGU)
+    // =========================================================
+
+    // WIDGET A: SALDO BANK
+    pSaldoBank.then(sb => {
+      if(!sb) return;
+      document.getElementById('kpi_saldobank').textContent = `Rp ${fmtB(sb.actual)}`;
+      document.getElementById('kpi_saldobank_pill').innerHTML = `
+        <div class="flex items-center gap-1.5 md:gap-2">
+            <div class="bg-gray-100 px-1.5 md:px-2 py-0.5 rounded font-bold text-[9px] md:text-[11px] text-gray-600 whitespace-nowrap">Closing: <span class="text-gray-900">Rp ${fmtB(sb.closing)}</span></div>
+            <div class="whitespace-nowrap">${getDeltaHTML(sb.delta, false, false, true)}</div>
+        </div>`;
+    });
+
+    // WIDGET B: REALISASI BY PRODUK
+    pRealProduk.then(rpRaw => {
+      if(!rpRaw) return;
+      let rp = rpRaw?.realisasi_by_produk || rpRaw || {};
+      let prods = rp.detail_produk || [];
+      let grandTotal = rp.grand_total?.total_realisasi || 0;
+      document.getElementById('label_total_realisasi_produk').textContent = `Rp ${fmtB(grandTotal)}`;
+      renderUniversalList('box_realisasi_produk', prods, 'nama_produk', 'total_realisasi', 'noa_realisasi', 'bg-indigo-400', false, 'NOA');
+    });
+
+    // WIDGET C: KPI UTAMA (OS, NPL, RR)
+    Promise.all([pTrenNpl, pRrCabang]).then(([tNplRaw, rrRaw]) => {
+      let tNpl = Array.isArray(tNplRaw) ? tNplRaw : (tNplRaw?.tren_npl || tNplRaw?.tren_portofolio || []);
+      let rrData = rrRaw?.repayment_rate || rrRaw || {};
       
-      let osCurr = rrG.os_total || 0; let osPrev = 0;
-      
-      if(tNpl.length > 0) {
-        const last = tNpl[tNpl.length - 1]; const prev = tNpl.length > 1 ? tNpl[tNpl.length - 2] : last; osPrev = prev.total_kredit || prev.osc_total || 0; 
+      let osPrev = 0;
+      if(tNpl && tNpl.length > 0) {
+        const last = tNpl[tNpl.length - 1]; 
+        const prev = tNpl.length > 1 ? tNpl[tNpl.length - 2] : last; 
+        osPrev = prev.total_kredit || prev.osc_total || 0; 
         
         document.getElementById('kpi_npl').textContent = `Rp ${fmtB(last.npl_amt || last.osc_npl)}`;
         document.getElementById('kpi_npl_pill').innerHTML = `
@@ -791,55 +861,33 @@
             </div>
             <div class="whitespace-nowrap">${getDeltaHTML(last.npl_persen - prev.npl_persen, true, true, true)}</div>`;
       }
-      
-      document.getElementById('kpi_os').textContent = `Rp ${fmtB(osCurr)}`;
-      document.getElementById('kpi_os_pill').innerHTML = `
-        <div class="flex items-center gap-1.5 md:gap-2">
-            <div class="bg-gray-100 px-1.5 md:px-2 py-0.5 rounded font-bold text-[9px] md:text-[11px] text-gray-600 whitespace-nowrap">Closing: <span class="text-gray-900">Rp ${fmtB(osPrev)}</span></div>
-            <div class="whitespace-nowrap">${getDeltaHTML(osCurr - osPrev, false, false, true)}</div>
-        </div>`;
 
-      // 🔥 FIX: Tambah Nominal di Card RR 🔥
-      const rrAmt = rrG.os_lancar;
-      document.getElementById('kpi_rr').textContent = `Rp ${fmtB(rrAmt)}`;
-      document.getElementById('kpi_rr_pill').innerHTML = `
-        <div class="flex items-center gap-1 md:gap-2 mb-1.5">
-            <div class="bg-gray-100 px-1.5 md:px-2 py-0.5 rounded font-bold text-[9px] md:text-[11px] text-gray-600 whitespace-nowrap">Closing: <span class="text-gray-900">${pct(rrG.rr_persen_prev)}</span></div>
-            <div class="bg-green-50 text-green-700 border border-green-100 px-1.5 md:px-2 py-0.5 rounded font-bold text-[9px] md:text-[11px] whitespace-nowrap">Act: ${pct(rrG.rr_persen_curr)}</div>
-        </div>
-        <div class="whitespace-nowrap">${getDeltaHTML(rrG.delta_rr, true, false, true)}</div>`;
-      
-      const depG = d.perkembangan_deposito?.grand_total || {}; const tabG = d.perkembangan_tabungan?.grand_total || {};
-      const dpkCurr = (depG.saldo_curr||0) + (tabG.saldo_curr||0); const dpkPrev = (depG.saldo_prev||0) + (tabG.saldo_prev||0);
-      document.getElementById('kpi_dpk').textContent = `Rp ${fmtB(dpkCurr)}`;
-      document.getElementById('kpi_dpk_pill').innerHTML = `
-        <div class="flex items-center gap-1.5 md:gap-2">
-            <div class="bg-gray-100 px-1.5 md:px-2 py-0.5 rounded font-bold text-[9px] md:text-[11px] text-gray-600 whitespace-nowrap">Closing: <span class="text-gray-900">Rp ${fmtB(dpkPrev)}</span></div>
-            <div class="whitespace-nowrap">${getDeltaHTML(dpkCurr - dpkPrev, false, false, true)}</div>
-        </div>`;
-    } catch(e) {}
+      if(rrData && rrData.grand_total) {
+        const rrG = rrData.grand_total;
+        let osCurr = rrG.os_total || 0;
+        
+        document.getElementById('kpi_os').textContent = `Rp ${fmtB(osCurr)}`;
+        document.getElementById('kpi_os_pill').innerHTML = `
+          <div class="flex items-center gap-1.5 md:gap-2">
+              <div class="bg-gray-100 px-1.5 md:px-2 py-0.5 rounded font-bold text-[9px] md:text-[11px] text-gray-600 whitespace-nowrap">Closing: <span class="text-gray-900">Rp ${fmtB(osPrev)}</span></div>
+              <div class="whitespace-nowrap">${getDeltaHTML(osCurr - osPrev, false, false, true)}</div>
+          </div>`;
 
-    // CARD SALDO BANK
-    try {
-      let sb = d.saldo_bank || { actual: 0, closing: 0, delta: 0 };
-      document.getElementById('kpi_saldobank').textContent = `Rp ${fmtB(sb.actual)}`;
-      document.getElementById('kpi_saldobank_pill').innerHTML = `
-        <div class="flex items-center gap-1.5 md:gap-2">
-            <div class="bg-gray-100 px-1.5 md:px-2 py-0.5 rounded font-bold text-[9px] md:text-[11px] text-gray-600 whitespace-nowrap">Closing: <span class="text-gray-900">Rp ${fmtB(sb.closing)}</span></div>
-            <div class="whitespace-nowrap">${getDeltaHTML(sb.delta, false, false, true)}</div>
-        </div>`;
-    } catch(e) {}
+        document.getElementById('kpi_rr').textContent = `Rp ${fmtB(rrG.os_lancar)}`;
+        document.getElementById('kpi_rr_pill').innerHTML = `
+          <div class="flex items-center gap-1 md:gap-2 mb-1.5">
+              <div class="bg-gray-100 px-1.5 md:px-2 py-0.5 rounded font-bold text-[9px] md:text-[11px] text-gray-600 whitespace-nowrap">Closing: <span class="text-gray-900">${pct(rrG.rr_persen_prev)}</span></div>
+              <div class="bg-green-50 text-green-700 border border-green-100 px-1.5 md:px-2 py-0.5 rounded font-bold text-[9px] md:text-[11px] whitespace-nowrap">Act: ${pct(rrG.rr_persen_curr)}</div>
+          </div>
+          <div class="whitespace-nowrap">${getDeltaHTML(rrG.delta_rr, true, false, true)}</div>`;
+      }
+    });
 
-    // RENDER REALISASI BY PRODUK & GRAND TOTAL
-    try {
-        let prods = d.realisasi_by_produk?.detail_produk || [];
-        let grandTotal = d.realisasi_by_produk?.grand_total?.total_realisasi || 0;
-        document.getElementById('label_total_realisasi_produk').textContent = `Rp ${fmtB(grandTotal)}`;
-        renderUniversalList('box_realisasi_produk', prods, 'nama_produk', 'total_realisasi', 'noa_realisasi', 'bg-indigo-400', false, 'NOA');
-    } catch(e) {}
+    // WIDGET D: GRAFIK KORWIL (Bar Horizontal)
+    Promise.all([pRunoffKorwil, pFlowKorwil]).then(([roRaw, flowRaw]) => {
+      let ro = roRaw?.runoff_vs_realisasi || roRaw || null;
+      let flow = flowRaw?.flow_vs_recovery_npl || flowRaw || null;
 
-    // RENDER KORWIL BAR
-    try {
       let hideGrandTotal = (kantorMode !== '000');
       let isKorwilFilter = ['SEMARANG','SOLO','BANYUMAS','PEKALONGAN'].includes(kantorMode);
 
@@ -854,35 +902,60 @@
           boxFlow.style.maxHeight = 'none'; boxFlow.classList.remove('overflow-y-auto', 'custom-scrollbar', 'pr-1');
       }
       
-      let runoffData = [...(d.runoff_vs_realisasi?.detail_korwil || [])]; 
-      if(d.runoff_vs_realisasi?.grand_total && !hideGrandTotal) { runoffData.push(d.runoff_vs_realisasi.grand_total); }
-      renderKorwilCompare('box_runoff_realisasi', runoffData, 'realisasi', 'total_runoff', 'bg-green-400', 'bg-red-400');
-      
-      let flowData = [...(d.flow_vs_recovery_npl?.detail_korwil || [])]; 
-      if(d.flow_vs_recovery_npl?.grand_total && !hideGrandTotal) { flowData.push(d.flow_vs_recovery_npl.grand_total); }
-      renderKorwilCompare('box_flow_recovery', flowData, 'flow_npl', 'total_recovery', 'bg-red-400', 'bg-green-400');
-    } catch(e) {}
+      if(ro && ro.detail_korwil) {
+        let runoffData = [...ro.detail_korwil]; 
+        if(ro.grand_total && !hideGrandTotal) runoffData.push(ro.grand_total);
+        renderKorwilCompare('box_runoff_realisasi', runoffData, 'realisasi', 'total_runoff', 'bg-green-400', 'bg-red-400');
+      }
 
-    // 🔥 FIX: Tampilkan Nama Cabang + Nama AO di TOP REALISASI AO 🔥
-    try {
-      renderUniversalList('best_realisasi', d.top_bottom_realisasi?.top_cabang, 'nama_cabang', 'total_realisasi', 'noa_realisasi', 'bg-blue-500', false, 'NOA');
-      
-      // Khusus AO, kita tambahkan info cabangnya
-      let topAOCustom = (d.top_bottom_realisasi?.top_ao || []).map(ao => {
-          let namaCustom = ao.nama_ao;
-          if (ao.nama_cabang && ao.nama_cabang.toLowerCase() !== 'unknown') {
-              let cabangShort = ao.nama_cabang.replace(/Kc\. /gi, '');
-              namaCustom = `[${cabangShort}] - ${ao.nama_ao}`;
-          }
-          return { ...ao, nama_custom: namaCustom };
-      });
-      renderUniversalList('best_realisasi_ao', topAOCustom, 'nama_custom', 'total_realisasi', 'noa_realisasi', 'bg-indigo-500', false, 'NOA');
-      
-      renderUniversalList('best_npl', d.top_bottom_npl?.bottom, 'nama_cabang', 'npl_persen', 'npl_amt', 'bg-emerald-400', true, 'Rp');
-      renderUniversalList('best_rr', d.repayment_rate?.top_rr, 'nama_cabang', 'rr_persen_curr', 'os_total', 'bg-green-500', true, 'Rp');
-      renderUniversalList('best_npl_turun', d.kenaikan_penurunan_npl?.top_penurunan, 'nama_cabang', 'delta_npl', 'npl_persen_curr', 'bg-teal-400', true, 'NPL Now');
+      if(flow && flow.detail_korwil) {
+        let flowData = [...flow.detail_korwil]; 
+        if(flow.grand_total && !hideGrandTotal) flowData.push(flow.grand_total);
+        renderKorwilCompare('box_flow_recovery', flowData, 'flow_npl', 'total_recovery', 'bg-red-400', 'bg-green-400');
+      }
+    });
 
-      const tReal = d.top_bottom_realisasi?.top_cabang[0]; const tAo = topAOCustom[0]; const tRR = d.repayment_rate?.top_rr[0]; const tNplBest = d.top_bottom_npl?.bottom[0]; const tTurun = d.kenaikan_penurunan_npl?.top_penurunan[0];
+    // WIDGET E: INSIGHTS & TOP/BOTTOM LIST
+    Promise.all([pTopReal, pTopNpl, pDeltaNpl, pRrCabang]).then(([realRaw, nplRaw, deltaRaw, rrRaw]) => {
+      let real = realRaw?.top_bottom_realisasi || realRaw || {};
+      let npl = nplRaw?.top_bottom_npl || nplRaw || {};
+      let delta = deltaRaw?.kenaikan_penurunan_npl || deltaRaw || {};
+      let rr = rrRaw?.repayment_rate || rrRaw || {};
+
+      if(real.top_cabang) {
+        renderUniversalList('best_realisasi', real.top_cabang, 'nama_cabang', 'total_realisasi', 'noa_realisasi', 'bg-blue-500', false, 'NOA');
+        let topAOCustom = (real.top_ao || []).map(ao => {
+            let namaCustom = ao.nama_ao;
+            if (ao.nama_cabang && ao.nama_cabang.toLowerCase() !== 'unknown') {
+                let cabangShort = ao.nama_cabang.replace(/Kc\. /gi, '');
+                namaCustom = `[${cabangShort}] - ${ao.nama_ao}`;
+            }
+            return { ...ao, nama_custom: namaCustom };
+        });
+        renderUniversalList('best_realisasi_ao', topAOCustom, 'nama_custom', 'total_realisasi', 'noa_realisasi', 'bg-indigo-500', false, 'NOA');
+        renderUniversalList('list_realisasi_bottom', [...(real.bottom_cabang || [])].reverse(), 'nama_cabang', 'total_realisasi', 'noa_realisasi', 'bg-orange-400', false, 'NOA');
+      }
+
+      if(npl.bottom) {
+        renderUniversalList('best_npl', npl.bottom, 'nama_cabang', 'npl_persen', 'npl_amt', 'bg-emerald-400', true, 'Rp');
+        renderUniversalList('list_npl_top', npl.top, 'nama_cabang', 'npl_persen', 'npl_amt', 'bg-red-500', true, 'Rp');
+      }
+
+      if(rr.top_rr) {
+        renderUniversalList('best_rr', rr.top_rr, 'nama_cabang', 'rr_persen_curr', 'os_total', 'bg-green-500', true, 'Rp');
+      }
+
+      if(delta.top_penurunan) {
+        renderUniversalList('best_npl_turun', delta.top_penurunan, 'nama_cabang', 'delta_npl', 'npl_persen_curr', 'bg-teal-400', true, 'NPL Now');
+        renderUniversalList('list_npl_naik', delta.top_kenaikan, 'nama_cabang', 'delta_npl', 'npl_persen_curr', 'bg-orange-500', true, 'NPL Now');
+      }
+
+      const tReal = real?.top_cabang?.[0]; 
+      const tAo = real?.top_ao?.[0]; 
+      const tRR = rr?.top_rr?.[0]; 
+      const tNplBest = npl?.bottom?.[0]; 
+      const tTurun = delta?.top_penurunan?.[0];
+      
       let html = '';
       if(tReal) html += `<div class="mb-3 md:mb-4"><span class="text-blue-400 font-bold">1. Realisasi Tertinggi:</span> <span class="text-white block md:inline mt-0.5 md:mt-0">${tReal.nama_cabang.replace('Kc. ','')} (${fmtB(tReal.total_realisasi)})</span></div>`;
       if(tAo) html += `<div class="mb-3 md:mb-4"><span class="text-indigo-400 font-bold">2. AO Terbaik:</span> <span class="text-white block md:inline mt-0.5 md:mt-0">${tAo.nama_ao} (${fmtB(tAo.total_realisasi)})</span></div>`;
@@ -890,27 +963,45 @@
       if(tNplBest) html += `<div class="mb-3 md:mb-4"><span class="text-emerald-400 font-bold">4. NPL Terbaik:</span> <span class="text-white block md:inline mt-0.5 md:mt-0">${tNplBest.nama_cabang.replace('Kc. ','')} (${pct(tNplBest.npl_persen)})</span></div>`;
       if(tTurun) html += `<div class="mb-3 md:mb-4"><span class="text-teal-400 font-bold">5. Penurunan Terbesar:</span> <span class="text-white block md:inline mt-0.5 md:mt-0">${tTurun.nama_cabang.replace('Kc. ','')} (Δ ${pct(Math.abs(tTurun.delta_npl))})</span></div>`;
       document.getElementById('dynamic_insights').innerHTML = html;
-    } catch(e) {}
+    });
 
-    try {
-      renderUniversalList('list_npl_top', d.top_bottom_npl?.top, 'nama_cabang', 'npl_persen', 'npl_amt', 'bg-red-500', true, 'Rp');
-      renderUniversalList('list_npl_naik', d.kenaikan_penurunan_npl?.top_kenaikan, 'nama_cabang', 'delta_npl', 'npl_persen_curr', 'bg-orange-500', true, 'NPL Now');
-      renderUniversalList('list_realisasi_bottom', [...(d.top_bottom_realisasi?.bottom_cabang || [])].reverse(), 'nama_cabang', 'total_realisasi', 'noa_realisasi', 'bg-orange-400', false, 'NOA');
-    } catch(e) {}
+    // WIDGET F: DANA PIHAK KETIGA (DPK)
+    // 🔥 PERBAIKAN EXTRA AMAN UNTUK DEPOSITO & TABUNGAN 🔥
+    Promise.all([pDeposito, pTabungan]).then(([depRaw, tabRaw]) => {
+      let dep = depRaw?.perkembangan_deposito || depRaw || {};
+      let tab = tabRaw?.perkembangan_tabungan || tabRaw || {};
 
-    try {
-      const dp = d.perkembangan_deposito || {}; const tb = d.perkembangan_tabungan || {};
-      renderUniversalList('list_dep_saldo_top', dp.top_saldo, 'nama_cabang', 'saldo_curr', 'noa_curr', 'bg-yellow-500', false, 'Rek');
-      renderUniversalList('list_dep_saldo_bot', [...(dp.bottom_saldo || [])].reverse(), 'nama_cabang', 'saldo_curr', 'noa_curr', 'bg-yellow-400', false, 'Rek');
-      renderUniversalList('list_dep_baru', dp.top_baru, 'nama_cabang', 'saldo_baru', 'noa_tambah', 'bg-emerald-500', false, 'Rek Baru');
-      renderUniversalList('list_dep_cair', dp.top_pencairan, 'nama_cabang', 'saldo_cair', 'noa_kurang', 'bg-red-400', false, 'Rek Cair');
-      renderUniversalList('list_tab_saldo_top', tb.top_saldo, 'nama_cabang', 'saldo_curr', 'noa_curr', 'bg-teal-500', false, 'Rek');
-      renderUniversalList('list_tab_saldo_bot', [...(tb.bottom_saldo || [])].reverse(), 'nama_cabang', 'saldo_curr', 'noa_curr', 'bg-teal-400', false, 'Rek');
-      renderUniversalList('list_tab_baru', tb.top_baru, 'nama_cabang', 'saldo_baru', 'noa_tambah', 'bg-blue-500', false, 'Rek Baru');
-      renderUniversalList('list_tab_cair', tb.top_pencairan, 'nama_cabang', 'saldo_cair', 'noa_kurang', 'bg-red-400', false, 'Rek Cair');
-    } catch(e) {}
+      const depG = dep.grand_total || {}; 
+      const tabG = tab.grand_total || {};
+      const dpkCurr = (depG.saldo_curr||0) + (tabG.saldo_curr||0); 
+      const dpkPrev = (depG.saldo_prev||0) + (tabG.saldo_prev||0);
+      
+      document.getElementById('kpi_dpk').textContent = `Rp ${fmtB(dpkCurr)}`;
+      document.getElementById('kpi_dpk_pill').innerHTML = `
+        <div class="flex items-center gap-1.5 md:gap-2">
+            <div class="bg-gray-100 px-1.5 md:px-2 py-0.5 rounded font-bold text-[9px] md:text-[11px] text-gray-600 whitespace-nowrap">Closing: <span class="text-gray-900">Rp ${fmtB(dpkPrev)}</span></div>
+            <div class="whitespace-nowrap">${getDeltaHTML(dpkCurr - dpkPrev, false, false, true)}</div>
+        </div>`;
+
+      if(Object.keys(dep).length > 0) {
+        renderUniversalList('list_dep_saldo_top', dep.top_saldo, 'nama_cabang', 'saldo_curr', 'noa_curr', 'bg-yellow-500', false, 'Rek');
+        renderUniversalList('list_dep_saldo_bot', [...(dep.bottom_saldo || [])].reverse(), 'nama_cabang', 'saldo_curr', 'noa_curr', 'bg-yellow-400', false, 'Rek');
+        renderUniversalList('list_dep_baru', dep.top_baru, 'nama_cabang', 'saldo_baru', 'noa_tambah', 'bg-emerald-500', false, 'Rek Baru');
+        renderUniversalList('list_dep_cair', dep.top_pencairan, 'nama_cabang', 'saldo_cair', 'noa_kurang', 'bg-red-400', false, 'Rek Cair');
+      }
+
+      if(Object.keys(tab).length > 0) {
+        renderUniversalList('list_tab_saldo_top', tab.top_saldo, 'nama_cabang', 'saldo_curr', 'noa_curr', 'bg-teal-500', false, 'Rek');
+        renderUniversalList('list_tab_saldo_bot', [...(tab.bottom_saldo || [])].reverse(), 'nama_cabang', 'saldo_curr', 'noa_curr', 'bg-teal-400', false, 'Rek');
+        renderUniversalList('list_tab_baru', tab.top_baru, 'nama_cabang', 'saldo_baru', 'noa_tambah', 'bg-blue-500', false, 'Rek Baru');
+        renderUniversalList('list_tab_cair', tab.top_pencairan, 'nama_cabang', 'saldo_cair', 'noa_kurang', 'bg-red-400', false, 'Rek Cair');
+      }
+    });
   }
 
+  // ==========================================
+  // HELPER RENDERING
+  // ==========================================
   function renderKorwilCompare(elId, dataArray, keyA, keyB, colorA, colorB) {
     const box = document.getElementById(elId); box.innerHTML = ''; if(!dataArray || !dataArray.length) return;
     let maxVal = Math.max(...dataArray.flatMap(o => [Number(o[keyA]), Number(o[keyB])])); if(maxVal === 0) maxVal = 1;
