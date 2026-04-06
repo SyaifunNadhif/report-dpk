@@ -1189,7 +1189,7 @@ class KreditController {
                     SUM(t1.realisasi_pokok) AS total_realisasi
                 FROM update_realisasi_kredit t1
                 LEFT JOIN ao_kredit ao ON t1.kode_group2 = ao.kode_group2
-                WHERE t1.tanggal_realisasi > :closing_date 
+                WHERE t1.tanggal_realisasi >= :closing_date 
                   AND t1.tanggal_realisasi <= :harian_date
             ";
 

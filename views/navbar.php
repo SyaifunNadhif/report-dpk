@@ -42,6 +42,27 @@
     <div id="navbar-default" class="nb-container">
       <ul class="nb-row">
         <li class="nb-li"><a href="dashboard" class="nb-link nb-tap nb-active">Dashboard</a></li>
+
+                <li class="nb-li">
+          <button data-dropdown="dropdownPemasaran" class="nb-parent nb-tap">
+            <span>Pemasaran</span>
+            <svg class="nb-caret" viewBox="0 0 20 20" fill="currentColor" width="16" height="16">
+              <path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.586l3.71-4.354a.75.75 0 111.14.976l-4.25 5a.75.75 0 01-1.14 0l-4.25-5a.75.75 0 01.02-1.06z" clip-rule="evenodd"/>
+            </svg>
+          </button>
+          <div id="dropdownPemasaran" class="dropdown-panel">
+            <ul class="nb-list">
+              <li><a href="realisasi_promo" class="nb-item nb-tap">Realisasi Kredit dan Promo</a></li>
+              <li><a href="realisasi_ao" class="nb-item nb-tap">Realisasi Kredit AO</a></li>
+              <li><a href="repayment_rate" class="nb-item nb-tap">Repayment Rate</a></li>
+              <li><a href="rekap_rr" class="nb-item nb-tap">Rekap Repayment Rate</a></li>
+              <li><a href="migrasi_bucket_sc" class="nb-item nb-tap">Migrasi Bucket SC</a></li>
+              <li><a href="mob" class="nb-item nb-tap">MOB 6 Bulan</a></li>
+              <li><a href="pipelane_ao_jt" class="nb-item nb-tap">Pipelane AO Kredit</a></li>
+              <li><a href="jatuh_tempo" class="nb-item nb-tap">Jatuh Tempo and Refinacing</a></li>
+            </ul>
+          </div>
+        </li>
       
         <!-- NPL -->
         <li class="nb-li">
@@ -96,7 +117,8 @@
               <li><a href="actual_kredit" class="nb-item nb-tap">Bucket DPD and Kolek</a></li>
               <li><a href="migrasi_bucket" class="nb-item nb-tap">Migrasi Bucket</a></li>
               <li><a href="search_debitur" class="nb-item nb-tap">Seach Debitur Kredit</a></li>
-              <li class="nb-li"><a href="migrasi_kolek" class="nb-link nb-tap nb-active">Migrasi Kolek</a></li>
+               <li><a href="migrasi_kolek" class="nb-item nb-tap">Migrasi Kolek</a></li>
+              <!-- <li class="nb-li"><a href="migrasi_kolek" class="nb-link nb-tap nb-active">Migrasi Kolek</a></li> -->
               <!-- <li><a href="monitoring_ao" class="nb-item nb-tap">Monitoring Ao Remedial</a></li> -->
             </ul>
           </div>
@@ -120,28 +142,9 @@
           </div>
         </li> -->
 
-        <li class="nb-li">
-          <button data-dropdown="dropdownPemasaran" class="nb-parent nb-tap">
-            <span>Pemasaran</span>
-            <svg class="nb-caret" viewBox="0 0 20 20" fill="currentColor" width="16" height="16">
-              <path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.586l3.71-4.354a.75.75 0 111.14.976l-4.25 5a.75.75 0 01-1.14 0l-4.25-5a.75.75 0 01.02-1.06z" clip-rule="evenodd"/>
-            </svg>
-          </button>
-          <div id="dropdownPemasaran" class="dropdown-panel">
-            <ul class="nb-list">
-              <li><a href="realisasi_promo" class="nb-item nb-tap">Realisasi Kredit dan Promo</a></li>
-              <li><a href="realisasi_ao" class="nb-item nb-tap">Realisasi Kredit AO</a></li>
-              <li><a href="repayment_rate" class="nb-item nb-tap">Repayment Rate</a></li>
-              <li><a href="rekap_rr" class="nb-item nb-tap">Rekap Repayment Rate</a></li>
-              <li><a href="migrasi_bucket_sc" class="nb-item nb-tap">Migrasi Bucket SC</a></li>
-              <li><a href="mob" class="nb-item nb-tap">MOB 6 Bulan</a></li>
-              <li><a href="pipelane_ao_jt" class="nb-item nb-tap">Pipelane AO Kredit</a></li>
-              <li><a href="jatuh_tempo" class="nb-item nb-tap">Jatuh Tempo and Refinacing</a></li>
-            </ul>
-          </div>
-        </li>
 
-        <li class="nb-li">
+
+        <!-- <li class="nb-li">
           <button data-dropdown="dropdownMonev" class="nb-parent nb-tap">
             <span>Laporan dan Komitmen</span>
             <svg class="nb-caret" viewBox="0 0 20 20" fill="currentColor" width="16" height="16">
@@ -156,7 +159,7 @@
               <li><a href="monev_mingguan" class="nb-item nb-tap">Komitmen dan Realisasi Monev</a></li>
             </ul>
           </div>
-        </li>
+        </li> -->
 
         <!-- ===== MOBILE-ONLY: Profile dimasukkan ke menu (di bawah Kredit) ===== -->
         <li class="nb-li md:hidden">

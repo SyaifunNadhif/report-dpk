@@ -33,10 +33,25 @@ switch ($method) {
             $controller->apiGetLabaRugi($input);
         }
 
+        elseif ($type === 'test tren perkiraan') {
+            // Menampilkan matrix 000-028 + Konsolidasi
+            $controller->apiGetTrenPerkiraan($input);
+        
+
+        // 🔥 TAMBAHKAN INI BROKU 🔥
+        } elseif ($type === 'list_coa') {
+            $controller->apiGetCoaList();
+
+        } elseif ($type === 'financial_kpi') {
+            $controller->apiGetFinancialKPI($input);
+
+        } elseif ($type === 'summary_perbandingan') {
+            $controller->GetSummaryPerbandingan($input);
+
         // ==========================================
         // ENDPOINT TESTING (Kalo lu butuh breakdown per kantor saja)
         // ==========================================
-        elseif ($type === 'neraca detail kantor' || $type === 'laba rugi detail kantor') {
+        }elseif ($type === 'neraca detail kantor' || $type === 'laba rugi detail kantor') {
             // Panggil fungsi detail, bukan matrix
             $controller->getReportDetail($input);
         }

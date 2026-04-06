@@ -14,41 +14,51 @@
   .animate-scale-up { animation: scaleUp 0.2s ease-out forwards; }
 
   /* ========================================================
-     🔥 MAGIC STICKY TABLE (ANTI NABRAK) 🔥
+     🔥 MAGIC STICKY TABLE (FIX SAFARI/MOBILE 100% FREEZE) 🔥
      ======================================================== */
   
-  #tabelUtama thead { position: sticky; top: 0; z-index: 60; box-shadow: inset 0 -1px 0 #cbd5e1; }
-  .head-lapis-1 th { height: 38px; }
-  .head-lapis-2 th { height: 34px; border-bottom: 2px solid #cbd5e1; box-shadow: inset 0 -1px 0 #cbd5e1; }
+  /* Apply sticky murni ke TH, jangan cuma thead */
+  #tabelUtama th, #tableDetail th { position: sticky !important; top: 0; z-index: 10; }
+  
+  /* --- Tabel Utama (Growth) --- */
+  .head-lapis-1 th { height: 46px; background-color: #dcedc8 !important; box-shadow: inset 0 -1px 0 #cbd5e1; top: 0 !important; }
+  .head-lapis-2 th { top: 46px !important; height: 40px; background-color: #eff6ff !important; box-shadow: inset 0 -2px 0 #cbd5e1; }
   @media (min-width: 768px) {
       .head-lapis-1 th { height: 50px; }
-      .head-lapis-2 th { height: 46px; }
+      .head-lapis-2 th { top: 50px !important; height: 46px; }
   }
 
-  .freeze-col-1 { position: sticky; left: 0; z-index: 20; box-shadow: inset -1px 0 0 #e2e8f0; }
-  .freeze-col-2 { position: sticky; left: 0; z-index: 20; box-shadow: inset -1px 0 0 #e2e8f0; }
-  @media (min-width: 768px) { .freeze-col-2 { left: 60px; } }
+  /* Cross Axis: Freeze Kiri */
+  .freeze-col-1 { position: sticky !important; left: 0 !important; z-index: 22 !important; box-shadow: inset -1px 0 0 #cbd5e1; background-color: #dcedc8; }
+  .freeze-col-2 { position: sticky !important; left: 0 !important; z-index: 20 !important; box-shadow: inset -1px 0 0 #e2e8f0; background-color: #dcedc8; }
+  @media (min-width: 768px) { .freeze-col-2 { left: 59px !important; } }
 
-  #tabelUtama thead th.freeze-col-1 { z-index: 70; border-top-left-radius: 8px; }
-  #tabelUtama thead th.freeze-col-2 { z-index: 69; }
-  .head-lapis-2 th.freeze-col-1 { z-index: 68; }
-  .head-lapis-2 th.freeze-col-2 { z-index: 67; }
+  /* Z-Index Tumpukan Header Kiri (Pojok Kiri Atas) */
+  #tabelUtama th.freeze-col-1 { z-index: 30 !important; }
+  #tabelUtama th.freeze-col-2 { z-index: 29 !important; }
+  #tabelUtama .head-lapis-2 th.freeze-col-1 { z-index: 32 !important; background-color: #eff6ff !important; }
+  #tabelUtama .head-lapis-2 th.freeze-col-2 { z-index: 31 !important; background-color: #eff6ff !important; }
+  
+  tbody td.freeze-col-1, tbody td.freeze-col-2 { background-color: #ffffff; }
 
-  .modal-head-1 th { position: sticky; top: 0; z-index: 60; height: 40px; box-shadow: inset 0 -1px 0 #cbd5e1; }
-  .modal-head-2 th { position: sticky; top: 40px; z-index: 59; height: 36px; border-bottom: 2px solid #cbd5e1; }
+  /* --- Tabel Modal Detail --- */
+  .modal-head-1 th { height: 46px; background-color: #f1f5f9 !important; box-shadow: inset 0 -1px 0 #cbd5e1; top: 0 !important; }
+  .modal-head-2 th { top: 46px !important; height: 40px; background-color: #eff6ff !important; box-shadow: inset 0 -2px 0 #cbd5e1; }
   @media (min-width: 768px) {
       .modal-head-1 th { height: 48px; }
-      .modal-head-2 th { top: 48px; height: 42px; }
+      .modal-head-2 th { top: 48px !important; height: 42px; }
   }
 
-  .mod-freeze-1 { position: sticky; left: 0; z-index: 20; box-shadow: inset -1px 0 0 #e2e8f0; }
-  .mod-freeze-2 { position: sticky; left: 100px; z-index: 20; box-shadow: inset -1px 0 0 #e2e8f0; }
-  @media (min-width: 768px) { .mod-freeze-2 { left: 120px; } }
+  .mod-freeze-1 { position: sticky !important; left: 0 !important; z-index: 22 !important; box-shadow: inset -1px 0 0 #e2e8f0; background-color: #ffffff;}
+  .mod-freeze-2 { position: sticky !important; left: 100px !important; z-index: 20 !important; box-shadow: inset -1px 0 0 #e2e8f0; background-color: #ffffff;}
+  @media (min-width: 768px) { .mod-freeze-2 { left: 120px !important; } }
 
-  .modal-head-1 th.mod-freeze-1 { z-index: 70; }
-  .modal-head-1 th.mod-freeze-2 { z-index: 69; }
-  .modal-head-2 th.mod-freeze-1 { z-index: 68; }
-  .modal-head-2 th.mod-freeze-2 { z-index: 67; }
+  #tableDetail th.mod-freeze-1 { z-index: 30 !important; background-color: #f1f5f9 !important; }
+  #tableDetail th.mod-freeze-2 { z-index: 29 !important; background-color: #f1f5f9 !important; }
+  #tableDetail .modal-head-2 th.mod-freeze-1 { z-index: 32 !important; background-color: #eff6ff !important; }
+  #tableDetail .modal-head-2 th.mod-freeze-2 { z-index: 31 !important; background-color: #eff6ff !important; }
+  
+  tbody td.mod-freeze-1, tbody td.mod-freeze-2 { background-color: #ffffff; }
 
   tbody tr:hover td { background-color: #f8fafc !important; }
   tbody tr:hover td.freeze-col-1, tbody tr:hover td.freeze-col-2, tbody tr:hover td.mod-freeze-1, tbody tr:hover td.mod-freeze-2 { filter: brightness(0.98); }
@@ -67,7 +77,7 @@
   input[type="date"] { -moz-appearance: textfield; }
 </style>
 
-<div class="max-w-[1920px] mx-auto px-2 md:px-4 py-2 md:py-4 min-h-[100dvh] md:h-[calc(100vh-60px)] md:min-h-0 flex flex-col bg-slate-50 font-sans text-slate-800 overflow-y-auto overflow-x-hidden md:overflow-hidden">
+<div class="max-w-[1920px] mx-auto px-2 md:px-4 py-2 md:py-4 h-screen flex flex-col bg-slate-50 font-sans text-slate-800 overflow-hidden" style="height: 100dvh;">
   
   <div class="flex gap-3 md:gap-8 border-b border-slate-300 mb-2 md:mb-3 px-1 md:px-2 overflow-x-auto no-scrollbar shrink-0">
       <button id="tab-growth" onclick="switchTab('growth')" class="pb-1.5 md:pb-2.5 font-extrabold text-[10px] md:text-sm uppercase transition border-b-[3px] border-blue-600 text-blue-700 whitespace-nowrap">REKAP REALISASI & GROWTH</button>
@@ -92,16 +102,18 @@
               
               <div class="w-px h-6 bg-slate-200 shrink-0 mx-1 hidden md:block mb-1.5" id="divider-filter" style="display: none;"></div>
 
-              <button type="submit" id="btn-cari" class="btn-icon h-[30px] md:h-[36px] w-[34px] md:w-[80px] bg-blue-600 hover:bg-blue-700 text-white rounded-md md:rounded-lg shadow-sm shrink-0" title="Cari Data">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" class="md:w-[16px] md:h-[16px]"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-                  <span class="hidden md:inline font-bold text-sm uppercase tracking-wider ml-1.5">CARI</span>
-              </button>
-              <button type="button" onclick="exportExcelRekap()" class="btn-icon h-[30px] md:h-[36px] w-[34px] md:w-[40px] bg-emerald-600 hover:bg-emerald-700 text-white rounded-md md:rounded-lg shadow-sm shrink-0" title="Download Excel">
-                  <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="md:w-[18px] md:h-[18px]"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></line></svg>
-              </button>
+              <div class="flex items-center justify-end gap-1 shrink-0 h-[30px] md:h-[36px]">
+                  <button type="submit" id="btn-cari" class="btn-icon h-full w-[34px] md:w-[80px] bg-blue-600 hover:bg-blue-700 text-white rounded-md md:rounded-lg shadow-sm" title="Cari Data">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" class="md:w-[16px] md:h-[16px]"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                      <span class="hidden md:inline font-bold text-xs uppercase tracking-wider ml-1.5">CARI</span>
+                  </button>
+                  <button type="button" onclick="exportExcelRekap()" class="btn-icon h-full w-[34px] md:w-[40px] bg-emerald-600 hover:bg-emerald-700 text-white rounded-md md:rounded-lg shadow-sm shrink-0" title="Download Excel">
+                      <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="md:w-[18px] md:h-[18px]"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></line></svg>
+                  </button>
+              </div>
           </div>
 
-          <div class="field w-full md:w-[220px] transition-opacity duration-300" id="wrap-area" style="display: none;">
+          <div class="field w-full md:w-[220px] transition-opacity duration-300 mt-0.5 md:mt-0" id="wrap-area" style="display: none;">
               <label class="lbl text-pink-700">AREA / CABANG</label>
               <select id="opt_area" class="inp border-pink-200 focus:border-pink-500 bg-pink-50/30 text-[10px] md:text-sm font-bold h-[30px] md:h-[36px] px-2 text-pink-800 cursor-pointer w-full truncate"></select>
           </div>
@@ -111,7 +123,7 @@
 
   <div class="flex-1 min-h-0 flex flex-col relative gap-2 md:gap-3 pb-4 md:pb-0">
       
-      <div id="content-growth" class="flex-1 h-[85vh] shrink-0 md:shrink md:h-auto md:min-h-0 bg-white rounded-lg md:rounded-xl shadow-sm border border-slate-200 overflow-hidden flex flex-col relative">
+      <div id="content-growth" class="flex-1 min-h-0 bg-white rounded-lg md:rounded-xl shadow-sm border border-slate-200 overflow-hidden flex flex-col relative">
           <div id="loadingUtama" class="hidden absolute inset-0 bg-white/80 z-[100] flex flex-col items-center justify-center text-blue-600 backdrop-blur-sm transition-colors">
               <div class="animate-spin rounded-full h-8 w-8 md:h-10 md:w-10 border-4 border-current border-t-transparent mb-2 md:mb-3"></div>
               <span class="text-[10px] md:text-sm font-bold uppercase tracking-widest">Menyiapkan Data...</span>
@@ -125,7 +137,7 @@
           </div>
       </div>
 
-      <div id="content-promo" class="hidden flex-1 h-auto shrink-0 md:shrink md:min-h-0 flex-col gap-2 md:gap-3 overflow-visible md:overflow-y-auto custom-scrollbar pb-6 relative">
+      <div id="content-promo" class="hidden flex-1 min-h-0 flex-col gap-2 md:gap-3 overflow-y-auto custom-scrollbar pb-6 relative">
           <div id="loadingPromo" class="hidden absolute inset-0 bg-slate-50/80 z-[100] flex flex-col items-center justify-center text-pink-600 backdrop-blur-sm transition-colors rounded-xl">
               <div class="animate-spin rounded-full h-8 w-8 md:h-10 md:w-10 border-4 border-current border-t-transparent mb-2 md:mb-3"></div>
               <span class="text-[10px] md:text-sm font-bold uppercase tracking-widest">Membangun Grafik...</span>
@@ -237,6 +249,7 @@
   let userKodeGlobal = '000';
   let defaultClosingGrowth = '';
 
+  // 🔥 Format nominal pakai fungsi asli untuk chart promo agar tidak luber 🔥
   const fmtSingkat = (n) => {
       let num = Math.abs(Number(n) || 0);
       let sign = n < 0 ? '-' : '';
@@ -246,13 +259,12 @@
       return sign + new Intl.NumberFormat('id-ID').format(Math.round(num));
   };
 
-  // 🔥 FIX 2: LOGIC USER LOGIN JWT PERSIS SESUAI REQUEST 🔥
   window.addEventListener('DOMContentLoaded', async () => {
       const user = (window.getUser && window.getUser()) || null;
       const uKode = user?.kode ? String(user.kode).padStart(3,'0') : '000';
       window.currentUser = { kode: uKode };
       userKodeGlobal = uKode;
-      if(userKodeGlobal === '099') userKodeGlobal = '000'; // Set HQ ke 000
+      if(userKodeGlobal === '099') userKodeGlobal = '000'; 
 
       const d = await getLastHarianData(); 
       if(d) {
@@ -272,7 +284,6 @@
 
   async function populateAreaOptions(userKode){
       const el = document.getElementById('opt_area');
-      // Jika user loginnya Cabang, Kunci Dropdown!
       if(userKode !== '000'){
           el.innerHTML = `<option value="CABANG|${userKode}">CABANG ${userKode}</option>`;
           el.value = `CABANG|${userKode}`;
@@ -280,7 +291,6 @@
           return;
       }
 
-      // Jika Pusat, bebas pilih
       try {
           const res = await apiCall(API_KODE, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({type:'kode_kantor'}) });
           const json = await res.json();
@@ -392,11 +402,11 @@
       
       if (userKode === '000') {
           thContent += `
-              <th class="freeze-col-1 w-[40px] md:w-[60px] border-r border-b border-slate-300 align-middle uppercase text-center hidden md:table-cell text-slate-800 bg-[#dcedc8]">KODE</th>
-              <th class="freeze-col-2 min-w-[120px] md:min-w-[200px] border-r border-b border-slate-300 align-middle uppercase pl-2 md:pl-5 text-slate-800 text-left bg-[#dcedc8]">NAMA KANTOR</th>
+              <th class="freeze-col-1 w-[40px] md:w-[60px] min-w-[40px] md:min-w-[60px] max-w-[40px] md:max-w-[60px] border-r border-b border-slate-300 align-middle uppercase text-center hidden md:table-cell text-slate-800">KODE</th>
+              <th class="freeze-col-2 min-w-[120px] md:min-w-[200px] border-r border-b border-slate-300 align-middle uppercase pl-2 md:pl-5 text-slate-800 text-left">NAMA KANTOR</th>
           `;
       } else {
-          thContent += `<th class="freeze-col-1 min-w-[120px] md:min-w-[200px] border-r border-b border-slate-300 align-middle uppercase pl-2 md:pl-5 text-slate-800 text-left border-t-0 rounded-tl-lg bg-[#dcedc8]">NAMA KANTOR</th>`;
+          thContent += `<th class="freeze-col-1 min-w-[120px] md:min-w-[200px] border-r border-b border-slate-300 align-middle uppercase pl-2 md:pl-5 text-slate-800 text-left border-t-0 rounded-tl-lg">NAMA KANTOR</th>`;
       }
 
       thContent += `
@@ -407,7 +417,7 @@
               <th class="px-2 md:px-3 border-r border-b border-slate-300 align-middle text-right w-[90px] md:w-[150px] uppercase text-orange-800 bg-[#dcedc8]">TOT RUN OFF</th>
               <th class="px-2 md:px-3 border-b border-slate-300 align-middle text-right w-[100px] md:w-[150px] uppercase text-slate-800 bg-[#dcedc8]">GROWTH</th>
           </tr>
-          <tr id="rowTotalAtas" class="text-[10px] md:text-xs font-extrabold tracking-wide head-lapis-2 bg-[#eff6ff]"></tr>
+          <tr id="rowTotalAtas" class="text-[10px] md:text-xs font-extrabold tracking-wide head-lapis-2"></tr>
       `;
       th.innerHTML = thContent;
   }
@@ -446,7 +456,7 @@
                   type: 'rekap_realisasi_growth', 
                   closing_date: document.getElementById('closing_date').value, 
                   harian_date: document.getElementById('harian_date').value, 
-                  kode_kantor: userKodeGlobal === '000' ? null : userKodeGlobal, // Payload sesuai kode user
+                  kode_kantor: userKodeGlobal === '000' ? null : userKodeGlobal,
                   korwil: null
               };
           } else {
@@ -507,23 +517,23 @@
           
           if (userKode === '000') {
               rowHtml += `
-                <td class="freeze-col-1 px-1.5 md:px-4 py-1.5 text-center font-mono font-bold text-slate-500 hidden md:table-cell bg-white">${r.kode_kantor}</td>
-                <td class="freeze-col-2 px-2 md:px-5 py-1.5 font-bold text-slate-700 text-left truncate bg-white" title="${r.nama_kantor}">${r.nama_kantor}</td>
+                <td class="freeze-col-1 w-[40px] md:w-[60px] min-w-[40px] md:min-w-[60px] max-w-[40px] md:max-w-[60px] px-1.5 md:px-4 py-1.5 text-center font-mono font-bold text-slate-500 hidden md:table-cell">${r.kode_kantor}</td>
+                <td class="freeze-col-2 px-2 md:px-5 py-1.5 font-bold text-slate-700 text-left truncate" title="${r.nama_kantor}">${r.nama_kantor}</td>
               `;
           } else {
               rowHtml += `
-                <td class="freeze-col-1 px-2 md:px-5 py-1.5 font-bold text-slate-700 text-left truncate bg-white" title="${r.nama_kantor}">${r.nama_kantor}</td>
+                <td class="freeze-col-1 px-2 md:px-5 py-1.5 font-bold text-slate-700 text-left truncate" title="${r.nama_kantor}">${r.nama_kantor}</td>
               `;
           }
 
-          // 🔥 FIX 3: Event Klik Detail CUMA di kolom NOA 🔥
+          // 🔥 FORMAT FULL NOMINAL (PAKAI fmt bukan fmtSingkat) 🔥
           rowHtml += `
-                <td class="px-1.5 md:px-4 py-1.5 text-center font-extrabold text-blue-600 cursor-pointer hover:bg-blue-50 hover:text-blue-800 transition border-r border-slate-100" onclick="initModalDetail('${r.kode_kantor}', '${r.nama_kantor}')" title="Klik untuk lihat detail">${fmt(noa_real)}</td>
-                <td class="px-2 md:px-4 py-1.5 text-right font-mono font-bold text-slate-800 border-r border-slate-100">${fmt(realisasi)}</td>
-                <td class="px-2 md:px-4 py-1.5 text-right font-mono font-bold text-emerald-700 border-r border-slate-100">${fmt(pelunasan)}</td>
-                <td class="px-2 md:px-4 py-1.5 text-right font-mono font-bold text-blue-700 border-r border-slate-100">${fmt(ang_murni)}</td>
-                <td class="px-2 md:px-4 py-1.5 text-right font-mono font-bold text-orange-700 border-r border-slate-100">${fmt(run_off)}</td>
-                <td class="px-2 md:px-4 py-1.5 text-right font-mono font-extrabold ${growthColor}">${fmt(growth)}</td>
+                <td class="px-1.5 md:px-4 py-1.5 text-center font-extrabold text-blue-600 cursor-pointer hover:bg-blue-50 hover:text-blue-800 transition border-r border-slate-100 bg-white" onclick="initModalDetail('${r.kode_kantor}', '${r.nama_kantor}')" title="Klik untuk lihat detail">${fmt(noa_real)}</td>
+                <td class="px-2 md:px-4 py-1.5 text-right font-mono font-bold text-slate-800 border-r border-slate-100 bg-white">${fmt(realisasi)}</td>
+                <td class="px-2 md:px-4 py-1.5 text-right font-mono font-bold text-emerald-700 border-r border-slate-100 bg-white">${fmt(pelunasan)}</td>
+                <td class="px-2 md:px-4 py-1.5 text-right font-mono font-bold text-blue-700 border-r border-slate-100 bg-white">${fmt(ang_murni)}</td>
+                <td class="px-2 md:px-4 py-1.5 text-right font-mono font-bold text-orange-700 border-r border-slate-100 bg-white">${fmt(run_off)}</td>
+                <td class="px-2 md:px-4 py-1.5 text-right font-mono font-extrabold ${growthColor} bg-white">${fmt(growth)}</td>
             </tr>`;
           html += rowHtml;
       });
@@ -535,22 +545,23 @@
 
           if (userKode === '000') {
               trTot.innerHTML = `
-                  <th class="freeze-col-1 px-1.5 md:px-4 border-r border-blue-300 text-center text-blue-900 font-extrabold hidden md:table-cell bg-[#eff6ff]">ALL</th>
-                  <th class="freeze-col-2 px-2 md:px-5 border-r border-blue-300 text-left uppercase tracking-widest font-extrabold text-[9px] md:text-sm text-blue-900 bg-[#eff6ff]">GRAND TOTAL</th>
+                  <th class="freeze-col-1 w-[40px] md:w-[60px] min-w-[40px] md:min-w-[60px] max-w-[40px] md:max-w-[60px] px-1.5 md:px-4 border-r border-blue-300 text-center text-blue-900 font-extrabold hidden md:table-cell">ALL</th>
+                  <th class="freeze-col-2 px-2 md:px-5 border-r border-blue-300 text-left uppercase tracking-widest font-extrabold text-[9px] md:text-sm text-blue-900">GRAND TOTAL</th>
               `;
           } else {
               trTot.innerHTML = `
-                  <th class="freeze-col-1 px-2 md:px-5 border-r border-blue-300 text-left uppercase tracking-widest font-extrabold text-[9px] md:text-sm text-blue-900 bg-[#eff6ff]">GRAND TOTAL</th>
+                  <th class="freeze-col-1 px-2 md:px-5 border-r border-blue-300 text-left uppercase tracking-widest font-extrabold text-[9px] md:text-sm text-blue-900">GRAND TOTAL</th>
               `;
           }
 
+          // 🔥 FORMAT FULL NOMINAL PADA GRAND TOTAL (PAKAI fmt) 🔥
           trTot.innerHTML += `
               <th class="px-1.5 md:px-4 border-r border-blue-300 text-center font-extrabold text-blue-900 align-middle bg-[#eff6ff]">${fmt(gt.noa_realisasi)}</th>
-              <th class="px-2 md:px-4 border-r border-blue-300 text-right font-mono font-bold text-blue-900 align-middle bg-[#eff6ff]" title="Rp ${fmt(gt.total_realisasi)}">${fmtSingkat(gt.total_realisasi)}</th>
-              <th class="px-2 md:px-4 border-r border-blue-300 text-right font-mono font-bold text-emerald-800 align-middle bg-[#eff6ff]" title="Rp ${fmt(gt.pelunasan)}">${fmtSingkat(gt.pelunasan)}</th>
-              <th class="px-2 md:px-4 border-r border-blue-300 text-right font-mono font-bold text-blue-800 align-middle bg-[#eff6ff]" title="Rp ${fmt(gt.angsuran_murni)}">${fmtSingkat(gt.angsuran_murni)}</th>
-              <th class="px-2 md:px-4 border-r border-blue-300 text-right font-mono font-bold text-orange-800 align-middle bg-[#eff6ff]" title="Rp ${fmt(gt.total_run_off)}">${fmtSingkat(gt.total_run_off)}</th>
-              <th class="px-2 md:px-4 text-right font-mono font-extrabold ${tGrowthColor} align-middle bg-[#eff6ff]" title="Rp ${fmt(gGrowth)}">${fmtSingkat(gGrowth)}</th>
+              <th class="px-2 md:px-4 border-r border-blue-300 text-right font-mono font-bold text-blue-900 align-middle bg-[#eff6ff]" title="Rp ${fmt(gt.total_realisasi)}">${fmt(gt.total_realisasi)}</th>
+              <th class="px-2 md:px-4 border-r border-blue-300 text-right font-mono font-bold text-emerald-800 align-middle bg-[#eff6ff]" title="Rp ${fmt(gt.pelunasan)}">${fmt(gt.pelunasan)}</th>
+              <th class="px-2 md:px-4 border-r border-blue-300 text-right font-mono font-bold text-blue-800 align-middle bg-[#eff6ff]" title="Rp ${fmt(gt.angsuran_murni)}">${fmt(gt.angsuran_murni)}</th>
+              <th class="px-2 md:px-4 border-r border-blue-300 text-right font-mono font-bold text-orange-800 align-middle bg-[#eff6ff]" title="Rp ${fmt(gt.total_run_off)}">${fmt(gt.total_run_off)}</th>
+              <th class="px-2 md:px-4 text-right font-mono font-extrabold ${tGrowthColor} align-middle bg-[#eff6ff]" title="Rp ${fmt(gGrowth)}">${fmt(gGrowth)}</th>
           `;
       }
   }
@@ -689,7 +700,6 @@
   // 🔥 MODAL DETAIL LOGIC 🔥
   // ==========================================
   async function initModalDetail(kode, nama) {
-      // 🔥 FIX 4: Check otentikasi ketat (001 tidak bisa buka 002) 🔥
       if (userKodeGlobal !== '000' && userKodeGlobal !== '099' && String(kode).padStart(3, '0') !== userKodeGlobal) {
           alert(`AKSES DITOLAK!\nAnda hanya memiliki izin untuk melihat detail Cabang ${userKodeGlobal}.`);
           return;
@@ -711,16 +721,16 @@
       `;
       
       mHead.innerHTML = `
-          <tr class="modal-head-1 bg-[#f1f5f9] text-blue-900 text-left md:text-center">
-              <th class="px-2 md:px-3 py-1.5 md:py-2 border-b border-r border-slate-300 w-[100px] md:w-[120px] mod-freeze-1 rounded-tl-lg bg-[#f1f5f9]">REKENING</th>
-              <th class="px-2 md:px-4 py-1.5 md:py-2 border-b border-r border-slate-300 w-[160px] md:w-[250px] mod-freeze-2 bg-[#f1f5f9]">NAMA NASABAH</th>
-              <th class="px-2 md:px-3 py-1.5 md:py-2 border-b border-r border-slate-300 w-[140px] md:w-[200px] bg-[#f1f5f9]">ALAMAT</th>
-              <th class="px-2 md:px-3 py-1.5 md:py-2 border-b border-r border-slate-300 w-[80px] md:w-[120px] text-center bg-[#f1f5f9]">KANKAS</th>
-              <th class="px-2 md:px-3 py-1.5 md:py-2 border-b border-r border-slate-300 w-[100px] md:w-[140px] bg-[#f1f5f9]">NAMA AO</th>
-              <th class="px-2 md:px-3 py-1.5 md:py-2 border-b border-r border-slate-300 w-[80px] md:w-[100px] text-center bg-[#f1f5f9]">TGL REK</th>
-              <th class="px-2 md:px-4 py-1.5 md:py-2 border-b border-slate-300 w-[100px] md:w-[160px] text-right bg-[#f1f5f9]">PLAFON</th>
+          <tr class="modal-head-1">
+              <th class="px-2 md:px-3 py-1.5 md:py-2 border-b border-r border-slate-300 w-[100px] md:w-[120px] mod-freeze-1 rounded-tl-lg">REKENING</th>
+              <th class="px-2 md:px-4 py-1.5 md:py-2 border-b border-r border-slate-300 w-[160px] md:w-[250px] mod-freeze-2">NAMA NASABAH</th>
+              <th class="px-2 md:px-3 py-1.5 md:py-2 border-b border-r border-slate-300 w-[140px] md:w-[200px]">ALAMAT</th>
+              <th class="px-2 md:px-3 py-1.5 md:py-2 border-b border-r border-slate-300 w-[80px] md:w-[120px] text-center">KANKAS</th>
+              <th class="px-2 md:px-3 py-1.5 md:py-2 border-b border-r border-slate-300 w-[100px] md:w-[140px]">NAMA AO</th>
+              <th class="px-2 md:px-3 py-1.5 md:py-2 border-b border-r border-slate-300 w-[80px] md:w-[100px] text-center">TGL REK</th>
+              <th class="px-2 md:px-4 py-1.5 md:py-2 border-b border-slate-300 w-[100px] md:w-[160px] text-right">PLAFON</th>
           </tr>
-          <tr id="rowTotalDetailAtas" class="modal-head-2 bg-[#eff6ff]"></tr>
+          <tr id="rowTotalDetailAtas" class="modal-head-2"></tr>
       `;
       
       document.getElementById('filter_kankas_modal').innerHTML = '<option value="">Semua Kankas</option>';
@@ -815,21 +825,21 @@
               const alamatLengkap = r.alamat || '-';
               const alamatPendek = alamatLengkap.length > 20 ? alamatLengkap.substring(0, 20) + '...' : alamatLengkap;
 
-              html += `<tr class="transition h-[40px] md:h-[46px] border-b border-slate-100 hover:bg-slate-50 text-left md:text-center">
-                    <td class="mod-freeze-1 px-2 md:px-3 py-1.5 font-mono text-[9px] md:text-[11px] text-slate-500 bg-white border-r border-slate-100 shadow-[inset_-1px_0_0_#e2e8f0] hover:bg-slate-50 text-left">${r.no_rekening}</td>
-                    <td class="mod-freeze-2 px-2 md:px-4 py-1.5 font-bold text-[9.5px] md:text-[11px] text-slate-700 bg-white truncate border-r border-slate-100 max-w-[160px] md:max-w-[250px] shadow-[inset_-1px_0_0_#e2e8f0] hover:bg-slate-50 text-left" title="${r.nama_nasabah}">${r.nama_nasabah}</td>
-                    <td class="px-2 md:px-3 py-1.5 text-[9px] md:text-[11px] text-slate-500 whitespace-nowrap border-r border-slate-100 text-left" title="${alamatLengkap}">${alamatPendek}</td>
-                    <td class="px-2 md:px-3 py-1.5 text-center font-mono text-[9px] md:text-[11px] text-slate-500 border-r border-slate-100">${r.nama_kankas||'-'}</td>
-                    <td class="px-2 md:px-3 py-1.5 text-[9px] md:text-[11px] font-bold text-blue-700 truncate border-r border-slate-100 text-left md:text-center">${r.nama_ao||'-'}</td>
-                    <td class="px-2 md:px-3 py-1.5 text-center font-mono text-[9px] md:text-[11px] text-slate-600 border-r border-slate-100">${r.tgl_realisasi}</td>
-                    <td class="px-2 md:px-4 py-1.5 text-right font-mono font-bold text-slate-800 text-[9.5px] md:text-[12px]">${fmt(r.plafond)}</td>
+              html += `<tr class="transition h-[40px] md:h-[46px] group border-b border-slate-100 hover:bg-slate-50 text-left md:text-center">
+                    <td class="mod-freeze-1 px-2 md:px-3 py-1.5 font-mono text-[9px] md:text-[11px] text-slate-500 border-r border-slate-100 shadow-[inset_-1px_0_0_#e2e8f0] text-left bg-white">${r.no_rekening}</td>
+                    <td class="mod-freeze-2 px-2 md:px-4 py-1.5 font-bold text-[9.5px] md:text-[11px] text-slate-700 truncate border-r border-slate-100 max-w-[160px] md:max-w-[250px] shadow-[inset_-1px_0_0_#e2e8f0] text-left bg-white" title="${r.nama_nasabah}">${r.nama_nasabah}</td>
+                    <td class="px-2 md:px-3 py-1.5 text-[9px] md:text-[11px] text-slate-500 whitespace-nowrap border-r border-slate-100 text-left bg-white" title="${alamatLengkap}">${alamatPendek}</td>
+                    <td class="px-2 md:px-3 py-1.5 text-center font-mono text-[9px] md:text-[11px] text-slate-500 border-r border-slate-100 bg-white">${r.nama_kankas||'-'}</td>
+                    <td class="px-2 md:px-3 py-1.5 text-[9px] md:text-[11px] font-bold text-blue-700 truncate border-r border-slate-100 text-left md:text-center bg-white">${r.nama_ao||'-'}</td>
+                    <td class="px-2 md:px-3 py-1.5 text-center font-mono text-[9px] md:text-[11px] text-slate-600 border-r border-slate-100 bg-white">${r.tgl_realisasi}</td>
+                    <td class="px-2 md:px-4 py-1.5 text-right font-mono font-bold text-slate-800 text-[9.5px] md:text-[12px] bg-white">${fmt(r.plafond)}</td>
                 </tr>`;
           });
           tb.innerHTML = html;
 
           trTot.innerHTML = `
-              <th class="mod-freeze-1 px-2 md:px-3 border-r border-b border-blue-200 text-center bg-[#eff6ff]">-</th>
-              <th class="mod-freeze-2 px-2 md:px-4 border-r border-b border-blue-200 uppercase tracking-widest font-extrabold text-[9px] md:text-[11px] text-blue-900 bg-[#eff6ff] text-left md:text-center">TOTAL HALAMAN INI</th>
+              <th class="mod-freeze-1 px-2 md:px-3 border-r border-b border-blue-200 text-center">-</th>
+              <th class="mod-freeze-2 px-2 md:px-4 border-r border-b border-blue-200 uppercase tracking-widest font-extrabold text-[9px] md:text-[11px] text-blue-900 text-left md:text-center">TOTAL HALAMAN INI</th>
               <th class="px-2 md:px-3 border-r border-b border-blue-200 text-center bg-[#eff6ff]">-</th>
               <th class="px-2 md:px-3 border-r border-b border-blue-200 text-center bg-[#eff6ff]">-</th>
               <th class="px-2 md:px-3 border-r border-b border-blue-200 text-center bg-[#eff6ff]">-</th>

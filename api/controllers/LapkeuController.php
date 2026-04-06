@@ -202,7 +202,522 @@ class LaporanKeuanganController
         }
     }
 
-        /**
+    /**
+     * =================================================================
+     * ENDPOINT: API TREN PERKIRAAN SPESIFIK (MtM & YtY)
+     * =================================================================
+     */
+    public function apiGetTrenPerkiraan(array $input) 
+    {
+        try {
+            $kodePerk = $input['kode_perk'] ?? '';
+            $baseDate = $input['harian_date'] ?? date('Y-m-d');
+            $kodeKantorReq = $input['kode_kantor'] ?? 'konsolidasi'; 
+
+            if (empty($kodePerk)) {
+                sendResponse(400, "Pilih Kode Perkiraan dulu broku!", null);
+                return;
+            }
+
+            // 1. Generate Tanggal Target Secara Dinamis
+            $baseDateObj = new DateTime($baseDate);
+            $targetDates = [];
+            $labelsMtM = [];
+            $labelsYtY = [];
+            
+            // A. Generate 4 Bulan Terakhir (MtM)
+            for ($i = 3; $i >= 0; $i--) {
+                $d = clone $baseDateObj;
+                $d->modify("first day of -$i month");
+                $d->modify('last day of this month');
+                if ($i == 0) $d = clone $baseDateObj; 
+                
+                $dtStr = $d->format('Y-m-d');
+                $targetDates[$dtStr] = true;
+                $labelsMtM[] = ['date' => $dtStr, 'label' => $d->format('M')];
+            }
+
+            // B. Generate 5 Tahun Terakhir (YtY) -> 31 Des
+            $currentYear = (int) $baseDateObj->format('Y');
+            for ($i = 4; $i >= 0; $i--) {
+                $targetYear = $currentYear - $i;
+                if ($i == 0) {
+                    $dtStr = $baseDateObj->format('Y-m-d');
+                } else {
+                    $dtStr = $targetYear . '-12-31';
+                }
+                $targetDates[$dtStr] = true;
+                $labelsYtY[] = ['date' => $dtStr, 'label' => (string)$targetYear];
+            }
+
+            $dateList = array_keys($targetDates);
+            $inQuery = implode(',', array_fill(0, count($dateList), '?'));
+
+            // 2. 🔥 PERBAIKAN LOGIKA FILTER KANTOR & PARAMETER PDO 🔥
+            $sqlKantor = "";
+            $params = $dateList; // Masukkan list tanggal ke parameter duluan
+
+            if (strtolower($kodeKantorReq) === 'konsolidasi') {
+                $sqlKantor = "AND LPAD(CAST(kode_kantor AS CHAR), 3, '0') BETWEEN '000' AND '028'";
+            } else {
+                $sqlKantor = "AND LPAD(CAST(kode_kantor AS CHAR), 3, '0') = ?";
+                $params[] = str_pad($kodeKantorReq, 3, '0', STR_PAD_LEFT); // Tambah param kantor
+            }
+
+            // 3. Tarik Data Historikal
+            if ($kodePerk === 'LABA_RUGI') {
+                $sql = "
+                    SELECT 
+                        tanggal,
+                        (
+                            SUM(CASE WHEN TRIM(CAST(kode_perk AS CHAR)) = '4' THEN saldo_akhir ELSE 0 END) -
+                            SUM(CASE WHEN TRIM(CAST(kode_perk AS CHAR)) = '5' THEN saldo_akhir ELSE 0 END)
+                        ) AS total_saldo
+                    FROM acc_history
+                    WHERE tanggal IN ($inQuery)
+                      $sqlKantor
+                    GROUP BY tanggal
+                ";
+                $namaAkun = "LABA RUGI BERJALAN (Pendapatan - Biaya)";
+                
+            } else {
+                $sql = "
+                    SELECT 
+                        tanggal,
+                        SUM(saldo_akhir) AS total_saldo
+                    FROM acc_history
+                    WHERE tanggal IN ($inQuery)
+                      $sqlKantor
+                      AND TRIM(CAST(kode_perk AS CHAR)) = ?
+                    GROUP BY tanggal
+                ";
+                
+                $params[] = $kodePerk; // Tambah param kode_perk terakhir
+                $coaDict = $this->getCoaDictionary();
+                $namaAkun = $coaDict[$kodePerk] ?? 'Nama Akun';
+            }
+
+            $stmt = $this->pdo->prepare($sql);
+            $stmt->execute($params);
+            $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+            // 4. Mapping Hasil Query
+            $dataMap = [];
+            foreach ($results as $row) {
+                $dataMap[$row['tanggal']] = (float) $row['total_saldo'];
+            }
+
+            $dataMtM = [];
+            foreach ($labelsMtM as $item) {
+                $dataMtM[] = ['label' => $item['label'], 'saldo' => $dataMap[$item['date']] ?? 0];
+            }
+
+            $dataYtY = [];
+            foreach ($labelsYtY as $item) {
+                $dataYtY[] = ['label' => $item['label'], 'saldo' => $dataMap[$item['date']] ?? 0];
+            }
+
+            $saldoSekarang = $dataMtM[3]['saldo'] ?? 0;
+            $saldoBulanLalu = $dataMtM[2]['saldo'] ?? 0;
+            $delta = $saldoSekarang - $saldoBulanLalu;
+            $persen = ($saldoBulanLalu != 0) ? ($delta / abs($saldoBulanLalu)) * 100 : ($saldoSekarang != 0 ? 100 : 0);
+            
+            $responseData = [
+                'summary' => [
+                    'kode_perk' => $kodePerk,
+                    'nama_perkiraan' => $namaAkun,
+                    'saldo_sekarang' => $saldoSekarang,
+                    'delta_nominal' => $delta,
+                    'pertumbuhan_persen' => round($persen, 2)
+                ],
+                'mtm' => $dataMtM,
+                'yty' => $dataYtY
+            ];
+
+            sendResponse(200, "Berhasil memuat tren data COA", $responseData);
+
+        } catch (Exception $e) {
+            sendResponse(500, "Gagal memuat tren: " . $e->getMessage(), null);
+        }
+    }
+
+    /**
+     * =================================================================
+     * ENDPOINT: API FINANCIAL KPI DASHBOARD
+     * (LDR, BOPO, CASA, ROA, ROE, Cash Ratio, Coverage Ratio, Top Biaya)
+     * =================================================================
+     */
+    public function apiGetFinancialKPI(array $input) 
+    {
+        try {
+            $baseDate = $input['harian_date'] ?? date('Y-m-d');
+            $kodeKantorReq = $input['kode_kantor'] ?? 'konsolidasi';
+
+            // 1. 🔥 FILTER KANTOR (Bisa dipakai u/ acc_history & nominatif) 🔥
+            $sqlKantorAcc = "";
+            $sqlKantorNom = "";
+            $params = [':tanggal' => $baseDate];
+
+            if (strtolower($kodeKantorReq) === 'konsolidasi') {
+                $sqlKantorAcc = "AND LPAD(CAST(kode_kantor AS CHAR), 3, '0') BETWEEN '000' AND '028'";
+                // Nominatif konsolidasi tidak perlu filter cabang
+            } else {
+                $sqlKantorAcc = "AND LPAD(CAST(kode_kantor AS CHAR), 3, '0') = :kode_kantor";
+                $sqlKantorNom = "AND LPAD(CAST(kode_cabang AS CHAR), 3, '0') = :kode_kantor";
+                $params[':kode_kantor'] = str_pad($kodeKantorReq, 3, '0', STR_PAD_LEFT);
+            }
+
+            // =========================================================
+            // QUERY 1: Hitung Semua Variabel dari ACC_HISTORY (Buku Besar)
+            // =========================================================
+            // Tambahan: '107' (CKPN Kredit) untuk hitung Coverage Ratio
+            $sqlRasio = "
+                SELECT 
+                    SUM(CASE WHEN TRIM(CAST(kode_perk AS CHAR)) = '1' THEN saldo_akhir ELSE 0 END) AS total_aset,
+                    SUM(CASE WHEN TRIM(CAST(kode_perk AS CHAR)) = '3' THEN saldo_akhir ELSE 0 END) AS total_ekuitas,
+                    SUM(CASE WHEN TRIM(CAST(kode_perk AS CHAR)) = '101' THEN saldo_akhir ELSE 0 END) AS kas,
+                    SUM(CASE WHEN TRIM(CAST(kode_perk AS CHAR)) = '104' THEN saldo_akhir ELSE 0 END) AS penempatan_bank,
+                    SUM(CASE WHEN TRIM(CAST(kode_perk AS CHAR)) = '201' THEN saldo_akhir ELSE 0 END) AS kewajiban_segera,
+                    SUM(CASE WHEN TRIM(CAST(kode_perk AS CHAR)) = '106' THEN saldo_akhir ELSE 0 END) AS kredit,
+                    SUM(CASE WHEN TRIM(CAST(kode_perk AS CHAR)) = '107' THEN saldo_akhir ELSE 0 END) AS ckpn_kredit,
+                    SUM(CASE WHEN TRIM(CAST(kode_perk AS CHAR)) = '20401' THEN saldo_akhir ELSE 0 END) AS tabungan,
+                    SUM(CASE WHEN TRIM(CAST(kode_perk AS CHAR)) = '20402' THEN saldo_akhir ELSE 0 END) AS deposito,
+                    SUM(CASE WHEN TRIM(CAST(kode_perk AS CHAR)) = '4' THEN saldo_akhir ELSE 0 END) AS total_pendapatan,
+                    SUM(CASE WHEN TRIM(CAST(kode_perk AS CHAR)) = '5' THEN saldo_akhir ELSE 0 END) AS total_biaya,
+                    SUM(CASE WHEN TRIM(CAST(kode_perk AS CHAR)) = '401' THEN saldo_akhir ELSE 0 END) AS pend_ops,
+                    SUM(CASE WHEN TRIM(CAST(kode_perk AS CHAR)) = '501' THEN saldo_akhir ELSE 0 END) AS biaya_ops
+                FROM acc_history
+                WHERE tanggal = :tanggal $sqlKantorAcc
+            ";
+            
+            $stmt1 = $this->pdo->prepare($sqlRasio);
+            $stmt1->execute($params);
+            $rasioData = $stmt1->fetch(PDO::FETCH_ASSOC);
+
+            // Ekstrak Nominal Acc History
+            $totalAset    = (float) ($rasioData['total_aset'] ?? 0);
+            $totalEkuitas = (float) ($rasioData['total_ekuitas'] ?? 0);
+            $kas          = (float) ($rasioData['kas'] ?? 0);
+            $penempatanBank = (float) ($rasioData['penempatan_bank'] ?? 0);
+            $kwjbnSegera  = (float) ($rasioData['kewajiban_segera'] ?? 0);
+            
+            $kredit       = (float) ($rasioData['kredit'] ?? 0);
+            // Saldo CKPN biasanya bernilai minus (kredit), jadi kita mutlakkan pakai abs()
+            $ckpnKredit   = abs((float) ($rasioData['ckpn_kredit'] ?? 0)); 
+            $tabungan     = (float) ($rasioData['tabungan'] ?? 0);
+            $deposito     = (float) ($rasioData['deposito'] ?? 0);
+            
+            $pendOps      = (float) ($rasioData['pend_ops'] ?? 0);
+            $biayaOps     = (float) ($rasioData['biaya_ops'] ?? 0);
+            
+            $labaBerjalan = ((float) ($rasioData['total_pendapatan'] ?? 0)) - ((float) ($rasioData['total_biaya'] ?? 0));
+            $dpk          = $tabungan + $deposito;
+            $alatLikuid   = $kas + $penempatanBank;
+
+            // =========================================================
+            // QUERY 2: Tarik Total NPL dari tabel NOMINATIF (Bocoran Broku)
+            // =========================================================
+            $sqlNPL = "
+                SELECT SUM(baki_debet) as total_npl
+                FROM nominatif
+                WHERE created = :tanggal 
+                  AND kolektibilitas IN ('KL', 'D', 'M')
+                  $sqlKantorNom
+            ";
+            $stmtNpl = $this->pdo->prepare($sqlNPL);
+            $stmtNpl->execute($params);
+            $nplData = $stmtNpl->fetch(PDO::FETCH_ASSOC);
+            $totalNpl = (float) ($nplData['total_npl'] ?? 0);
+
+
+            // =========================================================
+            // PERHITUNGAN RASIO KESEHATAN BANK
+            // =========================================================
+            $bopo = ($pendOps > 0) ? ($biayaOps / $pendOps) * 100 : 0;
+            $ldr  = ($dpk > 0) ? ($kredit / $dpk) * 100 : 0;
+            $casa = ($dpk > 0) ? ($tabungan / $dpk) * 100 : 0; 
+
+            // Disetahunkan (Annualized) untuk ROA & ROE
+            $currentMonth = (int) date('m', strtotime($baseDate));
+            $labaDisetahunkan = ($currentMonth > 0) ? ($labaBerjalan / $currentMonth) * 12 : $labaBerjalan;
+
+            $roa = ($totalAset > 0) ? ($labaDisetahunkan / $totalAset) * 100 : 0;
+            $roe = ($totalEkuitas > 0) ? ($labaDisetahunkan / $totalEkuitas) * 100 : 0;
+            $cashRatio = ($kwjbnSegera > 0) ? ($alatLikuid / $kwjbnSegera) * 100 : 0;
+            
+            // COVERAGE RATIO: CKPN vs NPL
+            $coverageRatio = ($totalNpl > 0) ? ($ckpnKredit / $totalNpl) * 100 : ($ckpnKredit > 0 ? 100 : 0);
+
+            // =========================================================
+            // QUERY 3: Cari Top 5 Biaya Terbesar (Leaf Node Filter)
+            // =========================================================
+            $sqlTopBiaya = "
+                SELECT 
+                    TRIM(CAST(kode_perk AS CHAR)) as kode, 
+                    SUM(saldo_akhir) as total_biaya
+                FROM acc_history
+                WHERE tanggal = :tanggal $sqlKantorAcc
+                  AND TRIM(CAST(kode_perk AS CHAR)) LIKE '5%'
+                GROUP BY TRIM(CAST(kode_perk AS CHAR))
+                HAVING SUM(saldo_akhir) > 0
+            ";
+            
+            $stmt2 = $this->pdo->prepare($sqlTopBiaya);
+            $stmt2->execute($params);
+            $allBiayaRaw = $stmt2->fetchAll(PDO::FETCH_ASSOC);
+
+            $allCodes = array_column($allBiayaRaw, 'kode');
+            $leafBiaya = [];
+            
+            foreach ($allBiayaRaw as $row) {
+                $kode = $row['kode'];
+                $isParent = false;
+                
+                foreach ($allCodes as $otherKode) {
+                    if ($kode !== $otherKode && strpos($otherKode, $kode) === 0) {
+                        $isParent = true;
+                        break;
+                    }
+                }
+                
+                if (!$isParent) {
+                    $leafBiaya[] = $row;
+                }
+            }
+
+            usort($leafBiaya, function($a, $b) {
+                return $b['total_biaya'] <=> $a['total_biaya']; 
+            });
+
+            $top5BiayaRaw = array_slice($leafBiaya, 0, 5);
+
+            $coaDict = $this->getCoaDictionary();
+            $topBiaya = [];
+            foreach($top5BiayaRaw as $row) {
+                $topBiaya[] = [
+                    'kode'    => $row['kode'],
+                    'nama'    => $coaDict[$row['kode']] ?? 'Biaya / Beban Lainnya',
+                    'nominal' => (float) $row['total_biaya']
+                ];
+            }
+
+            // =========================================================
+            // BUNGKUS KE DALAM RESPONSE JSON
+            // =========================================================
+            $responseData = [
+                'rasio' => [
+                    'bopo_persen'           => round($bopo, 2),
+                    'ldr_persen'            => round($ldr, 2),
+                    'casa_persen'           => round($casa, 2),
+                    'roa_persen'            => round($roa, 2),
+                    'roe_persen'            => round($roe, 2),
+                    'cash_ratio_persen'     => round($cashRatio, 2),
+                    'coverage_ratio_persen' => round($coverageRatio, 2), // ✨ INI DIA JAGOAN BARUNYA ✨
+                    
+                    'detail_nominal' => [
+                        'total_kredit'      => $kredit,
+                        'total_dpk'         => $dpk,
+                        'pend_operasional'  => $pendOps,
+                        'biaya_operasional' => $biayaOps,
+                        'laba_disetahunkan' => $labaDisetahunkan,
+                        'total_aset'        => $totalAset,
+                        'total_ekuitas'     => $totalEkuitas,
+                        'alat_likuid'       => $alatLikuid,
+                        'kewajiban_segera'  => $kwjbnSegera,
+                        'ckpn_kredit'       => $ckpnKredit,
+                        'total_npl'         => $totalNpl
+                    ]
+                ],
+                'top_5_biaya' => $topBiaya
+            ];
+
+            sendResponse(200, "Berhasil memuat KPI Kesehatan Bank (" . strtoupper($kodeKantorReq) . ")", $responseData);
+
+        } catch (Exception $e) {
+            sendResponse(500, "Gagal memuat KPI: " . $e->getMessage(), null);
+        }
+    }
+
+    /**
+     * =================================================================
+     * ENDPOINT: API SUMMARY PERBANDINGAN (Aktual vs M-1 vs Y-1)
+     * =================================================================
+     */
+    public function GetSummaryPerbandingan(array $input) 
+    {
+        try {
+            $baseDate = $input['harian_date'] ?? date('Y-m-d');
+            $kodeKantorReq = $input['kode_kantor'] ?? 'konsolidasi';
+
+            // 1. Tentukan 3 Titik Waktu
+            $baseDateObj = new DateTime($baseDate);
+            $dateCurrent = $baseDateObj->format('Y-m-d');
+
+            $dLastMonth = clone $baseDateObj;
+            $dLastMonth->modify('last day of previous month');
+            $dateLastMonth = $dLastMonth->format('Y-m-d');
+
+            $dLastYear = clone $baseDateObj;
+            $dLastYear->modify('-1 year');
+            $dateLastYear = $dLastYear->format('Y') . '-12-31';
+
+            // 2. Siapkan Filter Kantor
+            $sqlKantor = "";
+            $params = [$dateCurrent, $dateLastMonth, $dateLastYear];
+
+            if (strtolower($kodeKantorReq) === 'konsolidasi') {
+                $sqlKantor = "AND LPAD(CAST(kode_kantor AS CHAR), 3, '0') BETWEEN '000' AND '028'";
+            } else {
+                $sqlKantor = "AND LPAD(CAST(kode_kantor AS CHAR), 3, '0') = ?";
+                $params[] = str_pad($kodeKantorReq, 3, '0', STR_PAD_LEFT);
+            }
+
+            // 3. Query Super Cepat: Tarik Akun Makro (1-5) & Akun Mikro Pembentuk Rasio
+            $sql = "
+                SELECT 
+                    tanggal,
+                    SUM(CASE WHEN TRIM(CAST(kode_perk AS CHAR)) = '1' THEN saldo_akhir ELSE 0 END) AS aset,
+                    SUM(CASE WHEN TRIM(CAST(kode_perk AS CHAR)) = '2' THEN saldo_akhir ELSE 0 END) AS kewajiban,
+                    SUM(CASE WHEN TRIM(CAST(kode_perk AS CHAR)) = '3' THEN saldo_akhir ELSE 0 END) AS ekuitas,
+                    SUM(CASE WHEN TRIM(CAST(kode_perk AS CHAR)) = '4' THEN saldo_akhir ELSE 0 END) AS pendapatan,
+                    SUM(CASE WHEN TRIM(CAST(kode_perk AS CHAR)) = '5' THEN saldo_akhir ELSE 0 END) AS biaya,
+                    SUM(CASE WHEN TRIM(CAST(kode_perk AS CHAR)) = '106' THEN saldo_akhir ELSE 0 END) AS kredit,
+                    SUM(CASE WHEN TRIM(CAST(kode_perk AS CHAR)) = '20401' THEN saldo_akhir ELSE 0 END) AS tabungan,
+                    SUM(CASE WHEN TRIM(CAST(kode_perk AS CHAR)) = '20402' THEN saldo_akhir ELSE 0 END) AS deposito,
+                    SUM(CASE WHEN TRIM(CAST(kode_perk AS CHAR)) = '401' THEN saldo_akhir ELSE 0 END) AS pend_ops,
+                    SUM(CASE WHEN TRIM(CAST(kode_perk AS CHAR)) = '501' THEN saldo_akhir ELSE 0 END) AS biaya_ops
+                FROM acc_history
+                WHERE tanggal IN (?, ?, ?) $sqlKantor
+                GROUP BY tanggal
+            ";
+            
+            $stmt = $this->pdo->prepare($sql);
+            $stmt->execute($params);
+            $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+            // 4. Mapping Data berdasarkan Tanggal (Siapkan default 0)
+            $defaultData = [
+                'aset' => 0, 'kewajiban' => 0, 'ekuitas' => 0, 'pendapatan' => 0, 'biaya' => 0,
+                'kredit' => 0, 'tabungan' => 0, 'deposito' => 0, 'pend_ops' => 0, 'biaya_ops' => 0
+            ];
+
+            $dataMap = [
+                $dateCurrent   => $defaultData,
+                $dateLastMonth => $defaultData,
+                $dateLastYear  => $defaultData,
+            ];
+
+            foreach ($results as $row) {
+                $tgl = $row['tanggal'];
+                foreach ($defaultData as $key => $val) {
+                    $dataMap[$tgl][$key] = (float) $row[$key];
+                }
+            }
+
+            // 5. Fungsi Helper Buat Ngitung Pertumbuhan Nominal (%)
+            $calculateGrowth = function($current, $past) {
+                if ($past == 0) return $current > 0 ? 100 : 0;
+                return round((($current - $past) / abs($past)) * 100, 2);
+            };
+
+            // Fungsi Helper Buat Ngitung Rasio (Persentase Kesehatan)
+            $calculateRasio = function($data) {
+                $dpk = $data['tabungan'] + $data['deposito'];
+                return [
+                    'bopo' => ($data['pend_ops'] > 0) ? ($data['biaya_ops'] / $data['pend_ops']) * 100 : 0,
+                    'ldr'  => ($dpk > 0) ? ($data['kredit'] / $dpk) * 100 : 0,
+                    'casa' => ($dpk > 0) ? ($data['tabungan'] / $dpk) * 100 : 0,
+                ];
+            };
+
+            // 6. Format Response Makro (Nominal Aset, Laba Rugi, dll)
+            $kategori = ['aset', 'kewajiban', 'ekuitas', 'pendapatan', 'biaya'];
+            $summaryData = [];
+
+            foreach ($kategori as $kat) {
+                $valCurr  = $dataMap[$dateCurrent][$kat];
+                $valPrevM = $dataMap[$dateLastMonth][$kat];
+                $valPrevY = $dataMap[$dateLastYear][$kat];
+
+                $summaryData[$kat] = [
+                    'nominal_aktual'     => $valCurr,
+                    'nominal_bulan_lalu' => $valPrevM,
+                    'nominal_tahun_lalu' => $valPrevY,
+                    'growth_mom'         => $calculateGrowth($valCurr, $valPrevM),
+                    'growth_yoy'         => $calculateGrowth($valCurr, $valPrevY) 
+                ];
+            }
+
+            // Laba Rugi (Pendapatan - Biaya)
+            $lrCurr  = $dataMap[$dateCurrent]['pendapatan'] - $dataMap[$dateCurrent]['biaya'];
+            $lrPrevM = $dataMap[$dateLastMonth]['pendapatan'] - $dataMap[$dateLastMonth]['biaya'];
+            $lrPrevY = $dataMap[$dateLastYear]['pendapatan'] - $dataMap[$dateLastYear]['biaya'];
+
+            $summaryData['laba_rugi'] = [
+                'nominal_aktual'     => $lrCurr,
+                'nominal_bulan_lalu' => $lrPrevM,
+                'nominal_tahun_lalu' => $lrPrevY,
+                'growth_mom'         => $calculateGrowth($lrCurr, $lrPrevM),
+                'growth_yoy'         => $calculateGrowth($lrCurr, $lrPrevY)
+            ];
+
+            // 7. Format Response Rasio Kesehatan (Khusus Persentase)
+            $rasioCurr  = $calculateRasio($dataMap[$dateCurrent]);
+            $rasioPrevM = $calculateRasio($dataMap[$dateLastMonth]);
+            $rasioPrevY = $calculateRasio($dataMap[$dateLastYear]);
+
+            $rasioData = [];
+            foreach (['bopo', 'ldr', 'casa'] as $r) {
+                $rasioData[$r] = [
+                    'persen_aktual'     => round($rasioCurr[$r], 2),
+                    'persen_bulan_lalu' => round($rasioPrevM[$r], 2),
+                    'persen_tahun_lalu' => round($rasioPrevY[$r], 2),
+                    'delta_mom'         => round($rasioCurr[$r] - $rasioPrevM[$r], 2), 
+                    'delta_yoy'         => round($rasioCurr[$r] - $rasioPrevY[$r], 2)
+                ];
+            }
+
+            // 8. Rangkum Hasil
+            $responseData = [
+                'info_kantor'  => strtoupper($kodeKantorReq),
+                'info_tanggal' => [
+                    'aktual'     => $dateCurrent,
+                    'bulan_lalu' => $dateLastMonth,
+                    'tahun_lalu' => $dateLastYear
+                ],
+                'makro' => $summaryData,
+                'kesehatan_rasio' => $rasioData
+            ];
+
+            sendResponse(200, "Berhasil memuat Summary Perbandingan (" . strtoupper($kodeKantorReq) . ")", $responseData);
+
+        } catch (Exception $e) {
+            sendResponse(500, "Gagal memuat Summary: " . $e->getMessage(), null);
+        }
+    }
+
+    public function apiGetCoaList() 
+    {
+        try {
+            $coaDict = $this->getCoaDictionary();
+            $data = [];
+            
+            // Ubah format dari ['101' => 'Kas'] menjadi [['kode' => '101', 'nama' => 'Kas'], ...]
+            foreach ($coaDict as $kode => $nama) {
+                $data[] = [
+                    'kode' => (string)$kode,
+                    'nama' => $nama
+                ];
+            }
+
+            sendResponse(200, "Berhasil memuat daftar COA", $data);
+
+        } catch (Exception $e) {
+            sendResponse(500, "Gagal memuat daftar COA: " . $e->getMessage(), null);
+        }
+    }
+
+            /**
      * =================================================================
      * 1. KAMUS COA (Breakdown Nama Perkiraan)
      * =================================================================
