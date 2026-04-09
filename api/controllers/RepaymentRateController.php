@@ -406,10 +406,10 @@ class RepaymentRateController {
         $groupByCol = $isPusat ? 'kode_cabang' : 'kode_group1';
 
         // 1. QUERY M-1 (CLOSING)
-        // 🔥 FIX: Tambahkan kolektibilitas = 'L' di perhitungan lancar_os 🔥
+        // 🔥 FIX: all_noa diisi dengan jumlah rekening yang masuk kriteria Lancar/RR
         $sqlM1 = "SELECT 
                     $groupByCol as grp,
-                    COUNT(no_rekening) as all_noa,
+                    SUM(CASE WHEN COALESCE(hari_menunggak, 0) = 0 AND kolektibilitas = 'L' THEN 1 ELSE 0 END) as all_noa,
                     SUM(baki_debet) as all_os,
                     SUM(CASE WHEN COALESCE(hari_menunggak, 0) = 0 AND kolektibilitas = 'L' THEN baki_debet ELSE 0 END) as lancar_os
                   FROM nominatif
@@ -426,10 +426,10 @@ class RepaymentRateController {
         $dataM1 = $stmt1->fetchAll(PDO::FETCH_UNIQUE | PDO::FETCH_ASSOC);
 
         // 2. QUERY ACTUAL (HARIAN)
-        // 🔥 FIX: Tambahkan kolektibilitas = 'L' di perhitungan lancar_os 🔥
+        // 🔥 FIX: all_noa diisi dengan jumlah rekening yang masuk kriteria Lancar/RR
         $sqlCur = "SELECT 
                     $groupByCol as grp,
-                    COUNT(no_rekening) as all_noa,
+                    SUM(CASE WHEN COALESCE(hari_menunggak, 0) = 0 AND kolektibilitas = 'L' THEN 1 ELSE 0 END) as all_noa,
                     SUM(baki_debet) as all_os,
                     SUM(CASE WHEN COALESCE(hari_menunggak, 0) = 0 AND kolektibilitas = 'L' THEN baki_debet ELSE 0 END) as lancar_os
                    FROM nominatif
@@ -467,7 +467,7 @@ class RepaymentRateController {
         $grandTotal = [
             'm1_all_noa' => 0, 'm1_all_os' => 0, 'm1_lancar_os' => 0,
             'cur_all_noa' => 0, 'cur_all_os' => 0, 'cur_lancar_os' => 0,
-            'delta_noa' => 0, 'delta_os' => 0, 'delta_os_lancar' => 0, // Ditambahkan di inisialisasi awal
+            'delta_noa' => 0, 'delta_os' => 0, 'delta_os_lancar' => 0,
             'm1_pct' => 0, 'cur_pct' => 0, 'delta_pct' => 0
         ];
 
@@ -482,7 +482,6 @@ class RepaymentRateController {
             $m1AllOs = (float)$m1['all_os'];
             $curAllOs = (float)$cur['all_os'];
 
-            // Ekstrak nilai lancar_os untuk delta
             $m1LancarOs = (float)$m1['lancar_os'];
             $curLancarOs = (float)$cur['lancar_os'];
 
@@ -496,26 +495,26 @@ class RepaymentRateController {
                 
                 'm1_all_noa'    => (int)$m1['all_noa'],
                 'm1_all_os'     => $m1AllOs,
-                'm1_lancar_os'  => $m1LancarOs, // Munculkan lancar_os di data M-1
+                'm1_lancar_os'  => $m1LancarOs, 
                 'm1_pct'        => round($m1Pct, 2),
                 
                 'cur_all_noa'   => (int)$cur['all_noa'],
                 'cur_all_os'    => $curAllOs,
-                'cur_lancar_os' => $curLancarOs, // Munculkan lancar_os di data Actual
+                'cur_lancar_os' => $curLancarOs, 
                 'cur_pct'       => round($curPct, 2),
 
                 'delta_noa'       => (int)$cur['all_noa'] - (int)$m1['all_noa'],
                 'delta_os'        => $curAllOs - $m1AllOs,
-                'delta_os_lancar' => $curLancarOs - $m1LancarOs, // 🔥 INI PENAMBAHANNYA
+                'delta_os_lancar' => $curLancarOs - $m1LancarOs, 
                 'delta_pct'       => round($curPct - $m1Pct, 2)
             ];
 
             // Akumulasi Grand Total
-            $grandTotal['m1_all_noa']   += $m1['all_noa'];
+            $grandTotal['m1_all_noa']   += (int)$m1['all_noa'];
             $grandTotal['m1_all_os']    += $m1AllOs;
             $grandTotal['m1_lancar_os'] += $m1LancarOs;
 
-            $grandTotal['cur_all_noa']   += $cur['all_noa'];
+            $grandTotal['cur_all_noa']   += (int)$cur['all_noa'];
             $grandTotal['cur_all_os']    += $curAllOs;
             $grandTotal['cur_lancar_os'] += $curLancarOs;
         }
@@ -527,24 +526,21 @@ class RepaymentRateController {
         $gtM1Pct  = $grandTotal['m1_all_os'] > 0 ? ($grandTotal['m1_lancar_os'] / $grandTotal['m1_all_os']) * 100 : 0;
         $gtCurPct = $grandTotal['cur_all_os'] > 0 ? ($grandTotal['cur_lancar_os'] / $grandTotal['cur_all_os']) * 100 : 0;
 
-        $grandTotal['m1_pct']    = round($gtM1Pct, 2);
-        $grandTotal['cur_pct']   = round($gtCurPct, 2);
-        $grandTotal['delta_noa'] = $grandTotal['cur_all_noa'] - $grandTotal['m1_all_noa'];
-        $grandTotal['delta_os']  = $grandTotal['cur_all_os'] - $grandTotal['m1_all_os'];
-        
-        // 🔥 Tambahkan delta_os_lancar di Grand Total
+        $grandTotal['m1_pct']          = round($gtM1Pct, 2);
+        $grandTotal['cur_pct']         = round($gtCurPct, 2);
+        $grandTotal['delta_noa']       = $grandTotal['cur_all_noa'] - $grandTotal['m1_all_noa'];
+        $grandTotal['delta_os']        = $grandTotal['cur_all_os'] - $grandTotal['m1_all_os'];
         $grandTotal['delta_os_lancar'] = $grandTotal['cur_lancar_os'] - $grandTotal['m1_lancar_os'];
-        
-        $grandTotal['delta_pct'] = round($gtCurPct - $gtM1Pct, 2);
+        $grandTotal['delta_pct']       = round($gtCurPct - $gtM1Pct, 2);
 
         $this->send(200, "Sukses", [
             'meta' => [
-                'level' => $isPusat ? 'PUSAT' : 'CABANG',
+                'level'      => $isPusat ? 'PUSAT' : 'CABANG',
                 'label_kode' => $isPusat ? 'KODE CABANG' : 'KODE KANKAS',
                 'label_nama' => $isPusat ? 'NAMA CABANG' : 'NAMA KANKAS'
             ],
             'grand_total' => $grandTotal,
-            'data' => $finalData
+            'data'        => $finalData
         ]);
     }
 
