@@ -6,11 +6,12 @@
   
   /* === CONTROLS === */
   .inp { 
+      box-sizing: border-box;
       border: 1px solid #cbd5e1; border-radius: 0.5rem; padding: 0 0.5rem; 
       font-size: 13px; background: #fff; width: 100%; height: 36px; 
       min-width: 0; transition: all 0.2s; outline: none; color: #334155;
   }
-  .inp:focus { border-color: var(--primary); }
+  .inp:focus { border-color: var(--primary); outline: 2px solid #bfdbfe; }
   .inp:disabled { background-color: #f8fafc; color: #475569; font-weight: 600; cursor: not-allowed; border-color: #e2e8f0; }
   
   /* === DATEPICKER FIX === */
@@ -20,15 +21,6 @@
       position: absolute; top: 0; left: 0; right: 0; bottom: 0;
       width: 100%; height: 100%; opacity: 0; cursor: pointer;
   }
-
-  /* === ICON BUTTONS === */
-  .btn-icon { 
-      width: 38px; height: 36px; border-radius: 6px; 
-      background: var(--primary); color: white; border: none; cursor: pointer; 
-      display: inline-flex; align-items: center; justify-content: center; 
-      transition: 0.2s; flex-shrink: 0; box-shadow: 0 1px 2px rgba(37, 99, 235, 0.2);
-  }
-  .btn-icon:hover { background: #1d4ed8; }
 
   /* === TABLE CONTAINER === */
   #fpScroller {
@@ -85,11 +77,13 @@
 
   /* === MODAL STYLES === */
   #modalScroll { --colRek: 130px; --colNama: 200px; }
-  #modalTableFP { width: 100%; min-width: 1700px; }
+  #modalTableFP { width: 100%; min-width: 1700px; } 
   #modalTableFP th { position: sticky; top: 0; z-index: 30; background: #f8fafc; padding: 10px 12px; height: 40px; border-bottom: 1px solid #e2e8f0; font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; }
   #modalTableFP td { padding: 8px 12px; border-bottom: 1px solid #f1f5f9; color: #334155; font-size: 12px; }
-  .modal-freeze-1 { position: sticky; left: 0; z-index: 35; background: #fff; border-right: 1px solid #e2e8f0; width: var(--colRek); }
-  .modal-freeze-2 { position: sticky; left: var(--colRek); z-index: 34; background: #fff; border-right: 1px solid #e2e8f0; width: var(--colNama); }
+  
+  .modal-freeze-1 { position: sticky; left: 0; z-index: 35; background: #fff; border-right: 1px solid #e2e8f0; width: var(--colRek); min-width: var(--colRek); max-width: var(--colRek); }
+  .modal-freeze-2 { position: sticky; left: var(--colRek); z-index: 34; background: #fff; border-right: 1px solid #e2e8f0; width: var(--colNama); min-width: var(--colNama); max-width: var(--colNama); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  
   #modalTableFP th.modal-freeze-1 { z-index: 40; background: #f8fafc; }
   #modalTableFP th.modal-freeze-2 { z-index: 39; background: #f8fafc; }
   .modal-total-row td { position: sticky; top: 38px; z-index: 25; background: #f0f9ff; color: #0369a1; font-weight: bold; border-bottom: 1px solid #bae6fd; }
@@ -100,10 +94,7 @@
 
   /* === RESPONSIVE FIX (MOBILE) === */
   @media (max-width: 767px) {
-      #filterForm { flex-wrap: wrap; justify-content: flex-end; gap: 6px; }
-      .filter-box { flex: 1 1 30%; min-width: 100px; }
-      #opt_kantor_rec { font-size: 11px; padding: 0 4px; }
-      #closing_date, #harian_date { font-size: 11px; padding: 0 4px; text-align: center; width: 100%; }
+      #opt_kantor_rec, #closing_date, #harian_date { font-size: 12px; padding: 0 8px; text-align: left; width: 100%; }
 
       table { font-size: 11px; }
       th, td { padding: 6px 8px; }
@@ -121,47 +112,59 @@
 
 <div class="max-w-7xl mx-auto px-3 md:px-4 py-4 h-[calc(100vh-80px)] md:h-[calc(100vh-120px)] flex flex-col font-sans bg-slate-50">
 
-  <div class="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-4 shrink-0">
-    <div class="flex items-center justify-between">
+  <div class="flex flex-col md:flex-row md:items-start justify-between gap-4 mb-4 shrink-0">
+    
+    <div class="flex items-start justify-between w-full md:w-auto">
       <div>
         <h1 class="text-xl md:text-2xl font-bold flex items-center gap-2 text-slate-800">
             <span class="bg-blue-600 text-white p-1.5 rounded-lg text-sm md:text-base shadow-sm">📊</span> 
             <span>Rekap Flow PAR</span>
-            <span id="badgeUnit" class="ml-2 px-2 py-0.5 bg-blue-100 text-blue-800 text-[10px] uppercase font-bold rounded tracking-wider">MEMUAT...</span>
+            <span id="badgeUnit" class="hidden"></span>
         </h1>
         <p class="text-[10px] md:text-xs text-slate-500 mt-1 ml-1 font-medium">*Data Posisi Closing vs Harian</p>
       </div>
-      <div id="loadingMini" class="hidden md:hidden animate-spin h-5 w-5 border-2 border-blue-600 border-t-transparent rounded-full"></div>
+      
+      <button id="btnToggleFilter" class="md:hidden flex items-center gap-1.5 px-3 py-1.5 border border-gray-300 rounded-lg bg-white text-sm font-semibold text-slate-700 shadow-sm hover:bg-gray-50 focus:outline-none transition">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon></svg>
+          Filter
+      </button>
     </div>
 
-    <form id="filterForm" class="flex flex-row flex-wrap md:flex-nowrap items-end gap-2 md:gap-3 w-full md:w-auto">
-      
-      <div class="filter-box flex flex-col md:w-[190px]">
-          <label class="text-[9px] md:text-[10px] font-bold text-slate-500 uppercase ml-1 mb-1 tracking-wider">Kantor</label>
-          <select id="opt_kantor_rec" class="inp font-medium text-slate-700 shadow-sm" title="Pilih Kantor"><option value="">Memuat...</option></select>
-      </div>
+    <div id="filterPanel" class="hidden md:block bg-white border border-gray-200 rounded-xl p-3 shadow-sm w-full md:w-auto transition-all origin-top">
+      <form id="filterForm" class="flex flex-col md:flex-row items-end gap-2 md:gap-3 w-full">
+        
+        <div class="flex gap-2 w-full md:w-auto shrink-0">
+            <div class="flex flex-col w-1/2 md:w-[130px]">
+                <label class="text-[10px] font-extrabold text-slate-500 uppercase ml-1 mb-1 tracking-wider">CLOSING (M-1)</label>
+                <input type="date" id="closing_date" class="inp shadow-sm" required>
+            </div>
+            
+            <div class="flex flex-col w-1/2 md:w-[130px]">
+                <label class="text-[10px] font-extrabold text-slate-500 uppercase ml-1 mb-1 tracking-wider">ACTUAL (HARIAN)</label>
+                <input type="date" id="harian_date" class="inp shadow-sm" required>
+            </div>
+        </div>
 
-      <div class="filter-box flex flex-col md:w-[130px]">
-          <label class="text-[9px] md:text-[10px] font-bold text-slate-500 uppercase ml-1 mb-1 tracking-wider">Closing Date</label>
-          <input type="date" id="closing_date" class="inp shadow-sm" required>
-      </div>
-      
-      <div class="filter-box flex flex-col md:w-[130px]">
-          <label class="text-[9px] md:text-[10px] font-bold text-slate-500 uppercase ml-1 mb-1 tracking-wider">Actual Date</label>
-          <input type="date" id="harian_date" class="inp shadow-sm" required>
-      </div>
-      
-      <div class="filter-actions flex items-center gap-2">
-        <button type="submit" class="btn-icon bg-blue-600 hover:bg-blue-700" title="Cari Data">
-          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-        </button>
-        <button type="button" onclick="exportFlowParExcel()" class="btn-icon bg-blue-600 hover:bg-blue-700" title="Download Excel">
-          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
-        </button>
-      </div>
-    </form>
+        <div class="flex gap-2 w-full md:w-auto md:flex-1 items-end">
+            <div class="flex flex-col flex-1 min-w-[120px] md:w-[220px]">
+                <label class="text-[10px] font-extrabold text-slate-500 uppercase ml-1 mb-1 tracking-wider">CABANG</label>
+                <select id="opt_kantor_rec" class="inp font-medium text-slate-700 shadow-sm truncate"><option value="">Memuat...</option></select>
+            </div>
+            
+            <div class="flex items-center gap-2 shrink-0">
+              <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white h-9 px-3 md:px-4 rounded-lg font-bold text-sm shadow-sm flex items-center justify-center gap-1.5 transition" title="Cari Data">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                <span>CARI</span>
+              </button>
+              <button type="button" onclick="exportFlowParExcel()" class="bg-emerald-600 hover:bg-emerald-700 text-white h-9 w-10 md:w-11 rounded-lg font-bold text-sm shadow-sm flex items-center justify-center shrink-0 transition" title="Download Excel">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+              </button>
+            </div>
+        </div>
+
+      </form>
+    </div>
   </div>
-
   <div class="flex-1 min-h-0 relative flex flex-col">
     <div id="loadingFP" class="hidden absolute inset-0 bg-white/80 z-[100] flex flex-col items-center justify-center text-blue-600 font-bold backdrop-blur-sm rounded-lg">
        <div class="animate-spin h-10 w-10 border-4 border-blue-200 border-t-blue-600 rounded-full mb-3"></div>
@@ -187,24 +190,45 @@
 
 <div id="modalDebiturFlowPar" class="fixed inset-0 hidden bg-slate-900/60 backdrop-blur-sm items-center justify-center z-[9999] px-2 md:px-4">
   <div id="modalCardFP" class="bg-white rounded-xl shadow-2xl flex flex-col w-full max-w-[1400px] h-[90vh] overflow-hidden animate-scale-up">
-    <div class="flex flex-col md:flex-row md:items-center justify-between p-3 md:p-4 border-b border-slate-100 bg-slate-50 shrink-0 gap-3">
-      <div>
-        <h3 class="font-bold text-slate-800 text-base md:text-xl flex items-center gap-2">
-            📄 <span id="modalTitleFlowPar" class="truncate max-w-[250px] md:max-w-none">Detail Debitur</span>
-        </h3>
-        <p class="text-[10px] md:text-xs text-slate-500 mt-1" id="modalSubtitleFP">Posisi: -</p>
-      </div>
-      
-      <div class="flex items-center gap-2">
-          <select id="modalFilterKankas" class="inp !h-9 !py-0 text-xs w-[130px] md:w-[180px] font-medium text-slate-700 shadow-sm" onchange="fetchDetailFlowPar()">
-              <option value="">Semua Kankas</option>
-          </select>
-          <button onclick="exportDetailExcel()" class="h-9 px-3 bg-green-600 hover:bg-green-700 text-white rounded-lg text-xs font-bold transition shadow-sm flex items-center gap-1" title="Export Excel Detail">
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
-              <span class="hidden md:inline">Excel</span>
-          </button>
-          <button id="btnCloseFP" class="w-9 h-9 flex items-center justify-center rounded-lg bg-slate-200 hover:bg-red-100 hover:text-red-600 transition text-slate-600 font-bold">✕</button>
-      </div>
+    
+    <div class="flex flex-col border-b border-slate-100 bg-slate-50 shrink-0">
+        <div class="flex items-center justify-between p-3 md:p-4">
+            <div>
+                <h3 class="font-bold text-slate-800 text-base md:text-xl flex items-center gap-2">
+                    📄 <span id="modalTitleFlowPar" class="truncate max-w-[250px] md:max-w-none">Detail Debitur</span>
+                </h3>
+                <p class="text-[10px] md:text-xs text-slate-500 mt-1" id="modalSubtitleFP">Posisi: -</p>
+            </div>
+            
+            <div class="flex items-center gap-2">
+                <button id="btnToggleModalFilter" class="md:hidden flex items-center gap-1.5 px-3 py-1.5 border border-gray-300 rounded-lg bg-white text-xs font-semibold text-slate-700 shadow-sm hover:bg-gray-50 focus:outline-none transition">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon></svg>
+                    Filter
+                </button>
+                <button id="btnCloseFP" class="w-8 h-8 md:w-9 md:h-9 flex items-center justify-center rounded-lg bg-slate-200 hover:bg-red-100 hover:text-red-600 transition text-slate-600 font-bold">✕</button>
+            </div>
+        </div>
+        
+        <div id="modalFilterPanel" class="hidden md:flex flex-col md:flex-row items-stretch md:items-center justify-end gap-2 px-3 pb-3 md:px-4 md:pt-0 md:pb-4 transition-all">
+            
+            <div class="flex flex-row items-center gap-2 w-full md:w-auto">
+                <select id="modalFilterKankas" class="inp !h-9 !py-0 text-xs w-full md:w-[250px] font-medium text-slate-700 shadow-sm" onchange="fetchDetailFlowPar()">
+                    <option value="">Semua Kankas</option>
+                </select>
+                
+                <div class="flex gap-2 shrink-0">
+                    <button onclick="gotoUpdateFlowPar()" class="h-9 px-4 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-bold transition shadow-sm flex items-center justify-center gap-1.5" title="Update Flow PAR">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>
+                        <span>Update</span>
+                    </button>
+
+                    <button onclick="exportDetailExcel()" class="h-9 px-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold transition shadow-sm flex items-center justify-center gap-1.5" title="Export Excel Detail">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                        <span>Excel</span>
+                    </button>
+                </div>
+            </div>
+        </div>
     </div>
     
     <div class="flex-1 overflow-auto bg-white relative" id="modalScroll">
@@ -226,6 +250,8 @@
                     <th class="text-right w-[120px]">Angs. Bunga</th>
                     <th class="text-center w-[100px]">Tgl Trans</th>
                     <th class="text-left w-[180px]">Komitmen</th>
+                    <th class="text-center w-[110px]">Tgl Janji Bayar</th>
+                    <th class="text-right w-[130px]">Nominal Janji Bayar</th>
                 </tr>
             </thead>
             <tbody id="modalTotalRow"></tbody> 
@@ -276,6 +302,18 @@
   let currentDetailKode = ''; 
   let fpAbort;
 
+  // TOGGLE FILTER MOBILE LOGIC (Main Page)
+  document.getElementById('btnToggleFilter').addEventListener('click', function() {
+      const panel = document.getElementById('filterPanel');
+      panel.classList.toggle('hidden');
+  });
+
+  // TOGGLE FILTER MOBILE LOGIC (Modal)
+  document.getElementById('btnToggleModalFilter').addEventListener('click', function() {
+      const panel = document.getElementById('modalFilterPanel');
+      panel.classList.toggle('hidden');
+  });
+
   // Header Sticky Adjuster
   function updateFpStickyHeader() {
       const thead = document.getElementById('theadFP');
@@ -288,18 +326,12 @@
 
   // --- INIT ---
   window.addEventListener('DOMContentLoaded', async () => {
-    
-    // 1. AMBIL USER LOGIN (LOGIC SAMA PERSIS SEPERTI KOLEKTIBILITAS)
     const user = (window.getUser && window.getUser()) || null;
     const uKode = user?.kode ? String(user.kode).padStart(3,'0') : '000';
     window.currentUser = { kode: uKode };
 
-    document.getElementById('badgeUnit').innerText = (uKode === '000') ? 'KONSOLIDASI' : `CABANG ${uKode}`;
-
-    // 2. Populate Dropdown Kantor (Sesuai User)
     await populateKantorOptionsFP(uKode);
 
-    // 3. Load Tanggal Default & Tarik Data Awal
     try { 
         const res = await fetch('./api/date/');
         const j = await res.json();
@@ -322,15 +354,13 @@
   async function populateKantorOptionsFP(userKode){
       const optKantor = document.getElementById('opt_kantor_rec');
 
-      // JIKA KODE ADA ISINYA DAN BUKAN '000' (Berarti Cabang) -> KUNCI DROPDOWN
       if(userKode && userKode !== '000'){
           optKantor.innerHTML = `<option value="${userKode}">CABANG ${userKode}</option>`;
           optKantor.value = userKode;
-          optKantor.disabled = true; // KUNCI!
+          optKantor.disabled = true;
           return; 
       }
 
-      // JIKA PUSAT -> BUKA SEMUA
       try {
           const res = await fetch('./api/kode/', { 
               method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({type:'kode_kantor'}) 
@@ -338,7 +368,7 @@
           const json = await res.json();
           let list = json.data || [];
           
-          let html = `<option value="">KONSOLIDASI (SEMUA)</option>`;
+          let html = `<option value="">ALL | SEMUA CABANG</option>`;
           list.filter(x => x.kode_kantor !== '000').sort((a,b) => String(a.kode_kantor).localeCompare(b.kode_kantor)).forEach(it => {
               html += `<option value="${String(it.kode_kantor).padStart(3,'0')}">${String(it.kode_kantor).padStart(3,'0')} - ${it.nama_kantor}</option>`;
           });
@@ -355,14 +385,19 @@
     currentFilter.closing = document.getElementById('closing_date').value;
     currentFilter.harian  = document.getElementById('harian_date').value;
     sortState = { column:null, direction:1 }; 
+    
+    // Auto tutup filter di mobile setelah di submit
+    if(window.innerWidth < 768) {
+        document.getElementById('filterPanel').classList.add('hidden');
+    }
+
     fetchFlowPar();
   });
 
   // --- FETCH REKAP ---
   async function fetchFlowPar(){
     const loading = document.getElementById('loadingFP');
-    const loadingMini = document.getElementById('loadingMini');
-    loading.classList.remove('hidden'); loadingMini.classList.remove('hidden');
+    loading.classList.remove('hidden'); 
 
     if(fpAbort) fpAbort.abort();
     fpAbort = new AbortController();
@@ -371,9 +406,8 @@
     const ttotal = document.getElementById('fpTotalRow');
     tbody.innerHTML = ''; ttotal.innerHTML = '';
 
-    // Ambil parameter dari Dropdown Utama
     const kantor = document.getElementById('opt_kantor_rec').value || '';
-    document.getElementById('thNamaFP').innerText = (kantor !== '') ? "NAMA KANKAS" : "NAMA KANTOR";
+    document.getElementById('thNamaFP').innerText = "NAMA KANTOR";
 
     try {
         const payload = { 
@@ -393,7 +427,6 @@
         let data = [];
         let totalRow = null;
 
-        // PARSING JSON DATA
         if(json.data && json.data.data && json.data.grand_total) {
             data = json.data.data; 
             totalRow = json.data.grand_total;
@@ -416,7 +449,7 @@
             tbody.innerHTML = `<tr><td colspan="4" class="p-8 text-center text-red-500 font-bold bg-red-50">Gagal memuat data.</td></tr>`;
         }
     } finally {
-        loading.classList.add('hidden'); loadingMini.classList.add('hidden');
+        loading.classList.add('hidden'); 
         setTimeout(updateFpStickyHeader, 50);
     }
   }
@@ -426,9 +459,8 @@
       const el = document.getElementById('fpTotalRow');
       if(!tot) return;
 
-      // Logic: Target Modal = Value dari dropdown kantor saat ini.
       const dropVal = document.getElementById('opt_kantor_rec').value || '';
-      const targetKode = dropVal !== '' ? dropVal : '000'; // 000 = Konsolidasi Semua
+      const targetKode = dropVal !== '' ? dropVal : '000'; 
 
       const linkClass = num(tot.noa_flow) > 0 
           ? "text-blue-700 font-bold hover:bg-blue-100 hover:text-blue-900 px-2 py-1 rounded transition cursor-pointer underline decoration-blue-300 underline-offset-2" 
@@ -471,7 +503,6 @@
           `;
       }).join('');
 
-      // Spacer
       tbody.innerHTML += `<tr style="height: 60px;"><td colspan="4" class="border-none bg-transparent"></td></tr>`;
   }
 
@@ -545,11 +576,8 @@
 
   window.checkAccessAndOpenModal = function(targetKode) {
       const userKode = window.currentUser.kode;
-      
-      // Ambil 3 digit pertama untuk mengecek kepemilikan Cabang
       const targetCabang = targetKode.length >= 3 ? targetKode.substring(0,3) : targetKode; 
       
-      // PROTEKSI: Tolak akses jika user cabang buka data cabang lain
       if (userKode !== '000' && userKode !== targetCabang) {
           document.getElementById('warnUserLvl').innerText = `Unit ${userKode}`;
           document.getElementById('warnTargetLvl').innerText = `Unit ${targetCabang}`;
@@ -562,11 +590,10 @@
   };
 
   async function openModalDetail(kode){
-      // Pisahkan cabang utama (3 digit) dan kankas (6 digit)
       const targetCabang = kode.length >= 3 ? kode.substring(0,3) : kode;
       const targetKankas = kode.length > 3 ? kode : '';
       
-      currentDetailKode = targetCabang; // Kirim API sebagai kode_kantor (3 digit)
+      currentDetailKode = targetCabang; 
       
       const modal = document.getElementById('modalDebiturFlowPar');
       const title = document.getElementById('modalTitleFlowPar');
@@ -577,7 +604,6 @@
       title.innerHTML = `Detail Debitur <span class="ml-2 px-2 py-0.5 bg-blue-100 text-blue-800 text-xs rounded font-mono border border-blue-200">${titleLabel}</span>`;
       sub.innerText = `Posisi: ${formatDate(currentFilter.closing)} vs ${formatDate(currentFilter.harian)}`;
       
-      // --- LOAD DROPDOWN KANKAS DI MODAL ---
       const selKankas = document.getElementById('modalFilterKankas');
       selKankas.innerHTML = '<option value="">Semua Kankas</option>';
       
@@ -587,13 +613,18 @@
               const r = await fetch('./api/kode/', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({type:'kode_kankas', kode_kantor:targetCabang}) });
               const j = await r.json();
               (j.data||[]).forEach(k => { 
-                  // Jika yang diklik adalah baris kankas spesifik, dropdown otomatis pilih kankas tsb
                   const isSelected = (targetKankas === k.kode_group1) ? 'selected' : '';
                   selKankas.innerHTML += `<option value="${k.kode_group1}" ${isSelected}>${k.kode_group1} - ${k.deskripsi_group1}</option>`; 
               });
           } catch(e){}
       } else {
-          selKankas.classList.add('hidden'); // Kalau konsolidasi, hide filter kankas
+          selKankas.classList.add('hidden');
+      }
+
+      // Auto close modal filter on mobile when opening
+      if(window.innerWidth < 768) {
+          const mPanel = document.getElementById('modalFilterPanel');
+          if(mPanel) mPanel.classList.add('hidden');
       }
 
       fetchDetailFlowPar();
@@ -604,7 +635,12 @@
       const ttot  = document.getElementById('modalTotalRow');
       const kankas = document.getElementById('modalFilterKankas').value || ''; 
 
-      tbody.innerHTML = `<tr><td colspan="15" class="p-12 text-center"><div class="animate-spin h-8 w-8 border-4 border-slate-200 border-t-blue-600 rounded-full mx-auto mb-3"></div><span class="text-slate-500 font-medium">Sedang mengambil data...</span></td></tr>`;
+      // Auto tutup filter di mobile setelah fetch (change dropdown)
+      if(window.innerWidth < 768) {
+          document.getElementById('modalFilterPanel').classList.add('hidden');
+      }
+
+      tbody.innerHTML = `<tr><td colspan="17" class="p-12 text-center"><div class="animate-spin h-8 w-8 border-4 border-slate-200 border-t-blue-600 rounded-full mx-auto mb-3"></div><span class="text-slate-500 font-medium">Sedang mengambil data...</span></td></tr>`;
       ttot.innerHTML = '';
 
       try {
@@ -624,7 +660,7 @@
           const list = Array.isArray(json.data) ? json.data : [];
           detailDataRaw = list; 
 
-          if(list.length === 0){ tbody.innerHTML = `<tr><td colspan="15" class="p-10 text-center text-slate-400">Data tidak ditemukan.</td></tr>`; return; }
+          if(list.length === 0){ tbody.innerHTML = `<tr><td colspan="17" class="p-10 text-center text-slate-400">Data tidak ditemukan.</td></tr>`; return; }
 
           const refDate = currentFilter.harian ? new Date(currentFilter.harian) : new Date();
           const eom = endOfMonth(refDate) || endOfMonth(new Date());
@@ -666,6 +702,8 @@
                     <td class="text-right text-xs text-slate-500">${fmtNom(d.angsuran_bunga)}</td>
                     <td class="text-center text-xs text-slate-500">${d.tgl_trans ? formatDate(d.tgl_trans) : '-'}</td>
                     <td class="text-left text-xs text-slate-500 truncate max-w-[150px]" title="${d.komitmen}">${d.komitmen||'-'}</td>
+                    <td class="text-center text-xs font-semibold text-slate-600">${d.tgl_pembayaran ? formatDate(d.tgl_pembayaran) : '-'}</td>
+                    <td class="text-right text-xs font-semibold text-slate-600">${fmtNom(d.nominal)}</td>
                 </tr>
               `;
           }).join('');
@@ -682,13 +720,13 @@
                 <td colspan="4"></td>
                 <td class="text-right">${fmtNom(totals.ap)}</td>
                 <td class="text-right">${fmtNom(totals.ab)}</td>
-                <td colspan="2"></td>
+                <td colspan="4"></td> 
             </tr>
           `;
           tbody.innerHTML = rowsHtml;
 
       } catch(e){
-          console.error(e); tbody.innerHTML = `<tr><td colspan="15" class="p-10 text-center text-red-500">Gagal load data.</td></tr>`;
+          console.error(e); tbody.innerHTML = `<tr><td colspan="17" class="p-10 text-center text-red-500">Gagal load data.</td></tr>`;
       }
   }
 
@@ -714,6 +752,8 @@
                   <th style="background-color:#f1f5f9;">ANGS. BUNGA</th>
                   <th style="background-color:#f1f5f9;">TGL TRANS</th>
                   <th style="background-color:#f1f5f9;">KOMITMEN</th>
+                  <th style="background-color:#f1f5f9;">TGL JANJI BAYAR</th>
+                  <th style="background-color:#f1f5f9;">NOMINAL JANJI BAYAR</th>
               </tr>
           </thead>
           <tbody>`;
@@ -736,6 +776,8 @@
               <td>${d.angsuran_bunga}</td>
               <td>${d.tgl_trans || ''}</td>
               <td>${d.komitmen || ''}</td>
+              <td>${d.tgl_pembayaran || ''}</td>
+              <td>${d.nominal || ''}</td>
           </tr>`;
       });
       table += `</tbody></table>`;
@@ -751,7 +793,21 @@
       document.body.appendChild(a); a.click(); document.body.removeChild(a);
   }
 
-  const closeModal = () => { document.getElementById('modalDebiturFlowPar').classList.add('hidden'); document.getElementById('modalDebiturFlowPar').classList.remove('flex'); };
-  document.getElementById('btnCloseFP').onclick = closeModal;
-  document.addEventListener('keydown', e => { if(e.key === 'Escape') closeModal(); });
+  // --- TRIGGER UPDATE BULK (TOMBOL UPDATE DI ATAS) ---
+  window.gotoUpdateFlowPar = function() {
+      const selectedKankas = document.getElementById('modalFilterKankas').value || '';
+      const payload = {
+          kode_kantor: currentDetailKode === '000' ? '' : currentDetailKode,
+          kode_kankas: selectedKankas, 
+          closing_date: currentFilter.closing,
+          harian_date: currentFilter.harian
+      };
+      sessionStorage.setItem("flowpar_update", JSON.stringify(payload));
+      window.location.href = './update_flowpar'; 
+  };
+
+  document.getElementById('btnCloseFP').onclick = () => {
+    document.getElementById('modalDebiturFlowPar').classList.add('hidden'); 
+    document.getElementById('modalDebiturFlowPar').classList.remove('flex');
+  };
 </script>

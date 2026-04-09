@@ -1,400 +1,234 @@
-<!-- 25 NPL Terbesar — dropdown role-aware (ikut kode_kantor user; 000 bisa semua) -->
-<div class="max-w-7xl mx-auto px-4 py-6 h-screen flex flex-col">
-  <div class="flex items-center justify-between mb-2">
-    <h1 class="text-2xl font-bold flex items-center gap-2">
-      <span>🔥</span><span>25 Debitur Terbesar NPL</span>
-    </h1>
+<div class="max-w-7xl mx-auto px-4 py-4 h-screen flex flex-col font-sans bg-slate-50">
+  
+  <div class="flex flex-col md:flex-row md:items-start justify-between gap-4 mb-3 shrink-0">
+    <div class="flex items-start justify-between w-full md:w-auto">
+      <div>
+        <h1 class="text-xl md:text-2xl font-bold flex items-center gap-2 text-slate-800">
+          <span>🔥</span><span>25 Debitur Terbesar NPL</span>
+        </h1>
+        <p class="text-[10px] md:text-xs text-slate-500 mt-1 ml-1 font-medium">
+          *Berdasarkan posisi Nominatif Closing Bulan Lalu
+        </p>
+      </div>
+
+      <button id="btnToggleNplFilter" class="md:hidden flex items-center gap-1.5 px-3 py-1.5 border border-gray-300 rounded-lg bg-white text-sm font-semibold text-slate-700 shadow-sm hover:bg-gray-50 focus:outline-none transition">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon></svg>
+          Filter
+      </button>
+    </div>
+
+    <div id="filterPanelNpl" class="hidden md:block bg-white border border-gray-200 rounded-xl p-3 shadow-sm w-full md:w-auto transition-all origin-top">
+      <form id="formFilterTopNpl" class="flex flex-row items-center gap-3 w-full">
+        <div class="flex flex-col flex-1 md:w-[250px]">
+            <label class="text-[10px] font-extrabold text-slate-500 uppercase ml-1 mb-1 tracking-wider">PILIH KANTOR</label>
+            <select id="selCabangNpl" class="inp font-medium text-slate-700 shadow-sm truncate h-9">
+              <option value="">konsolidasi</option>
+            </select>
+        </div>
+        
+        <div class="flex items-end h-full pt-5">
+          <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white h-9 w-10 md:w-11 rounded-lg font-bold shadow-sm flex items-center justify-center transition" title="Tampilkan Data">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+          </button>
+        </div>
+      </form>
+    </div>
   </div>
 
-  <!-- Toolbar -->
-  <div class="toolbar-compact mb-3" id="toolbarNpl">
-    <div class="bar-left text-sm text-gray-700"></div>
-
-    <!-- kanan: HANYA dropdown Kantor + tombol search -->
-    <form id="formFilterTopNpl" class="bar-right">
-      <label class="pill">
-        <span>Kantor:</span>
-        <select id="selCabangNpl" class="pill-select">
-          <option value="">konsolidasi</option>
-        </select>
-      </label>
-      <button type="submit" class="f-btn" title="Tampilkan">🔍</button>
-    </form>
+  <div id="loadingTop" class="hidden flex items-center gap-2 text-sm text-blue-600 font-bold mb-2 ml-1">
+    <div class="animate-spin h-4 w-4 border-2 border-blue-200 border-t-blue-600 rounded-full"></div>
+    <span>Memuat data...</span>
   </div>
 
-  <!-- Loading -->
-  <div id="loadingTop" class="hidden flex items-center gap-2 text-sm text-gray-600 mb-2">
-    <svg class="animate-spin h-5 w-5 text-blue-600" viewBox="0 0 24 24">
-      <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-      <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
-    </svg>
-    <span>Memuat data…</span>
-  </div>
-
-  <!-- Tabel -->
-  <div id="nplScroller" class="flex-1 min-h-0 overflow-hidden rounded border border-gray-200 bg-white">
+  <div id="nplScroller" class="flex-1 min-h-0 overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm relative">
     <div class="h-full overflow-auto" id="nplScrollInner">
-      <table id="tabelTopNpl" class="min-w-full text-[12.5px] text-left text-gray-700">
+      <table id="tabelTopNpl" class="min-w-full text-[12px] text-left text-gray-700">
         <thead class="uppercase">
-          <tr id="nplHead" class="text-[11px]">
-            <th class="px-2.5 py-1.5 sticky th-namakantor col-namakantor border-r">NAMA KANTOR</th>
-            <th class="px-2.5 py-1.5 sticky th-norek freeze-1 col-norek border-r">NO REKENING</th>
-            <th class="px-2.5 py-1.5 sticky th-debitur freeze-2 lock-x col-debitur border-r">NAMA DEBITUR</th>
-
-            <th class="px-2 py-1.5 text-right sticky th-amt col-amt border-r">PLAFOND</th>
-            <th class="px-2 py-1.5 text-right sticky th-amt col-amt border-r">BAKI DEBET</th>
-            <th class="px-2 py-1.5 text-right sticky th-amt col-amt border-r">T.POKOK</th>
-            <th class="px-2 py-1.5 text-right sticky th-amt col-amt border-r">T.BUNGA</th>
-
-            <!-- KOLEK (closing) disembunyikan; KOLEK UPDATE tampil -->
-            <th class="px-2.5 py-1.5 sticky th-kol-closing col-kol-closing border-r">KOLEK</th>
-            <th class="px-2.5 py-1.5 sticky th-kol-update  col-kol-update  border-r">KOLEK UPDATE</th>
-
-            <th class="px-2 py-1.5 text-right sticky th-amt col-amt border-r">ANGS POKOK</th>
-            <th class="px-2 py-1.5 text-right sticky th-amt col-amt border-r">ANGS BUNGA</th>
-            <th class="px-2.5 py-1.5 sticky th-date col-date border-r">TGL TRANS</th>
-            <th class="px-2.5 py-1.5 sticky th-aksi col-aksi border-r text-center">AKSI</th>
+          <tr id="nplHead">
+            <th class="px-3 py-2 sticky col-namakantor border-r">NAMA KANTOR</th>
+            <th class="px-3 py-2 sticky freeze-1 col-norek border-r">NO REKENING</th>
+            <th class="px-3 py-2 sticky freeze-2 col-debitur border-r">NAMA DEBITUR</th>
+            <th class="px-3 py-2 text-right sticky col-amt border-r">PLAFOND</th>
+            <th class="px-3 py-2 text-right sticky col-amt border-r">BAKI DEBET</th>
+            <th class="px-3 py-2 text-right sticky col-pct border-r" title="Sisa Plafond">%</th>
+            <th class="px-3 py-2 text-right sticky col-amt border-r">T.POKOK</th>
+            <th class="px-3 py-2 text-right sticky col-amt border-r">T.BUNGA</th>
+            <th class="px-3 py-2 text-center sticky col-kol border-r">KOLEK</th>
+            <th class="px-3 py-2 text-center sticky col-kol border-r">KOLEK UPDATE</th>
+            <th class="px-3 py-2 text-right sticky col-amt border-r">ANGS POKOK</th>
+            <th class="px-3 py-2 text-right sticky col-amt border-r">ANGS BUNGA</th>
+            <th class="px-3 py-2 text-center sticky col-date">TGL TRANS</th>
           </tr>
         </thead>
         <tbody id="tbTotalNpl"></tbody>
         <tbody id="bodyTopNpl"></tbody>
       </table>
-
-      <!-- spacer agar baris paling bawah tidak kepotong -->
-      <div class="bottom-spacer" aria-hidden="true"></div>
+      <div class="bottom-spacer" style="height: 60px;"></div>
     </div>
   </div>
 </div>
 
 <style>
-  *{ box-sizing:border-box; }
-  html, body{ height:100%; }
-  body{ overflow:hidden; }
-  #nplScroller .h-full{ overscroll-behavior-x: contain; }
+  .inp { border: 1px solid #cbd5e1; border-radius: 0.5rem; padding: 0 0.75rem; font-size: 13px; background: #fff; width: 100%; outline: none; transition: border 0.2s; }
+  .inp:focus { border-color: #2563eb; ring: 2px solid #bfdbfe; }
+  #tabelTopNpl { border-collapse: separate; border-spacing: 0; table-layout: fixed; }
+  #tabelTopNpl thead th { position: sticky; top: 0; z-index: 60; background: #d9ead3 !important; color: #1e293b; border-bottom: 1px solid #cbd5e1; font-weight: 700; }
+  
+  .freeze-1 { position: sticky; left: 0; z-index: 45; background: #fff; border-right: 1px solid #e2e8f0; }
+  .freeze-2 { position: sticky; left: 7.5rem; z-index: 44; background: #fff; border-right: 1px solid #e2e8f0; box-shadow: 2px 0 5px rgba(0,0,0,0.03); }
+  
+  .col-namakantor { width: 10rem; }
+  .col-norek { width: 7.5rem; }
+  .col-debitur { width: 13rem; overflow: hidden; text-overflow: ellipsis; }
+  .col-amt { width: 8rem; text-align: right; }
+  .col-pct { width: 5.5rem; text-align: right; }
+  .col-kol { width: 5rem; text-align: center; }
+  .col-date { width: 7rem; text-align: center; }
 
-  /* ===== ruang ekstra bawah + scroll padding ===== */
-  #nplScrollInner{
-    padding-bottom: 64px;      /* naikkan dari 24px → 64px */
-    scroll-padding-bottom: 80px;/* saat scroll-into-view, sisakan ruang 80px di bawah */
-  }
-  .bottom-spacer{ height: 72px; } /* spacer fisik di akhir konten */
+  #tbTotalNpl tr td { position: sticky; top: var(--headH, 36px); z-index: 55; background: #f0f7ff; color: #1e40af; font-weight: 700; border-bottom: 2px solid #bfdbfe; }
 
-  .toolbar-compact{ display:flex; align-items:center; justify-content:space-between; gap:.75rem; flex-wrap:nowrap; }
-  .bar-left{ display:flex; align-items:center; gap:.5rem; flex:1 1 auto; min-width:0; flex-wrap:wrap; }
-  .bar-right{ display:flex; align-items:center; gap:.6rem; margin-left:auto; flex:0 0 auto; }
-  .pill{ display:inline-flex; align-items:center; gap:.45rem; padding:.22rem .55rem; border-radius:999px; background:#eef2ff; border:1px solid #c7d2fe; color:#1e40af; }
-  .pill-select{ border:0; background:transparent; outline:none; font-weight:700; color:#1e40af; min-width:12rem; padding-right:.2rem; }
-  .f-btn{ width:38px; height:38px; border-radius:999px; display:inline-flex; align-items:center; justify-content:center; background:#2563eb; color:#fff; box-shadow:0 6px 14px rgba(37,99,235,.25); }
-  .f-btn:hover{ background:#1e40af; }
-
-  #nplScroller{ --colNorek: 7.5rem; --colDeb: 12rem; --colDeb_m: 7.5rem; --headH: 32px; }
-  #tabelTopNpl{ table-layout:fixed; border-collapse:separate; border-spacing:0; }
-  #tabelTopNpl th, #tabelTopNpl td{ border-bottom:1px solid #eef2f7; }
-
-  #tabelTopNpl thead th{
-    position:sticky; top:0; z-index:88;
-    background:#d9ead3 !important; color:#0f5132;
-    border-bottom:1px solid #b7d4c1; user-select:none;
-  }
-  #tabelTopNpl thead th.border-r{ border-right:1px solid #b7d4c1; }
-  #tabelTopNpl thead .freeze-1{ left:0; z-index:90; }
-  #tabelTopNpl thead .freeze-2{ left:var(--colNorek); z-index:89; }
-
-  #tabelTopNpl .col-namakantor{ width:14rem; min-width:12rem; }
-  #tabelTopNpl .col-norek{ width:var(--colNorek); min-width:var(--colNorek); }
-  #tabelTopNpl .col-debitur{ width:var(--colDeb); min-width:var(--colDeb); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-  #tabelTopNpl .col-amt{ width:7.6rem; min-width:7rem; text-align:right; font-variant-numeric: tabular-nums; }
-  #tabelTopNpl .col-date{ width:9.5ch; min-width:8ch; white-space:nowrap; font-variant-numeric: tabular-nums; text-align:left; }
-  #tabelTopNpl .col-aksi{ width:9.5rem; min-width:9rem; text-align:center; }
-
-  #tabelTopNpl td.freeze-1{ position:sticky; left:0; z-index:41; background:#fff; box-shadow:1px 0 0 rgba(0,0,0,.06); }
-  #tabelTopNpl td.freeze-2{ position:sticky; left:var(--colNorek); z-index:40; background:#fff; box-shadow:1px 0 0 rgba(0,0,0,.06); }
-
-  #tabelTopNpl tbody tr.sticky-total td{
-    position:sticky; top:var(--headH); z-index:70;
-    background:#eaf2ff; color:#1e40af; border-bottom:1px solid #c7d2fe; font-weight:600;
-  }
-  #tabelTopNpl tbody tr.sticky-total td.freeze-1{ z-index:91; }
-  #tabelTopNpl tbody tr.sticky-total td.freeze-2{ z-index:90; }
-
-  /* ===== HIDE SESUAI PERMINTAAN ===== */
-  /* Sembunyikan NAMA KANTOR & AKSI */
-  #tabelTopNpl th.th-namakantor, #tabelTopNpl td.col-namakantor{ display:none !important; }
-  #tabelTopNpl th.th-aksi,       #tabelTopNpl td.col-aksi      { display:none !important; }
-  /* Sembunyikan KOLEK (closing) — KOLEK UPDATE tetap tampil */
-  #tabelTopNpl th.th-kol-closing, #tabelTopNpl td.col-kol-closing{ display:none !important; }
-
-  @media (max-width:640px){
-    .toolbar-compact{ display:grid; grid-template-columns: 1fr; gap:.65rem; }
-    .bar-right{ width:100%; display:grid; grid-template-columns: 1fr auto; gap:.5rem .6rem; align-items:center; }
-    .pill-select{ min-width:0; width:100%; font-size:12.5px; }
-    .f-btn{ width:34px; height:34px; justify-self:end; border-radius:.8rem; }
-
-    #tabelTopNpl{ font-size:11.5px; }
-    #tabelTopNpl thead th{ font-size:10.5px; }
-    #tabelTopNpl th, #tabelTopNpl td{ padding:.32rem .4rem; }
-
-    /* opsional: hide NO REKENING di mobile biar ringkas */
-    #tabelTopNpl th.th-norek, #tabelTopNpl td.col-norek{ display:none !important; }
-
-    #tabelTopNpl .col-debitur{ width:var(--colDeb_m); min-width:var(--colDeb_m); white-space:normal; word-break:break-word; }
-    #tabelTopNpl thead .th-debitur,
-    #tabelTopNpl tbody td.freeze-2,
-    #tabelTopNpl tbody tr.sticky-total td.freeze-2{ left:0 !important; right:auto !important; box-shadow:1px 0 0 rgba(0,0,0,.06); }
-
-    #tabelTopNpl .lock-x{ touch-action: pan-y; -ms-touch-action: pan-y; }
-    #tabelTopNpl .col-amt{ width:6.6rem; min-width:6.2rem; }
+  @media (max-width: 640px) {
+    .freeze-1 { display: none !important; }
+    .freeze-2 { left: 0 !important; width: 8.5rem; min-width: 8.5rem; white-space: normal; line-height: 1.2; }
+    .col-amt { width: 7.5rem; }
+    .col-pct { width: 4.5rem; }
   }
 </style>
 
 <script>
-  /* ===== State tanggal (tanpa input) ===== */
-  const StateDate = { closing: '', harian: '' };
-
-  /* ===== Helpers ===== */
+  let StateDate = { closing: '', harian: '' };
   const nfID = new Intl.NumberFormat('id-ID');
   const fmt = n => nfID.format(Number(n||0));
-  const selCabang  = document.getElementById('selCabangNpl');
+  
+  // Fungsi Hitung Sisa Persentase (100 - BD/PL)
+  const fmtSisaPct = (bd, pl) => {
+      const p = Number(pl||0);
+      if(p === 0) return '0%';
+      const res = 100 - ((Number(bd||0) / p) * 100);
+      return (res < 0 ? 0 : res).toFixed(1) + '%';
+  };
 
-  async function apiCall(url, options={}) {
-    if (window.apiFetch) return window.apiFetch(url, options);
-    const token = localStorage.getItem('dpk_token');
-    const headers = Object.assign({}, options.headers||{});
-    if (token) headers['Authorization'] = token;
-    return fetch(url, { ...options, headers });
-  }
+  const selCabang = document.getElementById('selCabangNpl');
 
-  /* ===== Init role-aware ===== */
+  document.getElementById('btnToggleNplFilter').addEventListener('click', function() {
+      document.getElementById('filterPanelNpl').classList.toggle('hidden');
+  });
+
+  selCabang.addEventListener('change', () => { document.getElementById('formFilterTopNpl').requestSubmit(); });
+
   window.addEventListener('DOMContentLoaded', async () => {
-    // ambil last closing & harian → simpan ke state
-    const d = await getLastHarianData();
-    if (!d) return;
-    StateDate.closing = d.last_closing || '';
-    StateDate.harian  = d.last_created || '';
+    try {
+        const d = await (await fetch('./api/date/')).json();
+        if (d.data) { StateDate.closing = d.data.last_closing; StateDate.harian = d.data.last_created; }
+    } catch(e) {}
 
-    // ambil user; prefer kode_kantor, fallback kode
     const user = (window.getUser && window.getUser()) || null;
-    const userKode = user?.kode_kantor
-      ? String(user.kode_kantor).padStart(3,'0')
-      : (user?.kode ? String(user.kode).padStart(3,'0') : '000');
+    const uKode = user?.kode_kantor ? String(user.kode_kantor).padStart(3,'0') : (user?.kode ? String(user.kode).padStart(3,'0') : '000');
 
-    await populateKantorOptions(userKode);
-    await fetchTop25Npl(StateDate.closing, StateDate.harian, (userKode && userKode!=='000') ? userKode : '');
-
-    // ukur tinggi scroller pertama kali
-    sizeScroller();
+    await populateKantorOptions(uKode);
+    fetchTop25Npl(uKode === '000' ? '' : uKode);
     setHeadHeight();
-
-    // Recalc saat viewport berubah (mobile chrome bar naik/turun)
-    if (window.visualViewport) {
-      visualViewport.addEventListener('resize', sizeScroller);
-      visualViewport.addEventListener('scroll', sizeScroller);
-    }
   });
 
-  async function getLastHarianData(){
-    try{ const r = await apiCall('./api/date/'); const j = await r.json(); return j.data||null; }
-    catch{ return null; }
+  async function populateKantorOptions(userKode) {
+    if (userKode !== '000') {
+      selCabang.innerHTML = `<option value="${userKode}">CABANG ${userKode}</option>`;
+      selCabang.disabled = true;
+      return;
+    }
+    try {
+        const res = await fetch('./api/kode/', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({type:'kode_kantor'}) });
+        const json = await res.json();
+        let html = `<option value="">konsolidasi</option>`;
+        (json.data || []).filter(x => x.kode_kantor !== '000').sort((a,b) => String(a.kode_kantor).localeCompare(b.kode_kantor)).forEach(it => {
+            html += `<option value="${it.kode_kantor}">${it.kode_kantor} - ${it.nama_kantor}</option>`;
+        });
+        selCabang.innerHTML = html;
+    } catch(e) { selCabang.innerHTML = `<option value="">konsolidasi</option>`; }
   }
 
-  async function populateKantorOptions(userKode){
-    try{
-      if(userKode && userKode!=='000'){
-        selCabang.innerHTML = `<option value="${userKode}">${userKode}</option>`;
-        selCabang.value = userKode;
-        selCabang.disabled = true;
-        selCabang.style.pointerEvents = 'none';
-        selCabang.addEventListener('mousedown', e=>e.preventDefault());
-        selCabang.addEventListener('keydown',  e=>e.preventDefault());
-        return;
-      }
-      const res=await apiCall('./api/kode/',{
-        method:'POST',
-        headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({type:'kode_kantor'})
-      });
-      const json=await res.json(); const list=Array.isArray(json.data)?json.data:[];
-      let html=`<option value="">konsolidasi</option>`;
-      list.filter(x=>x.kode_kantor && x.kode_kantor!=='000')
-          .sort((a,b)=> String(a.kode_kantor).localeCompare(String(b.kode_kantor)))
-          .forEach(it=>{
-            const code=String(it.kode_kantor).padStart(3,'0');
-            const name=it.nama_kantor||it.nama_cabang||'';
-            html+=`<option value="${code}">${code} — ${name}</option>`;
-          });
-      selCabang.innerHTML=html;
-      selCabang.disabled=false;
-      selCabang.style.pointerEvents = 'auto';
-    }catch{
-      selCabang.innerHTML=`<option value="${userKode && userKode!=='000' ? userKode : ''}">${userKode && userKode!=='000' ? userKode : 'konsolidasi'}</option>`;
-      selCabang.disabled = (userKode && userKode!=='000');
-      selCabang.style.pointerEvents = (userKode && userKode!=='000') ? 'none' : 'auto';
-    }
-  }
-
-  // 000 boleh ganti cabang → refetch; non-000 terkunci
-  selCabang.addEventListener('change', ()=>{
-    const user = (window.getUser && window.getUser()) || null;
-    const userKode = user?.kode_kantor
-      ? String(user.kode_kantor).padStart(3,'0')
-      : (user?.kode ? String(user.kode).padStart(3,'0') : '000');
-    const kode = (userKode!=='000') ? userKode : (selCabang.value || '');
-    if (StateDate.closing && StateDate.harian) {
-      fetchTop25Npl(StateDate.closing, StateDate.harian, kode);
-    }
-  });
-
-  document.getElementById("formFilterTopNpl").addEventListener("submit", function (e) {
+  document.getElementById("formFilterTopNpl").addEventListener("submit", (e) => {
     e.preventDefault();
-    const user = (window.getUser && window.getUser()) || null;
-    const userKode = user?.kode_kantor
-      ? String(user.kode_kantor).padStart(3,'0')
-      : (user?.kode ? String(user.kode).padStart(3,'0') : '000');
-    const kode = (userKode!=='000') ? userKode : (selCabang.value || '');
-    fetchTop25Npl(StateDate.closing, StateDate.harian, kode);
+    if(window.innerWidth < 768) document.getElementById('filterPanelNpl').classList.add('hidden');
+    fetchTop25Npl(selCabang.value);
   });
 
-  /* ===== Fetch + Render ===== */
-  async function fetchTop25Npl(closing_date, harian_date, kode_cabang){
-    const user = (window.getUser && window.getUser()) || null;
-    const userKode = user?.kode_kantor
-      ? String(user.kode_kantor).padStart(3,'0')
-      : (user?.kode ? String(user.kode).padStart(3,'0') : '000');
-    const enforcedKode = (userKode!=='000') ? userKode : (kode_cabang||'');
-
-    if (userKode!=='000') { selCabang.value = userKode; selCabang.disabled = true; }
-
-    document.getElementById('loadingTop').classList.remove('hidden');
-    try{
-      const res = await apiCall("./api/npl/",{
-        method:"POST",
-        headers:{ "Content-Type":"application/json" },
-        body: JSON.stringify({
-          type: "25 NPL Terbesar",
-          closing_date, harian_date,
-          kode_cabang: enforcedKode
-        })
+  async function fetchTop25Npl(kode) {
+    const loading = document.getElementById('loadingTop');
+    loading.classList.remove('hidden');
+    try {
+      const res = await fetch("./api/npl/", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ type: "25 NPL Terbesar", closing_date: StateDate.closing, harian_date: StateDate.harian, kode_cabang: kode })
       });
       const j = await res.json();
       renderTable(j.data || []);
-    }catch{ renderTable([]); }
-    finally{
-      document.getElementById('loadingTop').classList.add('hidden');
-      // pastikan tinggi scroller disesuaikan lagi setelah render
-      requestAnimationFrame(()=>{ sizeScroller(); setHeadHeight(); });
-      setTimeout(()=>{ sizeScroller(); setHeadHeight(); }, 80);
-    }
+    } catch { renderTable([]); }
+    finally { loading.classList.add('hidden'); setTimeout(setHeadHeight, 50); }
   }
 
-  function renderTable(rows){
-    const tb   = document.getElementById('bodyTopNpl');
+  function renderTable(rows) {
+    const tb = document.getElementById('bodyTopNpl');
     const ttot = document.getElementById('tbTotalNpl');
-    tb.innerHTML=''; ttot.innerHTML='';
+    tb.innerHTML = ''; ttot.innerHTML = '';
 
-    const sum = k => rows.reduce((s,r)=> s + Number(r[k]||0), 0);
-    const tPlaf = sum('jml_pinjaman');
-    const tBaki = sum('baki_debet');
-    const tTPok = sum('tunggakan_pokok');
-    const tTBng = sum('tunggakan_bunga');
-    const tAngP = sum('total_pokok');
-    const tAngB = sum('total_bunga');
-
+    const sum = k => rows.reduce((s, r) => s + Number(r[k] || 0), 0);
+    const totalPlaf = sum('jml_pinjaman');
+    const totalBaki = sum('baki_debet');
+    
     ttot.innerHTML = `
-      <tr class="sticky-total">
-        <td class="px-2.5 py-1.5 col-namakantor"></td>
-        <td class="px-2.5 py-1.5 freeze-1 col-norek"></td>
-        <td class="px-2.5 py-1.5 freeze-2 lock-x col-debitur">TOTAL</td>
-        <td class="px-2 py-1.5 text-right col-amt">${fmt(tPlaf)}</td>
-        <td class="px-2 py-1.5 text-right col-amt">${fmt(tBaki)}</td>
-        <td class="px-2 py-1.5 text-right col-amt">${fmt(tTPok)}</td>
-        <td class="px-2 py-1.5 text-right col-amt">${fmt(tTBng)}</td>
-        <td class="px-2.5 py-1.5 col-kol-closing"></td>
-        <td class="px-2.5 py-1.5 col-kol-update"></td>
-        <td class="px-2 py-1.5 text-right col-amt">${fmt(tAngP)}</td>
-        <td class="px-2 py-1.5 text-right col-amt">${fmt(tAngB)}</td>
-        <td class="px-2.5 py-1.5 col-date"></td>
-        <td class="px-2.5 py-1.5 col-aksi text-center"></td>
+      <tr>
+        <td class="px-3 py-2"></td>
+        <td class="px-3 py-2 freeze-1"></td>
+        <td class="px-3 py-2 freeze-2 font-bold">TOTAL</td>
+        <td class="px-3 py-2 text-right">${fmt(totalPlaf)}</td>
+        <td class="px-3 py-2 text-right">${fmt(totalBaki)}</td>
+        <td class="px-3 py-2 text-right font-mono text-slate-500">${fmtSisaPct(totalBaki, totalPlaf)}</td>
+        <td class="px-3 py-2 text-right">${fmt(sum('tunggakan_pokok'))}</td>
+        <td class="px-3 py-2 text-right">${fmt(sum('tunggakan_bunga'))}</td>
+        <td colspan="2"></td>
+        <td class="px-3 py-2 text-right">${fmt(sum('total_pokok'))}</td>
+        <td class="px-3 py-2 text-right">${fmt(sum('total_bunga'))}</td>
+        <td class="px-3 py-2"></td>
       </tr>`;
 
-    const closing_date = StateDate.closing, harian_date = StateDate.harian;
-
-    for(const r of rows){
-      const btns = `
-        <div class="flex flex-wrap gap-1 justify-center">
-          <button class="px-2 py-1 rounded border hover:bg-gray-50"
-            onclick="openDetailModal('${r.no_rekening}','${r.kode_cabang||''}')">Detail</button>
-          <button class="px-2 py-1 rounded bg-blue-600 text-white hover:bg-blue-700"
-            onclick="openPlanModal('${r.no_rekening}','${r.kode_cabang||''}','${closing_date}','${harian_date}','${(r.nama_nasabah||'').replace(/'/g, "\\'")}')">Kelola</button>
-        </div>`;
-      const aksiCell = `<td class="px-2.5 py-1.5 col-aksi text-center">${btns}</td>`;
-
-      tb.insertAdjacentHTML('beforeend', `
-        <tr class="border-b hover:bg-gray-50">
-          <td class="px-2.5 py-1.5 col-namakantor" title="${r.nama_kantor||''}">${r.nama_kantor||''}</td>
-          <td class="px-2.5 py-1.5 freeze-1 col-norek" title="${r.no_rekening||'-'}">${shortMid(r.no_rekening,12)}</td>
-          <td class="px-2.5 py-1.5 freeze-2 lock-x col-debitur" title="${r.nama_nasabah||'-'}">${shortTail(r.nama_nasabah,24)}</td>
-
-          <td class="px-2 py-1.5 text-right col-amt">${fmt(r.jml_pinjaman)}</td>
-          <td class="px-2 py-1.5 text-right col-amt">${fmt(r.baki_debet)}</td>
-          <td class="px-2 py-1.5 text-right col-amt">${fmt(r.tunggakan_pokok)}</td>
-          <td class="px-2 py-1.5 text-right col-amt">${fmt(r.tunggakan_bunga)}</td>
-
-          <!-- KOLEK (closing) disembunyikan via CSS; UPDATE tampil -->
-          <td class="px-2.5 py-1.5 col-kol-closing text-center">${r.kolek_closing || ""}</td>
-          <td class="px-2.5 py-1.5 col-kol-update  text-center">${r.kolek_harian  || ""}</td>
-
-          <td class="px-2 py-1.5 text-right col-amt">${fmt(r.total_pokok)}</td>
-          <td class="px-2 py-1.5 text-right col-amt">${fmt(r.total_bunga)}</td>
-          <td class="px-2.5 py-1.5 col-date">${r.tgl_trans || "-"}</td>
-          ${aksiCell}
-        </tr>`);
+    if(rows.length === 0) {
+        tb.innerHTML = `<tr><td colspan="13" class="py-10 text-center text-slate-400 font-medium">Data tidak ditemukan.</td></tr>`;
+        return;
     }
 
-    // setelah isi, recalibrate tinggi
-    requestAnimationFrame(sizeScroller);
+    rows.forEach(r => {
+      const plafond = Number(r.jml_pinjaman || 0);
+      const baki = Number(r.baki_debet || 0);
+      
+      // Hitung nilai sisa
+      const sisaPctValue = plafond > 0 ? (100 - ((baki / plafond) * 100)) : 0;
+      // Warna merah jika sisa <= 10%
+      const pctColor = sisaPctValue <= 10 ? 'text-red-600 font-bold' : 'text-slate-500';
+
+      tb.insertAdjacentHTML('beforeend', `
+        <tr class="hover:bg-slate-50 border-b transition">
+          <td class="px-3 py-2 truncate" title="${r.nama_kantor}">${r.nama_kantor}</td>
+          <td class="px-3 py-2 freeze-1 font-mono text-slate-500">${r.no_rekening}</td>
+          <td class="px-3 py-2 freeze-2 font-semibold text-slate-700">${r.nama_nasabah}</td>
+          <td class="px-3 py-2 text-right">${fmt(plafond)}</td>
+          <td class="px-3 py-2 text-right font-bold text-blue-700">${fmt(baki)}</td>
+          <td class="px-3 py-2 text-right ${pctColor}">${fmtSisaPct(baki, plafond)}</td>
+          <td class="px-3 py-2 text-right">${fmt(r.tunggakan_pokok)}</td>
+          <td class="px-3 py-2 text-right">${fmt(r.tunggakan_bunga)}</td>
+          <td class="px-3 py-2 text-center font-bold text-slate-400">${r.kolek_closing||''}</td>
+          <td class="px-3 py-2 text-center font-bold text-red-600">${r.kolek_harian||''}</td>
+          <td class="px-3 py-2 text-right">${fmt(r.total_pokok)}</td>
+          <td class="px-3 py-2 text-right">${fmt(r.total_bunga)}</td>
+          <td class="px-3 py-2 text-center text-slate-500">${r.tgl_trans || "-"}</td>
+        </tr>`);
+    });
   }
 
-  /* ===== Layout helpers ===== */
-  function sizeScroller(){
-    const wrap = document.getElementById('nplScroller');
-    if(!wrap) return;
-    const rect = wrap.getBoundingClientRect();
-    const top = rect.top;
-    const vpH = (window.visualViewport && window.visualViewport.height) ? window.visualViewport.height : window.innerHeight;
-
-    // tambah ruang ekstra supaya baris terakhir tidak ketutupan
-    const EXTRA_BOTTOM = 0; // tinggi container, ruang ekstra diatasi oleh padding/spacer
-    const h = Math.max(320, Math.floor(vpH - top - EXTRA_BOTTOM));
-    wrap.style.height = h + 'px';
-  }
-
-  function setHeadHeight(){
-    const h = document.getElementById('nplHead')?.offsetHeight || 32;
+  function setHeadHeight() {
+    const h = document.getElementById('nplHead')?.offsetHeight || 36;
     document.getElementById('nplScroller')?.style.setProperty('--headH', h + 'px');
   }
-
-  window.addEventListener('resize', ()=>{ sizeScroller(); setHeadHeight(); });
-
-  // Amati perubahan layout (toolbar berubah tinggi, dsb.)
-  const toolbar = document.getElementById('toolbarNpl');
-  if (window.ResizeObserver && toolbar) {
-    const ro = new ResizeObserver(()=> sizeScroller());
-    ro.observe(toolbar);
-  }
-
-  // Fonts/images loaded → recalc
-  if (document.fonts && document.fonts.ready) {
-    document.fonts.ready.then(()=>{ sizeScroller(); setHeadHeight(); });
-  }
-  window.addEventListener('load', ()=>{ sizeScroller(); setHeadHeight(); });
-
-  /* ===== Utils ===== */
-  function shortTail(s, n=18){ s=String(s||''); return s.length<=n? s : s.slice(0,n).trimEnd()+'…'; }
-  function shortMid(s, n=12){ s=String(s||''); if(s.length<=n) return s; const k=n-1, f=Math.ceil(k/2), b=Math.floor(k/2); return s.slice(0,f)+'…'+s.slice(-b); }
-
-  /* ===== Dummy modal hooks (opsional) ===== */
-  function openDetailModal(){ document.getElementById('modalDetail')?.classList.remove('hidden');}
-  function closeDetailModal(){ document.getElementById('modalDetail')?.classList.add('hidden'); }
-  function openPlanModal(){ document.getElementById('modalPlan')?.classList.remove('hidden'); }
-  function closePlanModal(){ document.getElementById('modalPlan')?.classList.add('hidden'); }
+  window.addEventListener('resize', setHeadHeight);
 </script>

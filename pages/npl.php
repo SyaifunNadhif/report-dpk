@@ -2,16 +2,15 @@
   :root { --primary: #2563eb; --bg: #f8fafc; --text: #334155; }
   body { font-family: 'Inter', system-ui, sans-serif; background: var(--bg); color: var(--text); overflow: hidden; }
   
-  /* Input & Button */
   .inp { 
+      box-sizing: border-box;
       border: 1px solid #cbd5e1; border-radius: 0.5rem; padding: 0 0.5rem; 
       font-size: 13px; background: #fff; height: 36px; cursor: pointer; 
       outline: none; transition: border 0.2s; min-width: 0;
   }
-  .inp:focus { border-color: var(--primary); }
-  .inp:disabled { background-color: #f1f5f9; color: #64748b; font-weight: 600; cursor: not-allowed; border-color: #e2e8f0; }
+  .inp:focus { border-color: var(--primary); ring: 2px solid #bfdbfe; }
+  .inp:disabled { background-color: #f8fafc; color: #64748b; font-weight: 600; cursor: not-allowed; border-color: #e2e8f0; }
   
-  /* === DATEPICKER FIX === */
   input[type="date"] { position: relative; cursor: pointer; }
   input[type="date"]::-webkit-inner-spin-button,
   input[type="date"]::-webkit-calendar-picker-indicator {
@@ -19,22 +18,10 @@
       width: 100%; height: 100%; opacity: 0; cursor: pointer;
   }
 
-  .btn-icon { 
-      width: 36px; height: 36px; border-radius: 8px; background: var(--primary); 
-      color: white; border: none; cursor: pointer; display: inline-flex; 
-      align-items: center; justify-content: center; transition: 0.2s; flex-shrink: 0; 
-  }
-  .btn-icon:hover { background: #1d4ed8; }
-
-  /* Table Wrapper */
   #kolScroller { 
       --kol_headH: 40px; 
-      overflow: auto; 
-      height: 100%; 
-      border-radius: 8px; 
-      border: 1px solid #e2e8f0; 
-      background: white; 
-      position: relative;
+      overflow: auto; height: 100%; border-radius: 8px; 
+      border: 1px solid #e2e8f0; background: white; position: relative;
       -webkit-overflow-scrolling: touch; 
   }
   
@@ -42,59 +29,31 @@
   th, td { white-space: nowrap; padding: 8px 10px; border-bottom: 1px solid #f1f5f9; vertical-align: middle; }
   tr:hover td { background-color: #f8fafc; }
 
-  /* === HEADER STICKY === */
+  /* Style untuk Header yang bisa di-sort */
   thead th { 
       position: sticky; top: 0; z-index: 60; 
       background: #d9ead3; color: #1e293b; font-weight: 700; 
-      text-transform: uppercase; border-bottom: 1px solid #cbd5e1; 
+      text-transform: uppercase; border-bottom: 1px solid #cbd5e1;
   }
+  .sort-link { cursor: pointer; user-select: none; transition: background 0.2s; }
+  .sort-link:hover { background: #cfe3c8 !important; }
   
-  /* === STICKY COLUMNS (DESKTOP) === */
   .col-kode { position: sticky; left: 0; z-index: 45; background: white; border-right: 1px solid #e2e8f0; width: 60px; min-width: 60px; text-align: center; }
   thead th.col-kode { z-index: 70; background: #d9ead3; }
   
   .col-nama { position: sticky; left: 60px; z-index: 44; background: white; border-right: 1px solid #e2e8f0; box-shadow: 2px 0 5px rgba(0,0,0,0.03); min-width: 180px; }
   thead th.col-nama { z-index: 69; background: #d9ead3; }
 
-  /* === TOTAL ROW STICKY (Nempel Tepat di Bawah Header) === */
   .sticky-total td { 
-      position: sticky; 
-      top: var(--kol_headH); 
-      z-index: 55; 
-      background: #f4f7fb; 
-      font-weight: 700; 
-      border-bottom: 2px solid #bfdbfe; 
+      position: sticky; top: var(--kol_headH); z-index: 55; 
+      background: #f4f7fb; font-weight: 700; border-bottom: 2px solid #bfdbfe; 
       box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); 
   }
-  /* Total Freeze Kiri */
-  .sticky-total td.col-kode { z-index: 65; background: #f4f7fb; border-right: none; }
+  .sticky-total td.col-kode { z-index: 65; background: #f4f7fb; }
   .sticky-total td.col-nama { z-index: 64; background: #f4f7fb; border-right: 1px solid #bfdbfe; }
 
-  .hidden { display: none !important; }
-
-  /* =========================================
-     MOBILE RESPONSIVE (1 BARIS BERSIH)
-     ========================================= */
   @media (max-width: 767px) {
-      /* Form 1 Baris Sejajar */
-      #formFilterKolek {
-          flex-direction: row; flex-wrap: nowrap;
-          width: 100%; gap: 6px; align-items: center;
-      }
-      
-      #opt_kantor_kolek { flex: 1 1 auto; min-width: 0; font-size: 11px; padding: 0 4px; }
-      #harian_date_kolek { flex: 0 0 95px; width: 95px; font-size: 11px; padding: 0 2px; text-align: center; }
-      
-      .btn-icon { width: 34px; height: 34px; border-radius: 6px; }
-
-      /* Tabel Tweaks Mobile */
-      table { font-size: 11px; }
-      th, td { padding: 6px 8px; }
-
-      /* Sembunyikan Kolom KODE sepenuhnya */
       .col-kode { display: none !important; }
-      
-      /* Freeze NAMA KANTOR mentok kiri */
       .col-nama { left: 0 !important; z-index: 45 !important; min-width: 140px; max-width: 160px; white-space: normal; line-height: 1.2; }
       thead th.col-nama { z-index: 70 !important; }
       .sticky-total td.col-nama { z-index: 65 !important; }
@@ -103,30 +62,57 @@
 
 <div class="max-w-7xl mx-auto px-3 md:px-4 py-4 h-[calc(100vh-80px)] md:h-[calc(100vh-120px)] flex flex-col">
   
-  <div class="flex flex-col md:flex-row md:items-center justify-between gap-3 mb-3">
-    <div>
-      <h1 class="text-xl md:text-2xl font-bold flex items-center gap-2 text-slate-800">
-        <span class="bg-blue-600 text-white p-1 rounded text-sm md:text-base">💳</span> 
-        <span>Rekap Kolektibilitas</span>
-      </h1>
-      <p class="text-[10px] md:text-xs text-slate-500 mt-0.5 ml-1">*Posisi Harian (NOA & Baki Debet)</p>
+  <div class="flex flex-col md:flex-row md:items-start justify-between gap-3 mb-3 shrink-0">
+    <div class="flex items-start justify-between w-full md:w-auto">
+        <div>
+            <h1 class="text-xl md:text-2xl font-bold flex items-center gap-2 text-slate-800">
+                <span class="bg-blue-600 text-white p-1 rounded text-sm md:text-base shadow-sm">💳</span> 
+                <span>Rekap Kolektibilitas</span>
+            </h1>
+            <p class="text-[10px] md:text-xs text-slate-500 mt-0.5 ml-1">*Posisi Harian (NOA & Saldo)</p>
+        </div>
+
+        <button id="btnToggleKolekFilter" class="md:hidden flex items-center gap-1.5 px-3 py-1.5 border border-gray-300 rounded-lg bg-white text-sm font-semibold text-slate-700 shadow-sm transition">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon></svg>
+            Filter
+        </button>
     </div>
 
-    <form id="formFilterKolek" class="flex gap-2">
-      <select id="opt_kantor_kolek" class="inp" title="Pilih Kantor">
-          <option value="">Memuat...</option>
-      </select>
-      
-      <input type="date" id="harian_date_kolek" class="inp" required title="Pilih Tanggal">
-      
-      <button type="submit" class="btn-icon" title="Cari Data">
-          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="7"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-      </button>
+    <div id="panelFilterKolek" class="hidden md:block bg-white border border-gray-200 rounded-xl p-3 shadow-sm w-full md:w-auto transition-all">
+        <form id="formFilterKolek" class="flex flex-col md:flex-row items-end gap-3 w-full">
+            
+            <div class="flex gap-2 w-full md:w-auto">
+                <div class="flex flex-col w-1/2 md:w-[130px]">
+                    <label class="text-[9px] font-extrabold text-slate-500 uppercase ml-1 mb-1 tracking-wider">TIPE SALDO</label>
+                    <select id="hitung_berdasarkan" class="inp font-bold text-blue-700 shadow-sm auto-refresh">
+                        <option value="baki_debet">BAKI DEBET</option>
+                        <option value="saldo_bank">SALDO BANK</option>
+                    </select>
+                </div>
+                <div class="flex flex-col w-1/2 md:w-[130px]">
+                    <label class="text-[9px] font-extrabold text-slate-500 uppercase ml-1 mb-1 tracking-wider">TANGGAL</label>
+                    <input type="date" id="harian_date_kolek" class="inp shadow-sm" required>
+                </div>
+            </div>
 
-      <button type="button" onclick="exportKolekExcel()" class="btn-icon bg-green-600 hover:bg-green-700" title="Export ke Excel">
-          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
-      </button>
-    </form>
+            <div class="flex gap-2 w-full md:w-auto md:flex-1 items-end">
+                <div class="flex flex-col flex-1 md:w-[220px]">
+                    <label class="text-[9px] font-extrabold text-slate-500 uppercase ml-1 mb-1 tracking-wider">CABANG</label>
+                    <select id="opt_kantor_kolek" class="inp font-medium text-slate-700 shadow-sm truncate auto-refresh"><option value="">Memuat...</option></select>
+                </div>
+                
+                <div class="flex gap-2 shrink-0">
+                    <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white h-9 px-4 rounded-lg font-bold text-sm shadow-sm flex items-center justify-center gap-2 transition">
+                        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                        <span>CARI</span>
+                    </button>
+                    <button type="button" onclick="exportKolekExcel()" class="bg-emerald-600 hover:bg-emerald-700 text-white h-9 w-11 rounded-lg shadow-sm flex items-center justify-center transition">
+                        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
   </div>
 
   <div class="flex-1 min-h-0 relative flex flex-col">
@@ -139,18 +125,16 @@
       <table id="tabelKolektibilitas">
         <thead id="theadKolek">
           <tr>
-            <th class="col-kode">Kode</th>
-            <th class="col-nama" id="thNamaKolek">NAMA KANTOR</th>
-            
-            <th class="text-right min-w-[90px]">Lancar (L)</th>
-            <th class="text-right min-w-[90px]">DPK (DP)</th>
-            <th class="text-right min-w-[90px]">Kurang Lancar</th>
-            <th class="text-right min-w-[90px]">Diragukan (D)</th>
-            <th class="text-right min-w-[90px]">Macet (M)</th>
-            
-            <th class="text-right min-w-[100px] border-l border-slate-200">Total NPL</th>
-            <th class="text-right min-w-[110px] border-l border-slate-200">Total Portofolio</th>
-            <th class="text-right min-w-[70px]">% NPL</th>
+            <th class="col-kode sort-link" onclick="sortTable('kode_unit')">Kode <span id="icon_kode_unit">↕</span></th>
+            <th class="col-nama sort-link" onclick="sortTable('nama_unit')">NAMA KANTOR <span id="icon_nama_unit">↕</span></th>
+            <th class="text-right min-w-[100px] sort-link" onclick="sortTable('bd_L')">Lancar (L) <span id="icon_bd_L">↕</span></th>
+            <th class="text-right min-w-[100px] sort-link" onclick="sortTable('bd_DP')">DPK (DP) <span id="icon_bd_DP">↕</span></th>
+            <th class="text-right min-w-[100px] sort-link" onclick="sortTable('bd_KL')">Kurang Lancar <span id="icon_bd_KL">↕</span></th>
+            <th class="text-right min-w-[100px] sort-link" onclick="sortTable('bd_D')">Diragukan (D) <span id="icon_bd_D">↕</span></th>
+            <th class="text-right min-w-[100px] sort-link" onclick="sortTable('bd_M')">Macet (M) <span id="icon_bd_M">↕</span></th>
+            <th class="text-right min-w-[110px] border-l border-slate-200 sort-link" onclick="sortTable('bd_npl')">Total NPL <span id="icon_bd_npl">↕</span></th>
+            <th class="text-right min-w-[120px] border-l border-slate-200 sort-link" onclick="sortTable('total_bd')">Portofolio <span id="icon_total_bd">↕</span></th>
+            <th class="text-right min-w-[70px] sort-link" onclick="sortTable('persentase_npl')">% NPL <span id="icon_persentase_npl">↕</span></th>
           </tr>
         </thead>
         <tbody id="totalKolek"></tbody>
@@ -158,24 +142,29 @@
       </table>
     </div>
   </div>
-
 </div>
 
 <script>
-  // --- CONFIG ---
   const API_KOLEK = './api/kredit/'; 
   const API_KODE  = './api/kode/';
   const API_DATE  = './api/date/';
 
   const nf = new Intl.NumberFormat('id-ID');
-  const fmt = n => nf.format(Number(n)||0);
+  const fmt = n => nf.format(Number(n||0));
   const fmt2 = x => (x == null || x === '' ? '0.00' : Number(x).toFixed(2));
 
-  // Simpan data mentah untuk Export Excel
   window.kolekDataRaw = [];
   window.kolekGtRaw = null;
+  let currentSort = { col: null, dir: 'asc' }; // 'asc' atau 'desc'
 
-  // Set Tinggi Dinamis Header untuk Sticky Total Row
+  document.getElementById('btnToggleKolekFilter').addEventListener('click', function() {
+      document.getElementById('panelFilterKolek').classList.toggle('hidden');
+  });
+
+  document.querySelectorAll('.auto-refresh').forEach(el => {
+      el.addEventListener('change', () => fetchKolektibilitas());
+  });
+
   function updateStickyHeader() {
       const thead = document.getElementById('theadKolek');
       const scroller = document.getElementById('kolScroller');
@@ -185,197 +174,164 @@
   }
   window.addEventListener('resize', updateStickyHeader);
 
-  // Helper API
-  async function apiCall(url, options = {}) {
-      const res = await fetch(url, options);
-      if(!res.ok) throw new Error(`HTTP Error ${res.status}`);
-      return res;
-  }
+  // --- LOGIKA SORTING ---
+  function sortTable(column) {
+      if (!window.kolekDataRaw || window.kolekDataRaw.length === 0) return;
 
-  // --- INIT ---
-  window.addEventListener('DOMContentLoaded', async () => {
-      // AMBIL USER LOGIN
-      const user = (window.getUser && window.getUser()) || null;
-      // Beri fallback default '000' (Pusat) jika tidak terdeteksi agar tidak null error
-      const uKode = user?.kode ? String(user.kode).padStart(3,'0') : '000';
-      window.currentUser = { kode: uKode };
-      
-      // 1. Load Dropdown
-      await populateKantorKolek(uKode);
-
-      // 2. Load Date
-      const d = await getLastHarianData(); 
-      if (d) {
-          document.getElementById('harian_date_kolek').value = d.last_created;
+      // Toggle arah jika kolom sama, jika beda balik ke 'desc' (biasanya NPL dicari yang tertinggi dulu)
+      if (currentSort.col === column) {
+          currentSort.dir = currentSort.dir === 'asc' ? 'desc' : 'asc';
       } else {
-          document.getElementById('harian_date_kolek').value = new Date().toISOString().split('T')[0];
+          currentSort.col = column;
+          currentSort.dir = 'desc'; 
       }
 
-      // 3. Fetch Data Awal
-      fetchKolektibilitas();
-  });
+      // Reset semua icon
+      document.querySelectorAll('.sort-link span').forEach(s => s.innerText = '↕');
+      // Set icon aktif
+      document.getElementById('icon_' + column).innerText = currentSort.dir === 'asc' ? '↑' : '↓';
 
-  async function getLastHarianData(){
-    try { const r = await apiCall(API_DATE); const j = await r.json(); return j.data || null; } catch{ return null; }
+      // Jalankan sorting
+      window.kolekDataRaw.sort((a, b) => {
+          let valA = a[column];
+          let valB = b[column];
+
+          // Jika string (nama unit), gunakan localeCompare
+          if (typeof valA === 'string') {
+              return currentSort.dir === 'asc' 
+                ? valA.localeCompare(valB) 
+                : valB.localeCompare(valA);
+          }
+
+          // Jika angka
+          return currentSort.dir === 'asc' ? valA - valB : valB - valA;
+      });
+
+      renderTableOnly(window.kolekDataRaw);
   }
 
-  // --- POPULATE DROPDOWN (LOGIC USER FIXED) ---
+  window.addEventListener('DOMContentLoaded', async () => {
+    const user = (window.getUser && window.getUser()) || null;
+    const uKode = user?.kode ? String(user.kode).padStart(3,'0') : '000';
+    await populateKantorKolek(uKode);
+    try { 
+        const r = await fetch(API_DATE); 
+        const j = await r.json();
+        if (j.data) document.getElementById('harian_date_kolek').value = j.data.last_created;
+    } catch {
+        document.getElementById('harian_date_kolek').value = new Date().toISOString().split('T')[0];
+    }
+    fetchKolektibilitas();
+  });
+
   async function populateKantorKolek(userKode){
     const optKantor = document.getElementById('opt_kantor_kolek');
-
-    // JIKA KODE ADA ISINYA DAN BUKAN '000' (Berarti Cabang) -> KUNCI DROPDOWN
     if(userKode && userKode !== '000'){
         optKantor.innerHTML = `<option value="${userKode}">CABANG ${userKode}</option>`;
         optKantor.value = userKode;
-        optKantor.disabled = true; // KUNCI!
+        optKantor.disabled = true;
         return; 
     }
-
-    // JIKA KODE '000' ATAU PUSAT -> BUKA KONSOLIDASI
     try {
-        const res = await apiCall(API_KODE, { 
-            method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({type:'kode_kantor'}) 
-        });
+        const res = await fetch(API_KODE, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({type:'kode_kantor'}) });
         const json = await res.json();
-        const list = Array.isArray(json.data) ? json.data : [];
-        
-        let html = `<option value="">KONSOLIDASI (SEMUA)</option>`;
-        list.filter(x => x.kode_kantor && x.kode_kantor !== '000')
-            .sort((a,b) => String(a.kode_kantor).localeCompare(b.kode_kantor))
-            .forEach(it => {
-               html += `<option value="${String(it.kode_kantor).padStart(3,'0')}">${String(it.kode_kantor).padStart(3,'0')} - ${it.nama_kantor}</option>`;
-            });
-        
+        const list = json.data || [];
+        let html = `<option value="">ALL | SEMUA CABANG</option>`;
+        list.filter(x => x.kode_kantor && x.kode_kantor !== '000').sort((a,b) => String(a.kode_kantor).localeCompare(b.kode_kantor)).forEach(it => {
+            html += `<option value="${String(it.kode_kantor).padStart(3,'0')}">${String(it.kode_kantor).padStart(3,'0')} - ${it.nama_kantor}</option>`;
+        });
         optKantor.innerHTML = html;
-        optKantor.disabled = false;
-    } catch(e){
-        optKantor.innerHTML = `<option value="">Error Load</option>`;
-    }
+    } catch(e){ optKantor.innerHTML = `<option value="">Error Load</option>`; }
   }
 
-  // --- FETCH DATA ---
-  document.getElementById('formFilterKolek').addEventListener('submit', e => { e.preventDefault(); fetchKolektibilitas(); });
+  document.getElementById('formFilterKolek').addEventListener('submit', e => { 
+      e.preventDefault(); 
+      if(window.innerWidth < 768) document.getElementById('panelFilterKolek').classList.add('hidden');
+      fetchKolektibilitas(); 
+  });
 
   async function fetchKolektibilitas() {
       const loading = document.getElementById('loadingKolek');
-      const tbody = document.getElementById('bodyKolek');
-      const tbodyTotal = document.getElementById('totalKolek');
-      
-      const harian  = document.getElementById('harian_date_kolek').value;
-      const kantor  = document.getElementById('opt_kantor_kolek').value;
-
-      document.getElementById('thNamaKolek').innerText = (kantor && kantor !== '') ? "NAMA KANKAS" : "NAMA KANTOR";
+      const harian = document.getElementById('harian_date_kolek').value;
+      const kantor = document.getElementById('opt_kantor_rec')?.value || document.getElementById('opt_kantor_kolek').value;
+      const mode   = document.getElementById('hitung_berdasarkan').value;
 
       loading.classList.remove('hidden');
-      tbody.innerHTML = ''; tbodyTotal.innerHTML = '';
-
+      
       try {
-          const payload = { type: 'kolektibilitas', harian_date: harian, kode_kantor: kantor };
+          const payload = { type: 'kolektibilitas', harian_date: harian, kode_kantor: kantor, hitung_berdasarkan: mode };
           const res = await fetch(API_KOLEK, { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(payload) });
           const json = await res.json();
           
-          if(json.status && json.status !== 200) throw new Error(json.message);
+          window.kolekDataRaw = json.data?.data || json.data || [];
+          window.kolekGtRaw = json.data?.grand_total || null;
 
-          const rows = json.data?.data || json.data || [];
-          const gt   = json.data?.grand_total || null;
+          // Render Total dan Body
+          renderTotalOnly(window.kolekGtRaw);
+          renderTableOnly(window.kolekDataRaw);
 
-          // Simpan raw data untuk export
-          window.kolekDataRaw = rows;
-          window.kolekGtRaw = gt;
-
-          if (rows.length === 0) {
-              tbody.innerHTML = `<tr><td colspan="10" class="text-center py-10 text-slate-400">Data Kosong</td></tr>`;
-              return;
-          }
-
-          // === 1. RENDER GRAND TOTAL (DI BAWAH HEADER) ===
-          if(gt) {
-              tbodyTotal.innerHTML = `
-                <tr class="sticky-total">
-                    <td class="col-kode font-bold text-blue-800"></td>
-                    <td class="col-nama font-bold text-blue-800 text-left">GRAND TOTAL</td>
-                    
-                    <td class="text-right font-bold text-blue-700">${fmt(gt.bd_L)} <div class="text-[10px] text-slate-500 font-normal">${fmt(gt.noa_L)} NOA</div></td>
-                    <td class="text-right font-bold text-slate-700">${fmt(gt.bd_DP)} <div class="text-[10px] text-slate-500 font-normal">${fmt(gt.noa_DP)} NOA</div></td>
-                    <td class="text-right font-bold text-orange-500">${fmt(gt.bd_KL)} <div class="text-[10px] text-slate-500 font-normal">${fmt(gt.noa_KL)} NOA</div></td>
-                    <td class="text-right font-bold text-orange-600">${fmt(gt.bd_D)} <div class="text-[10px] text-slate-500 font-normal">${fmt(gt.noa_D)} NOA</div></td>
-                    <td class="text-right font-bold text-red-600">${fmt(gt.bd_M)} <div class="text-[10px] text-slate-500 font-normal">${fmt(gt.noa_M)} NOA</div></td>
-                    
-                    <td class="text-right font-bold text-red-700 border-l border-slate-200">${fmt(gt.bd_npl)} <div class="text-[10px] text-slate-500 font-normal">${fmt(gt.noa_npl)} NOA</div></td>
-                    <td class="text-right font-bold text-blue-800 border-l border-slate-200">${fmt(gt.total_bd)} <div class="text-[10px] text-slate-500 font-normal">${fmt(gt.total_noa)} NOA</div></td>
-                    <td class="text-right font-bold text-slate-800">${fmt2(gt.persentase_npl)}%</td>
-                </tr>
-              `;
-          }
-
-          // === 2. RENDER DATA ROWS (CLEAN UI) ===
-          let html = '';
-          rows.forEach(r => {
-              html += `
-                <tr class="hover:bg-blue-50 transition border-b">
-                    <td class="col-kode text-center font-mono text-slate-500">${r.kode_unit}</td>
-                    <td class="col-nama font-semibold text-slate-700 text-xs">
-                        <div class="truncate" title="${r.nama_unit}">${r.nama_unit}</div>
-                    </td>
-                    
-                    <td class="text-right text-blue-700">${fmt(r.bd_L)} <div class="text-[10px] text-slate-400">${fmt(r.noa_L)} NOA</div></td>
-                    <td class="text-right text-slate-700">${fmt(r.bd_DP)} <div class="text-[10px] text-slate-400">${fmt(r.noa_DP)} NOA</div></td>
-                    <td class="text-right text-orange-500">${fmt(r.bd_KL)} <div class="text-[10px] text-slate-400">${fmt(r.noa_KL)} NOA</div></td>
-                    <td class="text-right text-orange-600">${fmt(r.bd_D)} <div class="text-[10px] text-slate-400">${fmt(r.noa_D)} NOA</div></td>
-                    <td class="text-right text-red-600">${fmt(r.bd_M)} <div class="text-[10px] text-slate-400">${fmt(r.noa_M)} NOA</div></td>
-                    
-                    <td class="text-right font-bold text-red-700 border-l border-slate-100">${fmt(r.bd_npl)} <div class="text-[10px] text-slate-400 font-normal">${fmt(r.noa_npl)} NOA</div></td>
-                    <td class="text-right font-bold text-blue-800 border-l border-slate-100">${fmt(r.total_bd)} <div class="text-[10px] text-slate-400 font-normal">${fmt(r.total_noa)} NOA</div></td>
-                    <td class="text-right font-bold ${r.persentase_npl > 5 ? 'text-red-600' : 'text-green-600'}">${fmt2(r.persentase_npl)}%</td>
-                </tr>
-              `;
-          });
-          
-          tbody.innerHTML = html;
-          
-          // Kalkulasi offset Sticky Total agar pas setelah render
           setTimeout(updateStickyHeader, 50);
-
-      } catch(e) {
-          console.error(e);
-          tbody.innerHTML = `<tr><td colspan="10" class="text-center py-10 text-red-500">Error: ${e.message}</td></tr>`;
-      } finally {
-          loading.classList.add('hidden');
-      }
+      } catch(e) { 
+          document.getElementById('bodyKolek').innerHTML = `<tr><td colspan="10" class="text-center py-10 text-red-500">Error Load Data</td></tr>`;
+      } finally { loading.classList.add('hidden'); }
   }
 
-  // --- EXPORT EXCEL (PISAH KOLOM NOA & OS) ---
+  function renderTotalOnly(gt) {
+      const tbodyTotal = document.getElementById('totalKolek');
+      tbodyTotal.innerHTML = '';
+      if (!gt) return;
+      tbodyTotal.innerHTML = `
+        <tr class="sticky-total">
+            <td class="col-kode"></td>
+            <td class="col-nama text-left">GRAND TOTAL</td>
+            <td class="text-right font-bold text-blue-700">${fmt(gt.bd_L)} <div class="text-[10px] text-slate-500 font-normal">${fmt(gt.noa_L)} NOA</div></td>
+            <td class="text-right font-bold text-slate-700">${fmt(gt.bd_DP)} <div class="text-[10px] text-slate-500 font-normal">${fmt(gt.noa_DP)} NOA</div></td>
+            <td class="text-right font-bold text-orange-500">${fmt(gt.bd_KL)} <div class="text-[10px] text-slate-500 font-normal">${fmt(gt.noa_KL)} NOA</div></td>
+            <td class="text-right font-bold text-orange-600">${fmt(gt.bd_D)} <div class="text-[10px] text-slate-500 font-normal">${fmt(gt.noa_D)} NOA</div></td>
+            <td class="text-right font-bold text-red-600">${fmt(gt.bd_M)} <div class="text-[10px] text-slate-500 font-normal">${fmt(gt.noa_M)} NOA</div></td>
+            <td class="text-right font-bold text-red-700 border-l border-slate-200">${fmt(gt.bd_npl)} <div class="text-[10px] text-slate-500 font-normal">${fmt(gt.noa_npl)} NOA</div></td>
+            <td class="text-right font-bold text-blue-800 border-l border-slate-200">${fmt(gt.total_bd)} <div class="text-[10px] text-slate-500 font-normal">${fmt(gt.total_noa)} NOA</div></td>
+            <td class="text-right font-bold text-slate-800">${fmt2(gt.persentase_npl)}%</td>
+        </tr>`;
+  }
+
+  function renderTableOnly(rows) {
+      const tbody = document.getElementById('bodyKolek');
+      tbody.innerHTML = '';
+      if (rows.length === 0) {
+          tbody.innerHTML = `<tr><td colspan="10" class="text-center py-10 text-slate-400">Data Kosong</td></tr>`;
+          return;
+      }
+      let html = '';
+      rows.forEach(r => {
+          html += `
+            <tr class="transition border-b">
+                <td class="col-kode text-center font-mono text-slate-500">${r.kode_unit}</td>
+                <td class="col-nama font-semibold text-slate-700 text-xs truncate" title="${r.nama_unit}">${r.nama_unit}</td>
+                <td class="text-right text-blue-700">${fmt(r.bd_L)} <div class="text-[10px] text-slate-400">${fmt(r.noa_L)} NOA</div></td>
+                <td class="text-right text-slate-700">${fmt(r.bd_DP)} <div class="text-[10px] text-slate-400">${fmt(r.noa_DP)} NOA</div></td>
+                <td class="text-right text-orange-500">${fmt(r.bd_KL)} <div class="text-[10px] text-slate-400">${fmt(r.noa_KL)} NOA</div></td>
+                <td class="text-right text-orange-600">${fmt(r.bd_D)} <div class="text-[10px] text-slate-400">${fmt(r.noa_D)} NOA</div></td>
+                <td class="text-right text-red-600">${fmt(r.bd_M)} <div class="text-[10px] text-slate-400">${fmt(r.noa_M)} NOA</div></td>
+                <td class="text-right font-bold text-red-700 border-l border-slate-100">${fmt(r.bd_npl)} <div class="text-[10px] text-slate-400 font-normal">${fmt(r.noa_npl)} NOA</div></td>
+                <td class="text-right font-bold text-blue-800 border-l border-slate-100">${fmt(r.total_bd)} <div class="text-[10px] text-slate-400 font-normal">${fmt(r.total_noa)} NOA</div></td>
+                <td class="text-right font-bold ${r.persentase_npl > 5 ? 'text-red-600' : 'text-green-600'}">${fmt2(r.persentase_npl)}%</td>
+            </tr>`;
+      });
+      tbody.innerHTML = html;
+  }
+
   function exportKolekExcel() {
       const rows = window.kolekDataRaw || [];
       const gt = window.kolekGtRaw || null;
-      
-      if(rows.length === 0) {
-          alert("Tidak ada data untuk diexport!");
-          return;
-      }
-
-      // Header CSV
-      let csv = "KODE\tNAMA KANTOR\tLANCAR (NOA)\tLANCAR (OS)\tDPK (NOA)\tDPK (OS)\tKURANG LANCAR (NOA)\tKURANG LANCAR (OS)\tDIRAGUKAN (NOA)\tDIRAGUKAN (OS)\tMACET (NOA)\tMACET (OS)\tTOTAL NPL (NOA)\tTOTAL NPL (OS)\tTOTAL PORTOFOLIO (NOA)\tTOTAL PORTOFOLIO (OS)\t% NPL\n";
-
-      // Baris Total
-      if(gt) {
-          csv += `\tGRAND TOTAL\t${gt.noa_L}\t${gt.bd_L}\t${gt.noa_DP}\t${gt.bd_DP}\t${gt.noa_KL}\t${gt.bd_KL}\t${gt.noa_D}\t${gt.bd_D}\t${gt.noa_M}\t${gt.bd_M}\t${gt.noa_npl}\t${gt.bd_npl}\t${gt.total_noa}\t${gt.total_bd}\t${gt.persentase_npl}\n`;
-      }
-
-      // Baris Data
-      rows.forEach(r => {
-          csv += `'${r.kode_unit}\t${r.nama_unit}\t${r.noa_L}\t${r.bd_L}\t${r.noa_DP}\t${r.bd_DP}\t${r.noa_KL}\t${r.bd_KL}\t${r.noa_D}\t${r.bd_D}\t${r.noa_M}\t${r.bd_M}\t${r.noa_npl}\t${r.bd_npl}\t${r.total_noa}\t${r.total_bd}\t${r.persentase_npl}\n`;
-      });
-
-      // Export file
-      const tgl = document.getElementById('harian_date_kolek').value;
+      if(rows.length === 0) return alert("Data Kosong!");
+      let csv = "KODE\tNAMA KANTOR\tLANCAR (OS)\tDPK (OS)\tKL (OS)\tD (OS)\tM (OS)\tTOTAL NPL (OS)\tTOTAL PORTO (OS)\t% NPL\n";
+      if(gt) csv += `\tGRAND TOTAL\t${gt.bd_L}\t${gt.bd_DP}\t${gt.bd_KL}\t${gt.bd_D}\t${gt.bd_M}\t${gt.bd_npl}\t${gt.total_bd}\t${gt.persentase_npl}\n`;
+      rows.forEach(r => { csv += `'${r.kode_unit}\t${r.nama_unit}\t${r.bd_L}\t${r.bd_DP}\t${r.bd_KL}\t${r.bd_D}\t${r.bd_M}\t${r.bd_npl}\t${r.total_bd}\t${r.persentase_npl}\n`; });
       const blob = new Blob([csv], { type: 'application/vnd.ms-excel' });
-      const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
-      a.href = url;
-      a.download = `Rekap_Kolektibilitas_${tgl}.xls`;
-      document.body.appendChild(a); 
-      a.click(); 
-      document.body.removeChild(a);
+      a.href = window.URL.createObjectURL(blob);
+      a.download = `Kolektibilitas_${document.getElementById('harian_date_kolek').value}.xls`;
+      a.click();
   }
 </script>

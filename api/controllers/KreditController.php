@@ -1013,10 +1013,14 @@ class KreditController {
 
 
 
-    public function getKolek($input) {
+public function getKolek($input) {
         // 1. Ambil Parameter
         $harian_date = isset($input['harian_date']) ? $input['harian_date'] : date('Y-m-d');
         $kc          = isset($input['kode_kantor']) ? $input['kode_kantor'] : null;
+        
+        // --- LOGIK TAMBAHAN: Pilih Kolom Nominal ---
+        $modeHitung = $input['hitung_berdasarkan'] ?? 'baki_debet';
+        $colValue   = ($modeHitung === 'saldo_bank') ? 'saldo_bank' : 'baki_debet';
 
         // Normalisasi: '000' dianggap null (Pusat)
         if ($kc === '000' || $kc === '') $kc = null;
@@ -1025,11 +1029,9 @@ class KreditController {
         if ($kc) {
             // === MODE DETAIL PER KANKAS (User Cabang) ===
             $colKey       = "kode_group1"; 
-            // Nama Unit diambil dari tabel kankas
             $selectName   = "COALESCE(k.deskripsi_group1, CONCAT('KAS ', d.kode_key))";
             $joinTable    = "LEFT JOIN kankas k ON d.kode_key = k.kode_group1";
             
-            // Filter Data Harian hanya untuk cabang ini
             $filterClause = "AND kode_cabang = :kc"; 
             $kc_val       = str_pad((string)$kc, 3, '0', STR_PAD_LEFT);
         } else {
@@ -1038,7 +1040,6 @@ class KreditController {
             $selectName   = "k.nama_kantor";
             $joinTable    = "LEFT JOIN kode_kantor k ON d.kode_key = k.kode_kantor";
             
-            // Ambil semua data
             $filterClause = ""; 
             $kc_val       = null;
         }
@@ -1046,9 +1047,9 @@ class KreditController {
         $sql = "
             WITH data_harian AS (
                 SELECT 
-                    $colKey as kode_key, -- Dinamis (Cabang/Group1)
+                    $colKey as kode_key,
                     kolektibilitas,
-                    baki_debet
+                    $colValue as nilai_nominal -- Menggunakan kolom dinamis $colValue
                 FROM nominatif
                 WHERE created = :harian_date
                 $filterClause
@@ -1061,38 +1062,37 @@ class KreditController {
 
                     -- LANCAR (L)
                     COUNT(CASE WHEN d.kolektibilitas = 'L' THEN 1 END) AS noa_L,
-                    SUM(CASE WHEN d.kolektibilitas = 'L' THEN d.baki_debet ELSE 0 END) AS bd_L,
+                    SUM(CASE WHEN d.kolektibilitas = 'L' THEN d.nilai_nominal ELSE 0 END) AS bd_L,
 
                     -- DALAM PERHATIAN KHUSUS (DP)
                     COUNT(CASE WHEN d.kolektibilitas = 'DP' THEN 1 END) AS noa_DP,
-                    SUM(CASE WHEN d.kolektibilitas = 'DP' THEN d.baki_debet ELSE 0 END) AS bd_DP,
+                    SUM(CASE WHEN d.kolektibilitas = 'DP' THEN d.nilai_nominal ELSE 0 END) AS bd_DP,
 
                     -- KURANG LANCAR (KL)
                     COUNT(CASE WHEN d.kolektibilitas = 'KL' THEN 1 END) AS noa_KL,
-                    SUM(CASE WHEN d.kolektibilitas = 'KL' THEN d.baki_debet ELSE 0 END) AS bd_KL,
+                    SUM(CASE WHEN d.kolektibilitas = 'KL' THEN d.nilai_nominal ELSE 0 END) AS bd_KL,
 
                     -- DIRAGUKAN (D)
                     COUNT(CASE WHEN d.kolektibilitas = 'D' THEN 1 END) AS noa_D,
-                    SUM(CASE WHEN d.kolektibilitas = 'D' THEN d.baki_debet ELSE 0 END) AS bd_D,
+                    SUM(CASE WHEN d.kolektibilitas = 'D' THEN d.nilai_nominal ELSE 0 END) AS bd_D,
 
                     -- MACET (M)
                     COUNT(CASE WHEN d.kolektibilitas = 'M' THEN 1 END) AS noa_M,
-                    SUM(CASE WHEN d.kolektibilitas = 'M' THEN d.baki_debet ELSE 0 END) AS bd_M,
+                    SUM(CASE WHEN d.kolektibilitas = 'M' THEN d.nilai_nominal ELSE 0 END) AS bd_M,
 
                     -- TOTAL PORTOFOLIO
                     COUNT(*) AS total_noa,
-                    SUM(d.baki_debet) AS total_bd,
+                    SUM(d.nilai_nominal) AS total_bd,
 
                     -- TOTAL NPL (KL + D + M)
                     SUM(CASE WHEN d.kolektibilitas IN ('KL', 'D', 'M') THEN 1 ELSE 0 END) AS noa_npl,
-                    SUM(CASE WHEN d.kolektibilitas IN ('KL', 'D', 'M') THEN d.baki_debet ELSE 0 END) AS bd_npl
+                    SUM(CASE WHEN d.kolektibilitas IN ('KL', 'D', 'M') THEN d.nilai_nominal ELSE 0 END) AS bd_npl
 
                 FROM data_harian d
                 $joinTable
                 GROUP BY d.kode_key, $selectName
             )
 
-            -- SELECT DATA PER BARIS
             SELECT
                 kode_key as kode_unit,
                 nama_unit,
@@ -1110,7 +1110,6 @@ class KreditController {
 
             UNION ALL
 
-            -- SELECT GRAND TOTAL (BARIS TERAKHIR)
             SELECT
                 '' as kode_unit,
                 'TOTAL KONSOLIDASI' as nama_unit,
@@ -1135,7 +1134,6 @@ class KreditController {
             $stmt = $this->pdo->prepare($sql);
             $stmt->bindValue(':harian_date', $harian_date);
             
-            // Bind kode kantor jika ada
             if ($kc_val) {
                 $stmt->bindValue(':kc', $kc_val);
             }
@@ -1143,10 +1141,8 @@ class KreditController {
             $stmt->execute();
             $data = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-            // Pisahkan Grand Total (agar format JSON konsisten dengan menu lain)
             $grandTotal = array_pop($data);
             if (!$grandTotal) {
-                // Fallback object kosong jika tidak ada data
                 $grandTotal = [
                     'kode_unit' => '', 'nama_unit' => 'TOTAL KONSOLIDASI',
                     'noa_L'=>0, 'bd_L'=>0, 'noa_DP'=>0, 'bd_DP'=>0, 
@@ -1155,7 +1151,7 @@ class KreditController {
                 ];
             }
 
-            sendResponse(200, "Berhasil ambil data Kolektibilitas", [
+            sendResponse(200, "Berhasil menghitung berdasarkan $colValue", [
                 'data' => $data,
                 'grand_total' => $grandTotal
             ]);
@@ -1163,7 +1159,7 @@ class KreditController {
         } catch (Exception $e) {
             sendResponse(500, "Error: " . $e->getMessage());
         }
-}
+    }
 
     public function getTopRealisasi($input = []) {
         // 1. Ambil Parameter Tanggal

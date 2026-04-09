@@ -157,7 +157,8 @@ class FlowParController {
                 GROUP BY no_rekening
             ),
             km_last AS (
-                SELECT k.no_rekening, k.komitmen, k.tgl_pembayaran, k.alasan
+                /* TAMBAHAN: Masukkan k.nominal di sini */
+                SELECT k.no_rekening, k.komitmen, k.tgl_pembayaran, k.nominal, k.alasan
                 FROM komitmen_flowpar k
                 JOIN (
                     SELECT no_rekening, MAX(COALESCE(updated, created)) AS last_ts
@@ -187,7 +188,11 @@ class FlowParController {
                 trx.angsuran_pokok,
                 trx.angsuran_bunga,
                 trx.tgl_trans,
-                km_last.komitmen
+                km_last.komitmen,
+                /* TAMBAHAN: Keluarkan data tgl, nominal, dan alasan */
+                km_last.tgl_pembayaran,
+                km_last.nominal,
+                km_last.alasan
             FROM flow_par f
             LEFT JOIN trx ON f.no_rekening = trx.no_rekening
             LEFT JOIN kode_kantor kk ON f.kode_cabang = kk.kode_kantor
@@ -793,6 +798,9 @@ class FlowParController {
         $komitmen        = $input['komitmen'] ?? null;
         $alasan          = $input['alasan'] ?? null;
         $tgl_pembayaran  = $input['tgl_pembayaran'] ?? date('Y-m-d');
+        // Tangkap nilai nominal, pastikan hanya angka yang masuk (hapus karakter selain digit jika perlu, atau cast to int)
+        $nominal         = isset($input['nominal']) ? (int) $input['nominal'] : 0; 
+        
         $tanggal = date('Y-m-d');
 
         if (!$rekening || !$komitmen) {
@@ -815,13 +823,14 @@ class FlowParController {
         $existing = $stmt->fetch(PDO::FETCH_ASSOC);
 
         if ($existing) {
-            // Data sudah ada → lakukan UPDATE, pertahankan created
+            // Data sudah ada → lakukan UPDATE, pertahankan created, UPDATE nominal
             $sql_update = "
                 UPDATE komitmen_flowpar 
                 SET 
                     tgl_pembayaran = :tgl_pembayaran,
                     komitmen = :komitmen,
                     alasan = :alasan,
+                    nominal = :nominal,
                     updated = NOW()
                 WHERE id = :id
             ";
@@ -831,25 +840,28 @@ class FlowParController {
                 ':tgl_pembayaran' => $tgl_pembayaran,
                 ':komitmen' => $komitmen,
                 ':alasan' => $alasan,
+                ':nominal' => $nominal, // Bind parameter nominal
                 ':id' => $existing['id']
             ]);
 
             sendResponse(200, "Data komitmen berhasil diupdate");
         } else {
-            // Data belum ada → lakukan INSERT baru
+            // Data belum ada → lakukan INSERT baru termasuk nominal
             $sql_insert = "
                 INSERT INTO komitmen_flowpar 
-                    (no_rekening, komitmen, alasan, tgl_pembayaran, created, updated)
+                    (no_rekening, komitmen, alasan, tgl_pembayaran, nominal, created, updated)
                 VALUES 
-                    (:rekening, :komitmen, :alasan, :tgl_pembayaran, NOW(), NOW())
+                    (:rekening, :komitmen, :alasan, :tgl_pembayaran, :nominal, NOW(), NOW())
             ";
             $stmt = $this->pdo->prepare($sql_insert);
             $stmt->execute([
                 ':rekening' => $rekening,
                 ':komitmen' => $komitmen,
                 ':alasan' => $alasan,
-                ':tgl_pembayaran' => $tgl_pembayaran
+                ':tgl_pembayaran' => $tgl_pembayaran,
+                ':nominal' => $nominal // Bind parameter nominal
             ]);
+            
             sendResponse(200, "Data komitmen berhasil disimpan");
         }
     }
