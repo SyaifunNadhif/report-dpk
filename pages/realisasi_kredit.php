@@ -92,7 +92,7 @@
     <div class="shrink-0 pl-1 md:pl-0">
       <h1 class="text-xl md:text-2xl font-bold flex items-center gap-2 text-slate-800">
         <span class="bg-blue-600 text-white p-1.5 rounded-lg shadow-sm text-sm">💳</span> 
-        <span>Rekap Realisasi & Growth</span>
+        <span>Run off : nom actual - nom m-1</span>
       </h1>
       <p class="text-[10px] md:text-xs text-slate-500 mt-1 md:mt-1.5 font-medium">*Data Growth = Realisasi Baru - Run Off</p>
     </div>
