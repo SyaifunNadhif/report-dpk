@@ -92,9 +92,9 @@
     <div class="shrink-0 pl-1 md:pl-0">
       <h1 class="text-xl md:text-2xl font-bold flex items-center gap-2 text-slate-800">
         <span class="bg-blue-600 text-white p-1.5 rounded-lg shadow-sm text-sm">💳</span> 
-        <span>Run off : nom actual - nom m-1</span>
+        <span>Rekap Realisasi Kredit</span>
       </h1>
-      <p class="text-[10px] md:text-xs text-slate-500 mt-1 md:mt-1.5 font-medium">*Data Growth = Realisasi Baru - Run Off</p>
+      <p class="text-[10px] md:text-xs text-slate-500 mt-1 md:mt-1.5 font-medium">*Run off : nom actual - nom m-1</p>
     </div>
 
     <form id="formFilterRealisasi" class="flex w-full lg:w-auto items-end gap-1.5 md:gap-2 bg-white p-2 rounded-xl border border-slate-200 shadow-sm shrink-0">
