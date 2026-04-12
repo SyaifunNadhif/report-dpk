@@ -22,6 +22,8 @@ switch ($method) {
             $controller->getRealisasiKredit($input);
         } elseif ($input['type'] === 'top realisasi') {
             $controller->getTopRealisasi($input);
+        } elseif ($input['type'] === 'detail realisasi ao') {
+            $controller->getDetailRealisasiAO($input);
         } elseif ($input['type'] === 'mob_vintage') {
             $controller->getRekapMob6Bulan($input);
         } elseif ($input['type'] === 'detail_mob_debitur') {

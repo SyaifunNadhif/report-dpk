@@ -226,147 +226,105 @@ class FlowParController {
         }
     }
 
-    public function searchDebiturKredit($input) {
-        // --- 1. PROTEKSI AKSES & AMBIL PARAMETER ---
-        
-        // Asumsi: Ambil kode user yang sedang login dari Session / Token JWT.
-        // GANTI $_SESSION['user_kode'] di bawah ini sesuai dengan sistem login kamu.
-        $user_login_kode = $_SESSION['user_kode'] ?? '000'; 
+public function searchDebiturKredit($input) {
+    // --- 1. AMBIL PARAMETER ---
+    $user_login_kode = $input['user_kode'] ?? '000'; 
+    $kc_input = $input['kode_kantor'] ?? '';
 
-        if ($user_login_kode !== '000') {
-            // JIKA CABANG: Paksa kode_kantor menjadi kode cabang dia sendiri (Anti Bypass)
-            $kode_kantor = str_pad($user_login_kode, 3, '0', STR_PAD_LEFT);
-        } else {
-            // JIKA PUSAT: Gunakan filter yang dikirim dari frontend (bisa Kosong/Semua)
-            $kode_kantor = str_pad($input['kode_kantor'] ?? '', 3, '0', STR_PAD_LEFT);
-        }
-
-        $kolek       = $input['kolek'] ?? 'Semua';
-        $search      = $input['search'] ?? '';
-        
-        // Pastikan input 0 tetap terbaca sebagai karakter '0', bukan kosong
-        $totung      = isset($input['totung']) ? trim((string)$input['totung']) : '';
-        
-        // Otomatis set tanggal H-1 (Kemarin)
-        // $tanggal_h1  = $input['tanggal'] ?? date('Y-m-d', strtotime('-1 days'));
-        $tanggal_h1  = $input['tanggal'] ?? date('Y-m-d', strtotime('-1 days'));
-
-        // Pagination Parameter
-        $page   = isset($input['page']) ? (int)$input['page'] : 1;
-        $limit  = isset($input['limit']) ? (int)$input['limit'] : 20;
-        $offset = ($page - 1) * $limit;
-
-        // WAJIB: Gunakan alias 'n' untuk nominatif & batasi hanya data kemarin
-        $where = " WHERE n.created = :tanggal_h1 ";
-        $params = [
-            ':tanggal_h1' => $tanggal_h1
-        ];
-
-        // --- 2. LOGIC FILTERING TAMBAHAN ---
-        if ($kode_kantor !== '000' && $kode_kantor !== '') {
-            $where .= " AND n.kode_cabang = :kode_kantor ";
-            $params[':kode_kantor'] = $kode_kantor;
-        }
-
-        if ($kolek !== 'Semua' && $kolek !== '') {
-            $where .= " AND n.kolektibilitas = :kolek ";
-            $params[':kolek'] = $kolek;
-        }
-
-        if ($search !== '') {
-            $where .= " AND (n.no_rekening LIKE :search OR n.nama_nasabah LIKE :search) ";
-            $params[':search'] = "%$search%";
-        }
-
-        // --- LOGIC TOTUNG (Tunggakan Pokok + Bunga) SUPER CERDAS ---
-        if ($totung !== '') {
-            if ((float)$totung > 0) {
-                // Jika input lebih dari 0 (misal: 200000) -> Tampilkan <= 200000 DAN > 0
-                $where .= " AND (COALESCE(n.tunggakan_pokok, 0) + COALESCE(n.tunggakan_bunga, 0)) <= :totung ";
-                $where .= " AND (COALESCE(n.tunggakan_pokok, 0) + COALESCE(n.tunggakan_bunga, 0)) > 0 ";
-                $params[':totung'] = $totung;
-            } else {
-                // Jika input tepat 0 -> Tampilkan khusus yang 0
-                $where .= " AND (COALESCE(n.tunggakan_pokok, 0) + COALESCE(n.tunggakan_bunga, 0)) <= 0 ";
-            }
-        } else {
-            // Jika form KOSONG -> Default tampilkan yang punya tunggakan saja (> 0)
-            $where .= " AND (COALESCE(n.tunggakan_pokok, 0) + COALESCE(n.tunggakan_bunga, 0)) > 0 ";
-        }
-
-        try {
-            // --- 3. HITUNG TOTAL DATA & SUMMARY UNTUK HEADER ---
-            $sqlSum = "
-                SELECT 
-                    COUNT(n.no_rekening) as total_data,
-                    SUM(n.baki_debet) AS sum_bd
-                FROM nominatif n
-                $where
-            ";
-            $stmtSum = $this->pdo->prepare($sqlSum);
-            foreach ($params as $key => $val) {
-                $stmtSum->bindValue($key, $val);
-            }
-            $stmtSum->execute();
-            $summary = $stmtSum->fetch(PDO::FETCH_ASSOC);
-            
-            $totalData  = $summary['total_data'] ?? 0;
-            $totalPages = ceil($totalData / $limit);
-
-            // --- 4. QUERY DATA UTAMA DENGAN JOIN TABUNGAN & PAGINATION ---
-            $sqlData = "
-                SELECT 
-                    n.nama_nasabah,
-                    n.no_rekening,
-                    n.norek_tabungan,
-                    n.kode_produk,
-                    n.kolektibilitas AS kolek,
-                    n.hari_menunggak AS dpd,
-                    n.hari_menunggak_pokok AS hmp,
-                    n.hari_menunggak_bunga AS hmb,
-                    n.tgl_jatuh_tempo,
-                    n.baki_debet,
-                    (COALESCE(n.tunggakan_pokok, 0) + COALESCE(n.tunggakan_bunga, 0)) AS totung,
-                    tb.saldo_akhir AS saldo_tabungan
-                FROM nominatif n
-                LEFT JOIN tabungan tb ON n.norek_tabungan = tb.no_rekening
-                $where
-                ORDER BY n.baki_debet DESC
-                LIMIT :limit OFFSET :offset
-            ";
-
-            $stmtData = $this->pdo->prepare($sqlData);
-            // Bind parameter WHERE
-            foreach ($params as $key => $val) {
-                $stmtData->bindValue($key, $val);
-            }
-            // Bind parameter LIMIT & OFFSET (Wajib Integer)
-            $stmtData->bindValue(':limit', $limit, PDO::PARAM_INT);
-            $stmtData->bindValue(':offset', $offset, PDO::PARAM_INT);
-            
-            $stmtData->execute();
-            $data = $stmtData->fetchAll(PDO::FETCH_ASSOC);
-
-            // --- 5. BUNGKUS RESPONSE KE FRONTEND ---
-            $response = [
-                'summary' => [
-                    'noa'    => $totalData,
-                    'bd_act' => $summary['sum_bd'] ?? 0
-                ],
-                'pagination' => [
-                    'total_data'   => $totalData,
-                    'total_page'   => $totalPages,
-                    'current_page' => $page,
-                    'limit'        => $limit
-                ],
-                'data' => $data
-            ];
-
-            sendResponse(200, "Data Debitur berhasil dimuat", $response);
-        } catch (Exception $e) {
-            sendResponse(500, "Error: " . $e->getMessage());
-        }
+    if ($user_login_kode !== '000' && $user_login_kode !== '') {
+        $kode_kantor = str_pad($user_login_kode, 3, '0', STR_PAD_LEFT);
+    } else {
+        $kode_kantor = ($kc_input !== '') ? str_pad($kc_input, 3, '0', STR_PAD_LEFT) : '';
     }
+
+    $kolek  = $input['kolek'] ?? 'Semua';
+    $search = trim($input['search'] ?? '');
+    
+    // Ambil totung dan pastikan tipenya float/angka
+    $totung = (isset($input['totung']) && $input['totung'] !== '') ? (float)$input['totung'] : null;
+    
+    // Ambil tanggal harian terakhir dari input atau default H-1
+    $tanggal_h1 = $input['tanggal'] ?? date('Y-m-d', strtotime('-1 days'));
+
+    $page   = isset($input['page']) ? (int)$input['page'] : 1;
+    $limit  = isset($input['limit']) ? (int)$input['limit'] : 50;
+    $offset = ($page - 1) * $limit;
+
+    // WHERE AWAL: Batasi berdasarkan tanggal created
+    $where = " WHERE n.created = :tanggal_h1 ";
+    $params = [':tanggal_h1' => $tanggal_h1];
+
+    // --- 2. LOGIC FILTERING ---
+    if ($kode_kantor !== '' && $kode_kantor !== '000') {
+        $where .= " AND n.kode_cabang = :kode_kantor ";
+        $params[':kode_kantor'] = $kode_kantor;
+    }
+
+    if ($kolek !== 'Semua' && $kolek !== '') {
+        $where .= " AND n.kolektibilitas = :kolek ";
+        $params[':kolek'] = $kolek;
+    }
+
+    if ($search !== '') {
+        $where .= " AND (n.no_rekening LIKE :search OR n.nama_nasabah LIKE :search_nama) ";
+        $params[':search'] = "%$search%";
+        $params[':search_nama'] = "%$search%";
+    }
+
+    // --- FIX LOGIC TOTUNG SESUAI REQUEST ---
+    // totung > 0 DAN totung <= nilai_input
+    if ($totung !== null) {
+        $where .= " AND (COALESCE(n.tunggakan_pokok, 0) + COALESCE(n.tunggakan_bunga, 0)) > 0 ";
+        $where .= " AND (COALESCE(n.tunggakan_pokok, 0) + COALESCE(n.tunggakan_bunga, 0)) <= :totung ";
+        $params[':totung'] = $totung;
+    }
+
+    try {
+        // --- 3. COUNT & SUMMARY ---
+        $sqlSum = "SELECT COUNT(n.no_rekening) as total_data, SUM(n.baki_debet) AS sum_bd FROM nominatif n $where";
+        $stmtSum = $this->pdo->prepare($sqlSum);
+        foreach ($params as $key => $val) { $stmtSum->bindValue($key, $val); }
+        $stmtSum->execute();
+        $summary = $stmtSum->fetch(PDO::FETCH_ASSOC);
+        
+        $totalData  = (int)($summary['total_data'] ?? 0);
+        $totalPages = ceil($totalData / $limit);
+
+        // --- 4. QUERY DATA UTAMA ---
+        $sqlData = "
+            SELECT 
+                n.kode_cabang, n.nama_nasabah, n.no_rekening, n.norek_tabungan, n.kode_produk,
+                n.kolektibilitas AS kolek, n.hari_menunggak AS dpd,
+                n.hari_menunggak_pokok AS hmp, n.hari_menunggak_bunga AS hmb,
+                n.tgl_jatuh_tempo, n.baki_debet,
+                (COALESCE(n.tunggakan_pokok, 0) + COALESCE(n.tunggakan_bunga, 0)) AS totung,
+                COALESCE(tb.saldo_akhir, 0) AS saldo_tabungan
+            FROM nominatif n
+            LEFT JOIN tabungan tb ON n.norek_tabungan = tb.no_rekening
+            $where
+            ORDER BY n.baki_debet DESC
+            LIMIT $limit OFFSET $offset
+        ";
+
+        $stmtData = $this->pdo->prepare($sqlData);
+        foreach ($params as $key => $val) { $stmtData->bindValue($key, $val); }
+        $stmtData->execute();
+        $data = $stmtData->fetchAll(PDO::FETCH_ASSOC);
+
+        sendResponse(200, "Sukses", [
+            'summary' => ['noa' => $totalData, 'bd_act' => $summary['sum_bd'] ?? 0],
+            'pagination' => [
+                'total_data'   => $totalData,
+                'total_page'   => $totalPages,
+                'current_page' => $page,
+                'limit'        => $limit
+            ],
+            'data' => $data
+        ]);
+    } catch (Exception $e) {
+        sendResponse(500, "Error BE: " . $e->getMessage());
+    }
+}
 
     public function getPotensiNplRekap($input = [])
     {

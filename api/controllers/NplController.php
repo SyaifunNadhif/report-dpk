@@ -268,91 +268,88 @@ class NplController {
     //     sendResponse(200, $msg, $data);
     // }
 
-    public function getTop25NplPerCabang($input) {
-        $closing_date = $input['closing_date'] ?? date('Y-m-d', strtotime('last day of previous month'));
-        $harian_date  = $input['harian_date'] ?? date('Y-m-d');
-        $kode_cabang  = $input['kode_cabang'] ?? null;
-        $start_month  = date('Y-m-01', strtotime($harian_date));
+public function getTop25NplPerCabang($input) {
+    $closing_date = $input['closing_date'] ?? date('Y-m-d', strtotime('last day of previous month'));
+    $harian_date  = $input['harian_date'] ?? date('Y-m-d');
+    $kode_cabang  = $input['kode_cabang'] ?? null;
+    $start_month  = date('Y-m-01', strtotime($harian_date));
 
-        // Ambil 25 rekening NPL tertinggi duluan (ringan)
-        $sql = "
-            WITH top25 AS (
-                SELECT 
-                    n.no_rekening,
-                    n.nama_nasabah,
-                    n.kode_cabang,
-                    k.nama_kantor,
-                    n.jml_pinjaman,
-                    n.kolektibilitas AS kolek_closing,
-                    n.baki_debet
-                FROM nominatif n
-                LEFT JOIN kode_kantor k ON n.kode_cabang = k.kode_kantor
-                WHERE n.created = :closing_date
-                AND n.kolektibilitas IN ('KL', 'D', 'M')
-        ";
-
-        if (!empty($kode_cabang)) {
-            $sql .= " AND n.kode_cabang = :kode_cabang";
+    try {
+        // 1. Buat filter dinamis untuk CTE dan Query Utama
+        $branchFilter = "";
+        if (!empty($kode_cabang) && $kode_cabang !== '000') {
+            $branchFilter = " AND kode_cabang = :kc_filter ";
         }
 
-        $sql .= "
+        // 2. Query dengan hitungan Persen Kontribusi
+        $sql = "
+            WITH total_npl AS (
+                SELECT SUM(baki_debet) as grand_total_bd_npl
+                FROM nominatif
+                WHERE created = :closing_date
+                AND kolektibilitas IN ('KL', 'D', 'M')
+                $branchFilter
+            ),
+            top25 AS (
+                SELECT 
+                    n.no_rekening, n.nama_nasabah, n.kode_cabang, k.nama_kantor,
+                    n.jml_pinjaman, n.kolektibilitas AS kolek_closing, n.baki_debet
+                FROM nominatif n
+                LEFT JOIN kode_kantor k ON n.kode_cabang = k.kode_kantor
+                WHERE n.created = :closing_date_2
+                AND n.kolektibilitas IN ('KL', 'D', 'M')
+                " . str_replace(':kc_filter', ':kc_filter_2', $branchFilter) . "
                 ORDER BY n.baki_debet DESC
                 LIMIT 25
             )
-
             SELECT 
                 t25.*,
+                -- Hitung % kontribusi debitur terhadap Total NPL Cabang/Pusat
+                CASE 
+                    WHEN tn.grand_total_bd_npl > 0 
+                    THEN ROUND((t25.baki_debet / tn.grand_total_bd_npl) * 100, 2)
+                    ELSE 0 
+                END AS persen_npl,
 
-                -- Dari nominatif harian
                 nh.kolektibilitas AS kolek_harian,
                 nh.baki_debet AS baki_debet_harian,
-                nh.tunggakan_pokok,
-                nh.tunggakan_bunga,
-
-                -- Transaksi
+                nh.tunggakan_pokok, nh.tunggakan_bunga,
                 COALESCE(SUM(tk.angsuran_pokok), 0) AS total_pokok,
                 COALESCE(SUM(tk.angsuran_bunga), 0) AS total_bunga,
                 MAX(tk.tgl_trans) AS tgl_trans
 
             FROM top25 t25
-
-            -- Join ke nominatif harian
-            LEFT JOIN nominatif nh 
-                ON t25.no_rekening = nh.no_rekening 
-                AND nh.created = :harian_date
-
-            -- Join ke transaksi kredit
-            LEFT JOIN transaksi_kredit tk 
-                ON t25.no_rekening = tk.no_rekening 
-                AND tk.tgl_trans BETWEEN :start_month AND :end_date
-
-            GROUP BY 
-                t25.no_rekening, t25.nama_nasabah, t25.kode_cabang, t25.nama_kantor, 
-                t25.kolek_closing, t25.baki_debet,
-                nh.kolektibilitas, nh.baki_debet, nh.tunggakan_pokok, nh.tunggakan_bunga
-
+            CROSS JOIN total_npl tn
+            LEFT JOIN nominatif nh ON t25.no_rekening = nh.no_rekening AND nh.created = :harian_date
+            LEFT JOIN transaksi_kredit tk ON t25.no_rekening = tk.no_rekening AND tk.tgl_trans BETWEEN :start_month AND :end_date
+            GROUP BY 1,2,3,4,5,6,7,8,9,10,11,12
             ORDER BY t25.baki_debet DESC
         ";
 
-
         $stmt = $this->pdo->prepare($sql);
+        
+        // BINDING PARAMETER (Harus Unik karena PDO tidak suka nama parameter sama di query yang sama)
         $stmt->bindValue(':closing_date', $closing_date);
+        $stmt->bindValue(':closing_date_2', $closing_date);
         $stmt->bindValue(':harian_date', $harian_date);
         $stmt->bindValue(':start_month', $start_month);
-        $stmt->bindValue(':end_date', $harian_date); // sama seperti harian_date
-        if (!empty($kode_cabang)) {
-            $stmt->bindValue(':kode_cabang', $kode_cabang);
+        $stmt->bindValue(':end_date', $harian_date);
+
+        if (!empty($kode_cabang) && $kode_cabang !== '000') {
+            $val_kc = str_pad((string)$kode_cabang, 3, '0', STR_PAD_LEFT);
+            $stmt->bindValue(':kc_filter', $val_kc);
+            $stmt->bindValue(':kc_filter_2', $val_kc);
         }
 
         $stmt->execute();
         $data = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-        $msg = !empty($kode_cabang)
-            ? "Top 25 NPL cabang $kode_cabang"
-            : "Top 25 NPL konsolidasi";
+        sendResponse(200, "Top 25 NPL Sukses", $data);
 
-        sendResponse(200, $msg, $data);
+    } catch (Exception $e) {
+        sendResponse(500, "Error DB: " . $e->getMessage());
     }
+}
 
     
     public function getDetailRecoveryNpl($input = []) {

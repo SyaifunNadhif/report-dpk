@@ -28,7 +28,7 @@
         
         <div class="flex items-end h-full pt-5">
           <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white h-9 w-10 md:w-11 rounded-lg font-bold shadow-sm flex items-center justify-center transition" title="Tampilkan Data">
-            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" x2="16.65" y2="16.65"></line></svg>
           </button>
         </div>
       </form>
@@ -42,22 +42,22 @@
 
   <div id="nplScroller" class="flex-1 min-h-0 overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm relative">
     <div class="h-full overflow-auto" id="nplScrollInner">
-      <table id="tabelTopNpl" class="min-w-full text-[12px] text-left text-gray-700">
+      <table id="tabelTopNpl" class="min-w-full text-[12px] text-left text-gray-700 border-separate border-spacing-0">
         <thead class="uppercase">
           <tr id="nplHead">
-            <th class="px-3 py-2 sticky col-namakantor border-r">NAMA KANTOR</th>
-            <th class="px-3 py-2 sticky freeze-1 col-norek border-r">NO REKENING</th>
-            <th class="px-3 py-2 sticky freeze-2 col-debitur border-r">NAMA DEBITUR</th>
-            <th class="px-3 py-2 text-right sticky col-amt border-r">PLAFOND</th>
-            <th class="px-3 py-2 text-right sticky col-amt border-r">BAKI DEBET</th>
-            <th class="px-3 py-2 text-right sticky col-pct border-r" title="Sisa Plafond">%</th>
-            <th class="px-3 py-2 text-right sticky col-amt border-r">T.POKOK</th>
-            <th class="px-3 py-2 text-right sticky col-amt border-r">T.BUNGA</th>
-            <th class="px-3 py-2 text-center sticky col-kol border-r">KOLEK</th>
-            <th class="px-3 py-2 text-center sticky col-kol border-r">KOLEK UPDATE</th>
-            <th class="px-3 py-2 text-right sticky col-amt border-r">ANGS POKOK</th>
-            <th class="px-3 py-2 text-right sticky col-amt border-r">ANGS BUNGA</th>
-            <th class="px-3 py-2 text-center sticky col-date">TGL TRANS</th>
+            <th class="px-3 py-2 sticky top-0 z-40 col-namakantor border-b border-r">NAMA KANTOR</th>
+            <th class="px-3 py-2 sticky top-0 z-50 freeze-1 col-norek border-b border-r">NO REKENING</th>
+            <th class="px-3 py-2 sticky top-0 z-40 freeze-2 col-debitur border-b border-r">NAMA DEBITUR</th>
+            <th class="px-3 py-2 text-right sticky top-0 z-30 col-amt border-b border-r">PLAFOND</th>
+            <th class="px-3 py-2 text-right sticky top-0 z-30 col-amt border-b border-r">BAKI DEBET</th>
+            <th class="px-3 py-2 text-right sticky top-0 z-30 col-pct border-b border-r" title="Kontribusi terhadap Total NPL (%)">%</th>
+            <th class="px-3 py-2 text-right sticky top-0 z-30 col-amt border-b border-r">T.POKOK</th>
+            <th class="px-3 py-2 text-right sticky top-0 z-30 col-amt border-b border-r">T.BUNGA</th>
+            <th class="px-3 py-2 text-center sticky top-0 z-30 col-kol border-b border-r">KOLEK</th>
+            <th class="px-3 py-2 text-center sticky top-0 z-30 col-kol border-b border-r">UPDATE</th>
+            <th class="px-3 py-2 text-right sticky top-0 z-30 col-amt border-b border-r">ANGS POKOK</th>
+            <th class="px-3 py-2 text-right sticky top-0 z-30 col-amt border-b border-r">ANGS BUNGA</th>
+            <th class="px-3 py-2 text-center sticky top-0 z-30 col-date border-b">TGL TRANS</th>
           </tr>
         </thead>
         <tbody id="tbTotalNpl"></tbody>
@@ -71,27 +71,32 @@
 <style>
   .inp { border: 1px solid #cbd5e1; border-radius: 0.5rem; padding: 0 0.75rem; font-size: 13px; background: #fff; width: 100%; outline: none; transition: border 0.2s; }
   .inp:focus { border-color: #2563eb; ring: 2px solid #bfdbfe; }
-  #tabelTopNpl { border-collapse: separate; border-spacing: 0; table-layout: fixed; }
-  #tabelTopNpl thead th { position: sticky; top: 0; z-index: 60; background: #d9ead3 !important; color: #1e293b; border-bottom: 1px solid #cbd5e1; font-weight: 700; }
   
-  .freeze-1 { position: sticky; left: 0; z-index: 45; background: #fff; border-right: 1px solid #e2e8f0; }
-  .freeze-2 { position: sticky; left: 7.5rem; z-index: 44; background: #fff; border-right: 1px solid #e2e8f0; box-shadow: 2px 0 5px rgba(0,0,0,0.03); }
+  #tabelTopNpl thead th { background: #d9ead3 !important; color: #1e293b; font-weight: 700; border-color: #cbd5e1; }
+  
+  .freeze-1 { position: sticky; left: 0; background: #fff; border-right: 1px solid #e2e8f0; }
+  .freeze-2 { position: sticky; left: 7.5rem; background: #fff; border-right: 1px solid #e2e8f0; box-shadow: 2px 0 5px rgba(0,0,0,0.03); }
   
   .col-namakantor { width: 10rem; }
   .col-norek { width: 7.5rem; }
   .col-debitur { width: 13rem; overflow: hidden; text-overflow: ellipsis; }
-  .col-amt { width: 8rem; text-align: right; }
-  .col-pct { width: 5.5rem; text-align: right; }
+  .col-amt { width: 8.5rem; text-align: right; }
+  .col-pct { width: 4.5rem; text-align: right; }
   .col-kol { width: 5rem; text-align: center; }
   .col-date { width: 7rem; text-align: center; }
 
-  #tbTotalNpl tr td { position: sticky; top: var(--headH, 36px); z-index: 55; background: #f0f7ff; color: #1e40af; font-weight: 700; border-bottom: 2px solid #bfdbfe; }
+  #tbTotalNpl tr td { 
+    position: sticky; top: var(--headH, 36px); z-index: 25; 
+    background: #f0f7ff; color: #1e40af; font-weight: 700; border-bottom: 2px solid #bfdbfe; 
+  }
+  #tbTotalNpl tr td.freeze-1 { z-index: 26; background: #f0f7ff; }
+  #tbTotalNpl tr td.freeze-2 { z-index: 26; background: #f0f7ff; }
 
   @media (max-width: 640px) {
     .freeze-1 { display: none !important; }
     .freeze-2 { left: 0 !important; width: 8.5rem; min-width: 8.5rem; white-space: normal; line-height: 1.2; }
     .col-amt { width: 7.5rem; }
-    .col-pct { width: 4.5rem; }
+    .col-pct { width: 4rem; }
   }
 </style>
 
@@ -99,15 +104,6 @@
   let StateDate = { closing: '', harian: '' };
   const nfID = new Intl.NumberFormat('id-ID');
   const fmt = n => nfID.format(Number(n||0));
-  
-  // Fungsi Hitung Sisa Persentase (100 - BD/PL)
-  const fmtSisaPct = (bd, pl) => {
-      const p = Number(pl||0);
-      if(p === 0) return '0%';
-      const res = 100 - ((Number(bd||0) / p) * 100);
-      return (res < 0 ? 0 : res).toFixed(1) + '%';
-  };
-
   const selCabang = document.getElementById('selCabangNpl');
 
   document.getElementById('btnToggleNplFilter').addEventListener('click', function() {
@@ -176,20 +172,21 @@
     const sum = k => rows.reduce((s, r) => s + Number(r[k] || 0), 0);
     const totalPlaf = sum('jml_pinjaman');
     const totalBaki = sum('baki_debet');
+    const totalPersen = sum('persen_npl'); // Ambil dari BE baru
     
     ttot.innerHTML = `
       <tr>
-        <td class="px-3 py-2"></td>
-        <td class="px-3 py-2 freeze-1"></td>
-        <td class="px-3 py-2 freeze-2 font-bold">TOTAL</td>
-        <td class="px-3 py-2 text-right">${fmt(totalPlaf)}</td>
-        <td class="px-3 py-2 text-right">${fmt(totalBaki)}</td>
-        <td class="px-3 py-2 text-right font-mono text-slate-500">${fmtSisaPct(totalBaki, totalPlaf)}</td>
-        <td class="px-3 py-2 text-right">${fmt(sum('tunggakan_pokok'))}</td>
-        <td class="px-3 py-2 text-right">${fmt(sum('tunggakan_bunga'))}</td>
-        <td colspan="2"></td>
-        <td class="px-3 py-2 text-right">${fmt(sum('total_pokok'))}</td>
-        <td class="px-3 py-2 text-right">${fmt(sum('total_bunga'))}</td>
+        <td class="px-3 py-2 border-r"></td>
+        <td class="px-3 py-2 freeze-1 border-r"></td>
+        <td class="px-3 py-2 freeze-2 font-bold border-r">TOTAL</td>
+        <td class="px-3 py-2 text-right border-r">${fmt(totalPlaf)}</td>
+        <td class="px-3 py-2 text-right border-r">${fmt(totalBaki)}</td>
+        <td class="px-3 py-2 text-right font-bold text-blue-900 border-r">${totalPersen.toFixed(1)}%</td>
+        <td class="px-3 py-2 text-right border-r">${fmt(sum('tunggakan_pokok'))}</td>
+        <td class="px-3 py-2 text-right border-r">${fmt(sum('tunggakan_bunga'))}</td>
+        <td colspan="2" class="border-r"></td>
+        <td class="px-3 py-2 text-right border-r">${fmt(sum('total_pokok'))}</td>
+        <td class="px-3 py-2 text-right border-r">${fmt(sum('total_bunga'))}</td>
         <td class="px-3 py-2"></td>
       </tr>`;
 
@@ -199,28 +196,23 @@
     }
 
     rows.forEach(r => {
-      const plafond = Number(r.jml_pinjaman || 0);
-      const baki = Number(r.baki_debet || 0);
-      
-      // Hitung nilai sisa
-      const sisaPctValue = plafond > 0 ? (100 - ((baki / plafond) * 100)) : 0;
-      // Warna merah jika sisa <= 10%
-      const pctColor = sisaPctValue <= 10 ? 'text-red-600 font-bold' : 'text-slate-500';
+      const pNpl = Number(r.persen_npl || 0);
+      const pctColor = pNpl >= 5 ? 'text-blue-700 font-bold' : 'text-slate-500';
 
       tb.insertAdjacentHTML('beforeend', `
         <tr class="hover:bg-slate-50 border-b transition">
-          <td class="px-3 py-2 truncate" title="${r.nama_kantor}">${r.nama_kantor}</td>
-          <td class="px-3 py-2 freeze-1 font-mono text-slate-500">${r.no_rekening}</td>
-          <td class="px-3 py-2 freeze-2 font-semibold text-slate-700">${r.nama_nasabah}</td>
-          <td class="px-3 py-2 text-right">${fmt(plafond)}</td>
-          <td class="px-3 py-2 text-right font-bold text-blue-700">${fmt(baki)}</td>
-          <td class="px-3 py-2 text-right ${pctColor}">${fmtSisaPct(baki, plafond)}</td>
-          <td class="px-3 py-2 text-right">${fmt(r.tunggakan_pokok)}</td>
-          <td class="px-3 py-2 text-right">${fmt(r.tunggakan_bunga)}</td>
-          <td class="px-3 py-2 text-center font-bold text-slate-400">${r.kolek_closing||''}</td>
-          <td class="px-3 py-2 text-center font-bold text-red-600">${r.kolek_harian||''}</td>
-          <td class="px-3 py-2 text-right">${fmt(r.total_pokok)}</td>
-          <td class="px-3 py-2 text-right">${fmt(r.total_bunga)}</td>
+          <td class="px-3 py-2 truncate border-r border-slate-100" title="${r.nama_kantor}">${r.nama_kantor}</td>
+          <td class="px-3 py-2 col-norek freeze-1 font-mono text-slate-500 border-r border-slate-100">${r.no_rekening}</td>
+          <td class="px-3 py-2 col-debitur freeze-2 font-semibold text-slate-700 border-r border-slate-100">${r.nama_nasabah}</td>
+          <td class="px-3 py-2 text-right border-r border-slate-100">${fmt(r.jml_pinjaman)}</td>
+          <td class="px-3 py-2 text-right font-bold text-blue-700 border-r border-slate-100">${fmt(r.baki_debet)}</td>
+          <td class="px-3 py-2 text-right ${pctColor} border-r border-slate-100">${pNpl.toFixed(1)}%</td>
+          <td class="px-3 py-2 text-right border-r border-slate-100">${fmt(r.tunggakan_pokok)}</td>
+          <td class="px-3 py-2 text-right border-r border-slate-100">${fmt(r.tunggakan_bunga)}</td>
+          <td class="px-3 py-2 text-center font-bold text-slate-400 border-r border-slate-100">${r.kolek_closing||''}</td>
+          <td class="px-3 py-2 text-center font-bold text-red-600 border-r border-slate-100">${r.kolek_harian||''}</td>
+          <td class="px-3 py-2 text-right border-r border-slate-100">${fmt(r.total_pokok)}</td>
+          <td class="px-3 py-2 text-right border-r border-slate-100">${fmt(r.total_bunga)}</td>
           <td class="px-3 py-2 text-center text-slate-500">${r.tgl_trans || "-"}</td>
         </tr>`);
     });
