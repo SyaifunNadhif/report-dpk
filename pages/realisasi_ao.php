@@ -7,7 +7,8 @@
       box-sizing: border-box; border: 1px solid #cbd5e1; border-radius: 0.5rem; padding: 0 0.5rem; 
       font-size: 13px; background: #fff; width: 100%; height: 38px; outline: none; transition: all 0.2s;
   }
-  .inp:focus { border-color: var(--primary); ring: 2px solid #bfdbfe; }
+  .inp:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(37,99,235,0.1); }
+  .inp:disabled { background-color: #f1f5f9; color: #64748b; font-weight: 700; cursor: not-allowed; }
   .lbl { font-size: 9px; font-weight: 800; color: #475569; text-transform: uppercase; margin-left: 2px; margin-bottom: 2px; }
 
   /* === TABLE SCROLLER === */
@@ -19,7 +20,7 @@
   .ao-link { color: #2563eb; font-weight: 700; cursor: pointer; text-decoration: underline decoration-blue-200; }
   .ao-link:hover { color: #1e40af; background: #eff6ff; border-radius: 4px; }
 
-  /* === WEB STYLE FILTER (IMAGE 6567ce) === */
+  /* === WEB STYLE FILTER === */
   #filterPanelAO { display: flex; align-items: center; gap: 8px; background: white; padding: 6px 12px; border: 1px solid #e2e8f0; border-radius: 12px; }
   .filter-group { display: flex; flex-direction: column; }
   .filter-group .inp-mini { height: 34px; width: 130px; font-size: 12px; font-weight: 600; }
@@ -112,23 +113,20 @@
 </div>
 
 <div id="modalDetail" class="fixed inset-0 hidden bg-slate-900/60 backdrop-blur-sm items-center justify-center z-[9999] px-2">
-    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[85vh] flex flex-col overflow-hidden animate-fade-in">
-        <div class="flex items-center justify-between p-4 border-b bg-slate-50">
-            <div>
-                <h3 class="font-bold text-slate-800 text-lg">Detail Debitur Realisasi</h3>
-                <p class="text-xs text-slate-500 mt-0.5" id="modalSub">-</p>
-            </div>
-            <button onclick="closeModal()" class="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-red-50 text-slate-400 hover:text-red-500 transition font-bold">✕</button>
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[85vh] flex flex-col overflow-hidden">
+        <div class="p-4 border-b flex justify-between items-center bg-slate-50">
+            <h3 class="font-bold text-slate-800" id="modalSub">Detail Realisasi</h3>
+            <button onclick="closeModal()" class="text-slate-400 hover:text-red-500 font-bold text-xl">✕</button>
         </div>
         <div class="flex-1 overflow-auto">
-            <table class="w-full text-xs text-left">
+            <table class="w-full text-xs text-left border-separate border-spacing-0">
                 <thead class="sticky top-0 bg-white shadow-sm font-bold uppercase text-slate-500 text-[10px]">
                     <tr>
                         <th class="px-4 py-3 border-b text-center">No</th>
                         <th class="px-4 py-3 border-b">Nama Nasabah</th>
                         <th class="px-4 py-3 border-b text-center">Rekening</th>
                         <th class="px-4 py-3 border-b text-center">Tanggal</th>
-                        <th class="px-4 py-3 border-b text-right bg-emerald-50 text-emerald-700">Plafond</th>
+                        <th class="px-4 py-3 border-b text-right bg-emerald-50">Plafond</th>
                     </tr>
                 </thead>
                 <tbody id="modalBody" class="divide-y divide-slate-100"></tbody>
@@ -138,48 +136,74 @@
 </div>
 
 <script>
-  let currentPage = 1;
-  let totalPage = 1;
-  const fmt = n => new Intl.NumberFormat("id-ID").format(+n||0);
+  let currentPage = 1, totalPage = 1;
+  const id = (x) => document.getElementById(x);
+  const fmt = (n) => new Intl.NumberFormat("id-ID").format(+n||0);
 
   window.addEventListener('DOMContentLoaded', async () => {
+    // 1. Set Tanggal Default
     const d = new Date();
-    document.getElementById("tgl_akhir").value = d.toISOString().split('T')[0];
+    id("tgl_akhir").value = d.toISOString().split('T')[0];
     d.setDate(1);
-    document.getElementById("tgl_awal").value = d.toISOString().split('T')[0];
+    id("tgl_awal").value = d.toISOString().split('T')[0];
+
+    // 2. Integrasi Login User & Dropdown
     await populateKantor();
+    
+    // 3. Fetch Data Awal
     fetchTopData(1);
   });
 
-  function toggleFilter() { document.getElementById('filterPanelAO').classList.toggle('active'); }
+  function toggleFilter() { id('filterPanelAO').classList.toggle('active'); }
 
   async function populateKantor() {
-      const el = document.getElementById('filter_kantor');
+      const el = id('filter_kantor');
+      
+      // Ambil user login (Sesuaikan dengan cara brother menyimpan data user)
+      const user = (window.getUser && window.getUser()) || JSON.parse(localStorage.getItem('user')) || { kode: '000' };
+      const userKode = String(user.kode || '000').padStart(3, '0');
+
       try {
           const r = await fetch('./api/kode/', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ type: 'kode_kantor' }) });
           const j = await r.json();
-          let h = '<option value="000">KONSOLIDASI</option>';
-          (j.data || []).filter(x => x.kode_kantor !== '000').forEach(x => { 
-              h += `<option value="${x.kode_kantor}">${x.kode_kantor} - ${x.nama_kantor}</option>`; 
-          });
-          el.innerHTML = h;
-      } catch { el.innerHTML = '<option value="000">KONSOLIDASI</option>'; }
+          const listKantor = j.data || [];
+
+          if (userKode === '000') {
+              // PUSAT: Bisa akses semua
+              let h = '<option value="000">KONSOLIDASI (SEMUA)</option>';
+              listKantor.filter(x => x.kode_kantor !== '000').forEach(x => { 
+                  h += `<option value="${x.kode_kantor}">${x.kode_kantor} - ${x.nama_kantor}</option>`; 
+              });
+              el.innerHTML = h;
+              el.disabled = false;
+          } else {
+              // CABANG: Hanya flag cabang dia sendiri
+              const cabangUser = listKantor.find(x => String(x.kode_kantor).padStart(3, '0') === userKode);
+              if (cabangUser) {
+                  el.innerHTML = `<option value="${cabangUser.kode_kantor}">${cabangUser.kode_kantor} - ${cabangUser.nama_kantor}</option>`;
+              } else {
+                  el.innerHTML = `<option value="${userKode}">CABANG ${userKode}</option>`;
+              }
+              el.disabled = true; // Kunci dropdown
+          }
+      } catch (e) { 
+          el.innerHTML = '<option value="000">KONSOLIDASI</option>'; 
+      }
   }
 
   function fetchTopData(page) {
     currentPage = page;
-    const loading = document.getElementById("loadingAO");
-    const tbody = document.getElementById("tbodyAO");
-    if(window.innerWidth < 1024) document.getElementById('filterPanelAO').classList.remove('active');
+    id("loadingAO").classList.remove("hidden");
+    const tbody = id("tbodyAO");
     
-    loading.classList.remove("hidden");
+    if(window.innerWidth < 1024) id('filterPanelAO').classList.remove('active');
     tbody.innerHTML = `<tr><td colspan="5" class="text-center py-20 text-slate-400">Loading data...</td></tr>`;
 
     const payload = { 
         type: "top realisasi", 
-        closing_date: document.getElementById("tgl_awal").value, 
-        harian_date: document.getElementById("tgl_akhir").value,
-        kode_kantor: document.getElementById("filter_kantor").value,
+        closing_date: id("tgl_awal").value, 
+        harian_date: id("tgl_akhir").value,
+        kode_kantor: id("filter_kantor").value,
         page: page
     };
 
@@ -191,11 +215,11 @@
       renderTable(list, (page - 1) * 10);
       updatePaginationUI(pag);
     })
-    .finally(() => loading.classList.add("hidden"));
+    .finally(() => id("loadingAO").classList.add("hidden"));
   }
 
   function renderTable(data, startIdx) {
-    const tbody = document.getElementById("tbodyAO");
+    const tbody = id("tbodyAO");
     tbody.innerHTML = data.length ? "" : `<tr><td colspan="5" class="text-center py-12 text-slate-500 font-bold">DATA KOSONG</td></tr>`;
     data.forEach((row, i) => {
       tbody.insertAdjacentHTML('beforeend', `
@@ -212,10 +236,9 @@
   }
 
   async function openDetailAO(kodeAO, namaAO) {
-      const modal = document.getElementById('modalDetail');
-      const body = document.getElementById('modalBody');
-      modal.classList.replace('hidden', 'flex');
-      document.getElementById('modalSub').innerText = `AO: ${namaAO} (${kodeAO})`;
+      id('modalDetail').classList.replace('hidden', 'flex');
+      id('modalSub').innerText = `AO: ${namaAO} (${kodeAO})`;
+      const body = id('modalBody');
       body.innerHTML = `<tr><td colspan="5" class="text-center py-12 italic">Loading...</td></tr>`;
 
       try {
@@ -223,8 +246,7 @@
             body: JSON.stringify({ type: "detail realisasi ao", kode_ao: kodeAO, closing_date: id('tgl_awal').value, harian_date: id('tgl_akhir').value, kode_kantor: id('filter_kantor').value }) 
           });
           const j = await r.json();
-          const list = j.data || [];
-          body.innerHTML = list.map((d, i) => `
+          body.innerHTML = (j.data || []).map((d, i) => `
               <tr class="border-b transition hover:bg-slate-50">
                   <td class="px-4 py-3 text-center text-slate-400 font-mono">${i+1}</td>
                   <td class="px-4 py-3 font-bold text-slate-700">${d.nama_nasabah}</td>
@@ -252,16 +274,15 @@
   }
 
   function updatePaginationUI(p) {
-      const wrap = document.getElementById('paginationWrap');
+      const wrap = id('paginationWrap');
       if(!p.is_konsolidasi) { wrap.classList.add('hidden'); return; }
       wrap.classList.remove('hidden');
       totalPage = p.total_page;
-      document.getElementById('pageInfo').innerText = `Hal ${p.current_page} / ${p.total_page}`;
-      document.getElementById('btnPrev').disabled = p.current_page <= 1;
-      document.getElementById('btnNext').disabled = p.current_page >= p.total_page;
+      id('pageInfo').innerText = `Hal ${p.current_page} / ${p.total_page}`;
+      id('btnPrev').disabled = p.current_page <= 1;
+      id('btnNext').disabled = p.current_page >= p.total_page;
   }
 
   function changePage(dir) { let t = currentPage + dir; if(t >= 1 && t <= totalPage) fetchTopData(t); }
-  function closeModal() { document.getElementById('modalDetail').classList.replace('flex', 'hidden'); }
-  function id(x) { return document.getElementById(x); }
+  function closeModal() { id('modalDetail').classList.replace('flex', 'hidden'); }
 </script>
