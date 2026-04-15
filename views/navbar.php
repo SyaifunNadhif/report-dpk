@@ -55,7 +55,7 @@
               <li><a href="realisasi_kredit" class="nb-item nb-tap">Realisasi Kredit</a></li>
               <li><a href="realisasi_promo" class="nb-item nb-tap">Realisasi Kredit dan Promo</a></li>
               <li><a href="realisasi_ao" class="nb-item nb-tap">Realisasi Kredit AO</a></li>
-              <li><a href="repayment_rate" class="nb-item nb-tap">Repayment Rate</a></li>
+              <li><a href="otp" class="nb-item nb-tap">Ontime Payment</a></li>
               <li><a href="rekap_rr" class="nb-item nb-tap">Rekap Repayment Rate</a></li>
               <li><a href="migrasi_bucket_sc" class="nb-item nb-tap">Migrasi Bucket SC</a></li>
               <li><a href="mob" class="nb-item nb-tap">MOB 6 Bulan</a></li>

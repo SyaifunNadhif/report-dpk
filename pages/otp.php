@@ -110,9 +110,9 @@
             <span class="p-1 md:p-2 bg-blue-600 text-white rounded-lg shadow-sm text-xs md:text-sm">
               <svg class="w-4 h-4 md:w-5 md:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
             </span>
-            <span>Monitoring Repayment Rate</span>
+            <span>Ontime Payment (OTP)</span>
           </h1>
-          <p class="text-[9px] md:text-xs text-slate-500 font-medium tracking-wide">*Data RR = Target (M-1) / Total Bayar (Aktual)*</p>
+          <p class="text-[9px] md:text-xs text-slate-500 font-medium tracking-wide">*Data OTP = Target (M-1) / Total Bayar (Aktual)*</p>
         </div>
 
         <button type="button" onclick="toggleMainFilter()" class="xl:hidden h-[30px] px-3 bg-white border border-slate-200 text-slate-700 rounded-lg flex items-center gap-1.5 shadow-sm transition font-bold text-[10px] whitespace-nowrap ml-2 shrink-0">
