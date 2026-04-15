@@ -1115,36 +1115,38 @@ public function getTopRealisasi($input = []) {
     $is_konsolidasi = empty($kc) || $kc === '000' || $kc === 'konsolidasi';
 
     try {
-        // --- 1. WHERE CLAUSE ---
-        $where = " WHERE t1.tanggal_realisasi >= :closing_date AND t1.tanggal_realisasi <= :harian_date ";
+        // --- 1. FILTER CABANG (Gunakan filter pada tabel AO) ---
+        $branchFilter = "";
         if (!$is_konsolidasi) {
-            $where .= " AND LPAD(CAST(t1.kode_kantor AS CHAR), 3, '0') = :kc ";
+            // Kita filter berdasarkan kode kantor AO-nya
+            $branchFilter = " WHERE LPAD(CAST(ao.kode_kantor AS CHAR), 3, '0') = :kc ";
         }
 
-        // --- 2. COUNT TOTAL (Pagination) ---
-        $sqlCount = "SELECT COUNT(DISTINCT t1.kode_group2) as total FROM update_realisasi_kredit t1 $where";
+        // --- 2. COUNT TOTAL AO ---
+        $sqlCount = "SELECT COUNT(*) as total FROM ao_kredit ao $branchFilter";
         $stmtCount = $this->pdo->prepare($sqlCount);
-        $stmtCount->bindValue(':closing_date', $closing_date);
-        $stmtCount->bindValue(':harian_date', $harian_date);
         if (!$is_konsolidasi) $stmtCount->bindValue(':kc', str_pad((string)$kc, 3, '0', STR_PAD_LEFT));
         $stmtCount->execute();
         $totalData = $stmtCount->fetch(PDO::FETCH_ASSOC)['total'] ?? 0;
 
-        // --- 3. DATA UTAMA DENGAN JOIN NAMA_KANTOR ---
+        // --- 3. QUERY UTAMA: BASE NYA ADALAH TABEL AO ---
         $sql = "
             SELECT 
-                LPAD(CAST(t1.kode_kantor AS CHAR), 3, '0') AS kode_cabang,
+                LPAD(CAST(ao.kode_kantor AS CHAR), 3, '0') AS kode_cabang,
                 kk.nama_kantor,
-                t1.kode_group2 AS kode_ao,
-                COALESCE(ao.nama_ao, t1.kode_group2) AS nama_ao,
+                ao.kode_group2 AS kode_ao,
+                ao.nama_ao,
                 COUNT(t1.no_rekening) AS total_noa,
-                SUM(t1.realisasi_pokok) AS total_realisasi
-            FROM update_realisasi_kredit t1
-            LEFT JOIN ao_kredit ao ON t1.kode_group2 = ao.kode_group2
-            LEFT JOIN kode_kantor kk ON LPAD(CAST(t1.kode_kantor AS CHAR), 3, '0') = kk.kode_kantor
-            $where
-            GROUP BY 1, 2, 3, 4
-            ORDER BY total_realisasi DESC
+                COALESCE(SUM(t1.realisasi_pokok), 0) AS total_realisasi
+            FROM ao_kredit ao
+            -- LEFT JOIN ke transaksi: AO tetap muncul biarpun transaksi NULL
+            LEFT JOIN update_realisasi_kredit t1 ON ao.kode_group2 = t1.kode_group2 
+                AND t1.tanggal_realisasi >= :closing_date 
+                AND t1.tanggal_realisasi <= :harian_date
+            LEFT JOIN kode_kantor kk ON LPAD(CAST(ao.kode_kantor AS CHAR), 3, '0') = kk.kode_kantor
+            $branchFilter
+            GROUP BY ao.kode_kantor, ao.kode_group2, ao.nama_ao, kk.nama_kantor
+            ORDER BY total_realisasi DESC, ao.nama_ao ASC
         ";
 
         if ($is_konsolidasi) {
@@ -1169,6 +1171,7 @@ public function getTopRealisasi($input = []) {
                 'total_data'   => (int)$totalData,
                 'total_page'   => ceil($totalData / $limit),
                 'current_page' => $page,
+                'limit'        => $limit,
                 'is_konsolidasi' => $is_konsolidasi
             ]
         ]);
