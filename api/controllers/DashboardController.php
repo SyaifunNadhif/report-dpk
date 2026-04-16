@@ -1536,56 +1536,54 @@ class DashboardController{
 
     public function getTopBottomRealisasi($input) {
         $harian_date  = $input['harian_date'] ?? date('Y-m-d');
-        // Tangkap closing_date dari FE. Jika kosong, fallback ke hari terakhir bulan lalu
         $closing_date = $input['closing_date'] ?? date('Y-m-t', strtotime($harian_date . ' -1 month')); 
         
         $kode_kantor = $input['kode_kantor'] ?? '000';
         $korwil      = strtoupper($input['korwil'] ?? '');
 
         // =========================================================
-        // FILTER CABANG & KORWIL EKSKLUSIF (Manual)
+        // FILTER CABANG & KORWIL (Berlaku untuk Master Kantor)
         // =========================================================
         $filterSql = "";
         $filterParams = [];
 
         if ($kode_kantor !== '000' && empty($korwil)) {
-            $filterSql .= " AND t.kode_kantor = :kode_kantor";
+            $filterSql .= " AND k.kode_kantor = :kode_kantor";
             $filterParams[':kode_kantor'] = $kode_kantor;
         } elseif (!empty($korwil)) {
             if ($korwil === 'SEMARANG') {
-                $filterSql .= " AND t.kode_kantor BETWEEN '001' AND '007'";
+                $filterSql .= " AND k.kode_kantor BETWEEN '001' AND '007'";
             } elseif ($korwil === 'SOLO') {
-                $filterSql .= " AND t.kode_kantor BETWEEN '008' AND '014'";
+                $filterSql .= " AND k.kode_kantor BETWEEN '008' AND '014'";
             } elseif ($korwil === 'BANYUMAS') {
-                $filterSql .= " AND t.kode_kantor BETWEEN '015' AND '021'";
+                $filterSql .= " AND k.kode_kantor BETWEEN '015' AND '021'";
             } elseif ($korwil === 'PEKALONGAN') {
-                $filterSql .= " AND t.kode_kantor BETWEEN '022' AND '028'";
+                $filterSql .= " AND k.kode_kantor BETWEEN '022' AND '028'";
             }
         }
 
         // ==========================================
-        // 1. QUERY REALISASI CABANG (Top & Bottom)
+        // 1. QUERY REALISASI CABANG (Base: Master Kantor)
         // ==========================================
-        // 🔥 FIX: Ubah logika WHERE menjadi > closing_date AND <= harian_date
+        // 🔥 FIX: Pakai LEFT JOIN agar realisasi 0 tetap muncul
         $sqlCabang = "
             SELECT 
-                t.kode_kantor AS kode_cabang,
-                COALESCE(k.nama_kantor, CONCAT('CABANG ', t.kode_kantor)) AS nama_cabang,
-                SUM(COALESCE(t.realisasi_pokok, 0)) AS total_realisasi,
+                k.kode_kantor AS kode_cabang,
+                k.nama_kantor AS nama_cabang,
+                COALESCE(SUM(t.realisasi_pokok), 0) AS total_realisasi,
                 COUNT(DISTINCT t.no_rekening) AS noa_realisasi
-            FROM update_realisasi_kredit t
-            LEFT JOIN kode_kantor k ON t.kode_kantor = k.kode_kantor
-            WHERE t.tanggal_realisasi > :closing_date
-              AND t.tanggal_realisasi <= :harian_date
+            FROM kode_kantor k
+            LEFT JOIN update_realisasi_kredit t ON k.kode_kantor = t.kode_kantor
+                AND t.tanggal_realisasi > :closing_date
+                AND t.tanggal_realisasi <= :harian_date
+            WHERE k.kode_kantor <> '000'
             {$filterSql}
-            GROUP BY t.kode_kantor, k.nama_kantor
-            HAVING SUM(COALESCE(t.realisasi_pokok, 0)) > 0
+            GROUP BY k.kode_kantor, k.nama_kantor
         ";
 
         // ==========================================
         // 2. QUERY REALISASI AO (Top 5 Saja)
         // ==========================================
-        // 🔥 FIX: Ubah logika WHERE menjadi > closing_date AND <= harian_date
         $sqlAO = "
             SELECT 
                 t.kode_group2,
@@ -1599,6 +1597,7 @@ class DashboardController{
             LEFT JOIN kode_kantor k ON t.kode_kantor = k.kode_kantor
             WHERE t.tanggal_realisasi > :closing_date
               AND t.tanggal_realisasi <= :harian_date
+              AND t.kode_kantor <> '000'
             {$filterSql}
             GROUP BY t.kode_group2, ao.nama_ao, t.kode_kantor, k.nama_kantor
             HAVING SUM(COALESCE(t.realisasi_pokok, 0)) > 0
@@ -1610,17 +1609,11 @@ class DashboardController{
             // --- Eksekusi Cabang ---
             $stmtCabang = $this->pdo->prepare($sqlCabang);
             $stmtCabang->bindValue(':harian_date', $harian_date);
-            $stmtCabang->bindValue(':closing_date', $closing_date); // Bind closing_date
-            
-            // Bind manual parameter untuk Cabang
-            foreach ($filterParams as $key => $val) {
-                $stmtCabang->bindValue($key, $val);
-            }
-            
+            $stmtCabang->bindValue(':closing_date', $closing_date);
+            foreach ($filterParams as $key => $val) { $stmtCabang->bindValue($key, $val); }
             $stmtCabang->execute();
             $rowsCabang = $stmtCabang->fetchAll(PDO::FETCH_ASSOC);
 
-            // Sort di PHP untuk Top dan Bottom Cabang
             $cabangData = array_map(function($r) {
                 return [
                     'kode_cabang'     => $r['kode_cabang'],
@@ -1636,8 +1629,12 @@ class DashboardController{
             });
             $topCabang = array_slice($cabangData, 0, 5);
 
-            // Sort Ascending (Bottom 5 Terendah)
+            // Sort Ascending (Bottom 5 Terendah - Sekarang Cabang 0 akan ikut)
             usort($cabangData, function($a, $b) {
+                // Jika realisasi sama, sort by kode cabang
+                if ($a['total_realisasi'] == $b['total_realisasi']) {
+                    return $a['kode_cabang'] <=> $b['kode_cabang'];
+                }
                 return $a['total_realisasi'] <=> $b['total_realisasi'];
             });
             $bottomCabang = array_slice($cabangData, 0, 5);
@@ -1645,13 +1642,8 @@ class DashboardController{
             // --- Eksekusi AO ---
             $stmtAO = $this->pdo->prepare($sqlAO);
             $stmtAO->bindValue(':harian_date', $harian_date);
-            $stmtAO->bindValue(':closing_date', $closing_date); // Bind closing_date
-            
-            // Bind manual parameter untuk AO
-            foreach ($filterParams as $key => $val) {
-                $stmtAO->bindValue($key, $val);
-            }
-            
+            $stmtAO->bindValue(':closing_date', $closing_date);
+            foreach ($filterParams as $key => $val) { $stmtAO->bindValue($key, $val); }
             $stmtAO->execute();
             $rowsAO = $stmtAO->fetchAll(PDO::FETCH_ASSOC);
 
@@ -1666,9 +1658,7 @@ class DashboardController{
                 ];
             }, $rowsAO);
 
-            // ==========================================
-            // GRAND TOTAL (Untuk dikirim ke KPI Box Atas)
-            // ==========================================
+            // --- GRAND TOTAL ---
             $grand_total_realisasi = 0;
             $grand_total_noa = 0;
             foreach($cabangData as $cd) {
