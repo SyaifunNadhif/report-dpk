@@ -12,7 +12,7 @@
             
             <div id="helpdeskText" class="hidden flex flex-col leading-none pr-4">
                 <span class="text-[11px] font-bold uppercase tracking-tight">Helpdesk</span>
-                <span class="text-[9px] opacity-90">Lapor Kabid Ops</span>
+                <span class="text-[9px] opacity-90">Sambatan</span>
             </div>
         </div>
     </div>
