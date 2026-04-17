@@ -86,16 +86,12 @@
                   <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08-.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
               </span>
               Rekomendasi Pipeline Kredit
+              <button onclick="openInfoModal()" class="text-slate-400 hover:text-blue-600 transition rounded-full p-1 focus:outline-none focus:ring-2 focus:ring-blue-200" title="Informasi Status">
+                  <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+              </button>
           </h1>
           
           <div id="summaryPills" class="hidden flex-wrap items-center gap-2">
-              <!-- <div class="hidden sm:flex flex-col bg-white border border-slate-200 px-3 py-1.5 rounded-lg shadow-sm min-w-[130px]">
-                  <span class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-0.5">Target Pipeline</span>
-                  <div class="flex items-end gap-1.5">
-                      <span class="text-sm md:text-base font-bold text-slate-800" id="sum_target">0</span>
-                      <span class="text-[11px] md:text-xs font-mono text-slate-500 mb-0.5" id="sum_target_nom">0</span>
-                  </div>
-              </div> -->
               <div class="flex flex-col bg-emerald-50 border border-emerald-200 px-3 py-1.5 rounded-lg shadow-sm min-w-[130px]">
                   <span class="text-[10px] font-bold text-emerald-700 uppercase tracking-widest mb-0.5">Sudah Ambil</span>
                   <div class="flex items-end gap-1.5">
@@ -110,13 +106,6 @@
                       <span class="text-[11px] md:text-xs font-mono text-blue-600 mb-0.5" id="sum_potensi_nom">0</span>
                   </div>
               </div>
-              <!-- <div class="hidden sm:flex flex-col bg-rose-50 border border-rose-200 px-3 py-1.5 rounded-lg shadow-sm min-w-[130px]">
-                  <span class="text-[10px] font-bold text-rose-700 uppercase tracking-widest mb-0.5">Drop</span>
-                  <div class="flex items-end gap-1.5">
-                      <span class="text-sm md:text-base font-bold text-rose-800" id="sum_drop">0</span>
-                      <span class="text-[11px] md:text-xs font-mono text-rose-600 mb-0.5" id="sum_drop_nom">0</span>
-                  </div>
-              </div> -->
           </div>
       </div>
 
@@ -160,6 +149,36 @@
     </div>
   </div>
 
+</div>
+
+<div id="infoModal" class="fixed inset-0 z-[9999] hidden items-center justify-center p-4">
+    <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity" onclick="closeInfoModal()"></div>
+    <div class="relative bg-white w-full max-w-md rounded-2xl shadow-2xl flex flex-col overflow-hidden animate-scale-up border border-slate-200">
+        <div class="flex justify-between items-center px-5 py-4 border-b bg-slate-50">
+            <h3 class="font-bold text-slate-800 flex items-center gap-2">
+                <span class="w-1.5 h-5 bg-blue-600 rounded-full"></span>
+                Panduan Status Pipeline
+            </h3>
+            <button onclick="closeInfoModal()" class="text-slate-400 hover:text-red-500 transition text-2xl leading-none">&times;</button>
+        </div>
+        <div class="p-5 space-y-4 text-sm text-slate-600 bg-white">
+            <div class="flex items-start gap-3">
+                <span class="mt-0.5 px-2 py-1 bg-blue-50 text-blue-700 border border-blue-200 rounded text-xs font-bold w-[80px] text-center shrink-0">LUNAS</span>
+                <p>Nasabah yang telah lunas. Anda dapat melanjutkan aksi <strong>PROSPEK</strong> pada nasabah ini.</p>
+            </div>
+            <div class="flex items-start gap-3">
+                <span class="mt-0.5 px-2 py-1 bg-purple-50 text-purple-700 border border-purple-200 rounded text-xs font-bold w-[80px] text-center shrink-0">TOP UP</span>
+                <p>Nasabah berpotensi dengan proporsi sisa Baki Debet (BD) <strong>&le; 50%</strong>.</p>
+            </div>
+            <div class="flex items-start gap-3">
+                <span class="mt-0.5 px-2 py-1 bg-orange-50 text-orange-700 border border-orange-200 rounded text-xs font-bold w-[80px] text-center shrink-0">RETENSI</span>
+                <p>Nasabah yang masih berjalan dengan sisa Baki Debet (BD) <strong>&gt; 50%</strong>.</p>
+            </div>
+        </div>
+        <div class="px-5 py-3 border-t bg-slate-50 flex justify-end">
+            <button onclick="closeInfoModal()" class="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-bold shadow-sm transition">Mengerti</button>
+        </div>
+    </div>
 </div>
 
 <div id="modalDetail" class="fixed inset-0 z-[9999] hidden items-end md:items-center justify-center p-2 md:p-4">
@@ -403,7 +422,6 @@
                   `;
               }
 
-              // Susunan Kolom: Target -> Lunas -> TopUp -> Retensi -> Drop -> Sudah Ambil (NOA | NOMINAL | %)
               rowHtml += `
                     <td class="px-4 py-2 border-r border-slate-100 text-right"><div class="font-extrabold text-slate-800 text-sm md:text-base">${fmt(r.noa_target)}</div><div class="text-[10px] md:text-xs text-slate-400 font-mono mt-0.5">${fmt(r.plafon_closing)}</div></td>
                     
@@ -455,14 +473,11 @@
           T.pot_noa = T.lun_noa + T.top_noa + T.ret_noa;
           T.pot_nom = T.lun_nom + T.top_nom + T.ret_nom;
 
-
-          
           document.getElementById('sum_sudah').innerText = fmt(T.sdh_noa);
           document.getElementById('sum_sudah_nom').innerText = `Rp ${fmt(T.sdh_nom)} (${pctReal}%)`;
           
           document.getElementById('sum_potensi').innerText = fmt(T.pot_noa);
           document.getElementById('sum_potensi_nom').innerText = 'Rp ' + fmt(T.pot_nom);
-          
 
           pills.classList.remove('hidden');
           pills.classList.add('flex');
@@ -504,7 +519,6 @@
       fetchDetail();
   }
 
-  // 🔥 FIX API CALL UNTUK KANKAS (Pakai format request yang benar)
   async function loadKankasModal(kode_cabang) {
       const el = document.getElementById('filter_kankas_modal');
       el.innerHTML = '<option value="">Semua Kankas</option>';
@@ -564,7 +578,6 @@
 
               t_plafon_awal += parseFloat(r.plafon_awal||0);
               if(!isClear) t_sisa_os += parseFloat(r.os_actual||0);
-              // 🔥 FIX NOMINAL BARU DI TOTAL AGAR SELALU DIHITUNG
               t_nom_baru += parseFloat(r.plafon_baru||0);
           });
           const pctBaru = totBaseLunasSudah > 0 ? ((totBaru / totBaseLunasSudah) * 100).toFixed(2) : 0;
@@ -629,13 +642,13 @@
 
               let sisaOsVisual = isClear ? '-' : fmt(r.os_actual);
               
-              // 🔥 FIX NOMINAL BARU MUNCUL MESKIPUN STATUS SUDAH CLEAR
               let nomBaru = '-';
               if (parseFloat(r.plafon_baru) > 0) {
                   nomBaru = `<div class="font-bold text-emerald-700 text-sm">${fmt(r.plafon_baru)}</div><div class="text-[10px] md:text-[11px] text-emerald-600 font-mono mt-0.5">${r.tgl_baru || ''}</div>`;
               }
 
-              let isLocked = isClear || isDrop;
+              // MODIFIKASI 1: "LUNAS" TIDAK LAGI DILOCK (BISA PROSPEK)
+              let isLocked = statStr.includes("SUDAH") || isDrop;
               const btnAksi = isLocked 
                   ? `<span class="text-xs font-bold text-slate-400">LOCKED</span>`
                   : `<button class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded-lg text-xs font-bold shadow-sm transition w-full uppercase tracking-widest">PROSPEK</button>`;
@@ -646,6 +659,11 @@
               else if(statStr.includes("TOP UP")) badgeClass = "text-purple-700 border-purple-300 bg-purple-50/80";
               else if(statStr.includes("RETENSI")) badgeClass = "text-orange-700 border-orange-300 bg-orange-50/80";
               else if(statStr.includes("DROP")) badgeClass = "text-rose-700 border-rose-300 bg-rose-50/80";
+
+              // MODIFIKASI 2 & 3: TAMBAHAN KETERANGAN PERSENTASE BD UNTUK LABEL RETENSI DAN TOP UP
+              let displayStatus = r.status_ket;
+              if (statStr.includes("RETENSI")) displayStatus = "RETENSI (BD > 50%)";
+              else if (statStr.includes("TOP UP")) displayStatus = "TOP UP (BD <= 50%)";
 
               const jtDate = new Date(r.tgl_jatuh_tempo);
               const diffTime = jtDate - actDate;
@@ -676,7 +694,7 @@
                     <td class="px-4 py-2 text-right font-medium text-sm text-slate-600 border-r border-slate-100">${fmt(r.plafon_awal)}</td>
                     <td class="px-3 py-2 text-center border-r border-slate-100">${strJt}</td>
                     <td class="px-4 py-2 text-right font-mono font-bold text-sm text-blue-700 bg-blue-50/30 border-r border-blue-100">${sisaOsVisual}</td>
-                    <td class="px-4 py-2 text-center border-r border-slate-100"><span class="inline-flex items-center px-2.5 py-1 rounded-lg text-[10px] md:text-xs font-bold uppercase tracking-widest border ${badgeClass}">${r.status_ket}</span></td>
+                    <td class="px-4 py-2 text-center border-r border-slate-100"><span class="inline-flex items-center px-2.5 py-1 rounded-lg text-[10px] md:text-xs font-bold uppercase tracking-widest border ${badgeClass}">${displayStatus}</span></td>
                     <td class="px-4 py-2 text-right bg-emerald-50/30 border-r border-slate-100">${nomBaru}</td>
                     <td class="px-3 py-2 text-center">${btnAksi}</td>
                 </tr>`;
@@ -711,7 +729,6 @@
 
           rows.sort((a, b) => new Date(a.tgl_jatuh_tempo) - new Date(b.tgl_jatuh_tempo));
 
-          // Penamaan Header Excel Disamakan
           let csv = "No Rekening\tNama Nasabah\tAlamat\tNo HP\tKankas\tNama AO\tPlafon Awal\tTgl JT\tSisa OS\tStatus\tTgl Realisasi Baru\tNominal Baru\n";
           rows.forEach(r => {
               const isClear = r.status_ket.toUpperCase().includes("SUDAH") || r.status_ket.toUpperCase() === "LUNAS" || r.status_ket.toUpperCase() === "LUNAS (POTENSI)";
@@ -738,5 +755,22 @@
       modal.classList.add('hidden'); 
       modal.classList.remove('flex');
   }
-  document.addEventListener('keydown', e => { if(e.key === 'Escape') closeModal(); });
+
+  // --- MODAL INFO HANDLERS ---
+  function openInfoModal() {
+      const m = document.getElementById('infoModal');
+      m.classList.remove('hidden'); m.classList.add('flex');
+  }
+  
+  function closeInfoModal() {
+      const m = document.getElementById('infoModal');
+      m.classList.add('hidden'); m.classList.remove('flex');
+  }
+
+  document.addEventListener('keydown', e => { 
+      if(e.key === 'Escape') {
+          closeModal();
+          closeInfoModal();
+      }
+  });
 </script>

@@ -1,5 +1,7 @@
+<!-- NAVBAR -->
 <nav id="mainNavbar" class="sticky top-0 bg-white/90 backdrop-blur border-b border-slate-200 shadow-sm">
   <div class="max-w-screen-xl mx-auto px-4">
+    <!-- Top bar -->
     <div class="h-14 flex items-center justify-between">
       <a href="home" class="flex items-center gap-2">
         <img src="./img/logodpk.png" class="h-8 w-8 object-contain" alt="Logo">
@@ -7,11 +9,13 @@
       </a>
 
       <div class="flex items-center gap-3">
+        <!-- ✅ user box: selalu flex; sembunyikan via media query (lihat CSS) -->
         <div class="flex flex-col leading-tight text-right select-none nb-userbox">
           <span id="navUserName" class="text-slate-800 text-sm font-medium">—</span>
           <span id="navBranch" class="text-slate-500 text-[11px]">—</span>
         </div>
 
+        <!-- Profile (desktop only; disembunyikan di mobile via CSS) -->
         <button id="dropdownProfileButton" data-dropdown="dropdownProfile" aria-haspopup="menu" aria-expanded="false"
                 class="inline-flex items-center justify-center rounded-full ring-1 ring-slate-200 hover:ring-slate-300 transition nb-tap"
                 style="width:2.25rem;height:2.25rem">
@@ -21,6 +25,7 @@
           </svg>
         </button>
 
+        <!-- Hamburger (mobile) -->
         <button id="hamburger" type="button" aria-label="Toggle menu" aria-expanded="false"
                 class="md:hidden burger-btn nb-tap">
           <svg class="icon-burger" viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" fill="none" stroke-width="2" aria-hidden="true">
@@ -33,123 +38,147 @@
       </div>
     </div>
 
+    <!-- Menu -->
     <div id="navbar-default" class="nb-container">
       <ul class="nb-row">
-        <li class="nb-li"><a href="dashboard" class="nb-link nb-tap nb-active">Dashboard</a></li>
 
-        <li class="nb-li">
-          <button data-dropdown="dropdownPemasaran" class="nb-parent nb-tap">
-            <span>Pemasaran</span>
+      <li class="nb-li"><a href="dashboard" class="nb-link nb-tap nb-active">Dashboard</a></li>
+
+      <li class="nb-li" id="parent-pemasaran">
+        <button data-dropdown="dropdownPemasaran" class="nb-parent nb-tap">
+          <span>Pemasaran</span>
+          <svg class="nb-caret" viewBox="0 0 20 20" fill="currentColor" width="16" height="16">
+            <path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.586l3.71-4.354a.75.75 0 111.14.976l-4.25 5a.75.75 0 01-1.14 0l-4.25-5a.75.75 0 01.02-1.06z" clip-rule="evenodd"/>
+          </svg>
+        </button>
+        <div id="dropdownPemasaran" class="dropdown-panel">
+          <ul class="nb-list">
+            <li id="sub-realisasi-kredit"><a href="realisasi_kredit" class="nb-item nb-tap">Realisasi Kredit</a></li>
+            <li id="sub-realisasi-promo"><a href="realisasi_promo" class="nb-item nb-tap">Realisasi Kredit dan Promo</a></li>
+            <li id="sub-realisasi-ao"><a href="realisasi_ao" class="nb-item nb-tap">Realisasi Kredit AO</a></li>
+            <li id="sub-otp"><a href="otp" class="nb-item nb-tap">On time Payment</a></li>
+            <li id="sub-rekap-rr"><a href="rekap_rr" class="nb-item nb-tap">Rekap Repayment Rate</a></li>
+            <li id="sub-migrasi-bucket-sc"><a href="migrasi_bucket_sc" class="nb-item nb-tap">Migrasi Bucket SC</a></li>
+            <li id="sub-mob"><a href="mob" class="nb-item nb-tap">MOB 6 Bulan</a></li>
+            <li id="sub-pipelane-ao"><a href="pipelane_ao_jt" class="nb-item nb-tap">Pipelane AO Kredit</a></li>
+            <li id="sub-jatuh-tempo"><a href="jatuh_tempo" class="nb-item nb-tap">Jatuh Tempo and Refinacing</a></li>
+          </ul>
+        </div>
+      </li>
+
+      <li class="nb-li" id="parent-npl">
+        <button data-dropdown="dropdownNPL" class="nb-parent nb-tap">
+          <span>NPL</span>
+          <svg class="nb-caret" viewBox="0 0 20 20" fill="currentColor" width="16" height="16">
+            <path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.586l3.71-4.354a.75.75 0 111.14.976l-4.25 5a.75.75 0 01-1.14 0l-4.25-5a.75.75 0 01.02-1.06z" clip-rule="evenodd"/>
+          </svg>
+        </button>
+        <div id="dropdownNPL" class="dropdown-panel">
+          <ul class="nb-list">
+            <li id="sub-npl"><a href="npl" class="nb-item nb-tap">NPL</a></li>
+            <li id="sub-perbandingan-npl"><a href="perbandingan_npl" class="nb-item nb-tap">Perbandingan NPL</a></li>
+            <li id="sub-recovery-npl"><a href="recovery_npl" class="nb-item nb-tap">Recovery NPL</a></li>
+            <li id="sub-flow-par"><a href="flow_par" class="nb-item nb-tap">Flow Par</a></li>
+            <li id="sub-npl-25"><a href="npl_25_besar" class="nb-item nb-tap">25 NPL Besar</a></li>
+            <li id="sub-potensi-npl"><a href="potensi_npl" class="nb-item nb-tap">Potensi NPL</a></li>
+          </ul>
+        </div>
+      </li>
+
+      <li class="nb-li" id="parent-ph">
+        <button data-dropdown="dropdownPH" class="nb-parent nb-tap">
+          <span>PH</span>
+          <svg class="nb-caret" viewBox="0 0 20 20" fill="currentColor" width="16" height="16">
+            <path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.586l3.71-4.354a.75.75 0 111.14.976l-4.25 5a.75.75 0 01-1.14 0l-4.25-5a.75.75 0 01.02-1.06z" clip-rule="evenodd"/>
+          </svg>
+        </button>
+        <div id="dropdownPH" class="dropdown-panel">
+          <ul class="nb-list">
+            <li id="sub-recovery-ph"><a href="recovery_ph" class="nb-item nb-tap">Recovery PH</a></li>
+            <li id="sub-lgd"><a href="lgd" class="nb-item nb-tap">Rekap Recovery (PH LGD)</a></li>
+          </ul>
+        </div>
+      </li>
+
+      <li class="nb-li" id="parent-collection">
+        <button data-dropdown="dropdownPenagihan" class="nb-parent nb-tap">
+          <span>Collection</span>
+          <svg class="nb-caret" viewBox="0 0 20 20" fill="currentColor" width="16" height="16">
+            <path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.586l3.71-4.354a.75.75 0 111.14.976l-4.25 5a.75.75 0 01-1.14 0l-4.25-5a.75.75 0 01.02-1.06z" clip-rule="evenodd"/>
+          </svg>
+        </button>
+        <div id="dropdownPenagihan" class="dropdown-panel">
+          <ul class="nb-list">
+            <li id="sub-actual-kredit"><a href="actual_kredit" class="nb-item nb-tap">Bucket DPD and Kolek</a></li>
+            <li id="sub-migrasi-bucket"><a href="migrasi_bucket" class="nb-item nb-tap">Migrasi Bucket</a></li>
+            <li id="sub-search-debitur"><a href="search_debitur" class="nb-item nb-tap">Seach Debitur Kredit</a></li>
+            <li id="sub-migrasi-kolek"><a href="migrasi_kolek" class="nb-item nb-tap">Migrasi Kolek</a></li>
+          </ul>
+        </div>
+      </li>
+        
+        
+
+        <!-- Kredit -->
+        <!-- <li class="nb-li">
+          <button data-dropdown="dropdownCKPN" class="nb-parent nb-tap">
+            <span>Kredit</span>
             <svg class="nb-caret" viewBox="0 0 20 20" fill="currentColor" width="16" height="16">
               <path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.586l3.71-4.354a.75.75 0 111.14.976l-4.25 5a.75.75 0 01-1.14 0l-4.25-5a.75.75 0 01.02-1.06z" clip-rule="evenodd"/>
             </svg>
           </button>
-          <div id="dropdownPemasaran" class="dropdown-panel">
+          <div id="dropdownCKPN" class="dropdown-panel">
             <ul class="nb-list">
               <li><a href="realisasi_kredit" class="nb-item nb-tap">Realisasi Kredit</a></li>
-              <li><a href="realisasi_promo" class="nb-item nb-tap">Realisasi Kredit dan Promo</a></li>
-              <li><a href="realisasi_ao" class="nb-item nb-tap">Realisasi Kredit AO</a></li>
-              <li><a href="otp" class="nb-item nb-tap">Ontime Payment</a></li>
-              <li><a href="rekap_rr" class="nb-item nb-tap">Rekap Repayment Rate</a></li>
-              <li><a href="migrasi_bucket_sc" class="nb-item nb-tap">Migrasi Bucket SC</a></li>
-              <li><a href="mob" class="nb-item nb-tap">MOB 6 Bulan</a></li>
-              <li><a href="pipelane_ao_jt" class="nb-item nb-tap">Pipelane AO Kredit</a></li>
-              <li><a href="jatuh_tempo" class="nb-item nb-tap">Jatuh Tempo and Refinacing</a></li>
+              <li><a href="ckpn" class="nb-item nb-tap">CKPN</a></li>
+              <li><a href="ckpn_produk" class="nb-item nb-tap">CKPN Produk</a></li>
+              <li><a href="actual_kredit" class="nb-item nb-tap">Actual Kredit</a></li>
             </ul>
           </div>
-        </li>
-      
-        <li class="nb-li">
-          <button data-dropdown="dropdownNPL" class="nb-parent nb-tap">
-            <span>NPL</span>
-            <svg class="nb-caret" viewBox="0 0 20 20" fill="currentColor" width="16" height="16">
-              <path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.586l3.71-4.354a.75.75 0 111.14.976l-4.25 5a.75.75 0 01-1.14 0l-4.25-5a.75.75 0 01.02-1.06z" clip-rule="evenodd"/>
-            </svg>
-          </button>
-          <div id="dropdownNPL" class="dropdown-panel">
-            <ul class="nb-list">
-              <li><a href="npl" class="nb-item nb-tap">NPL</a></li>
-              <li><a href="perbandingan_npl" class="nb-item nb-tap">Perbandingan NPL</a></li>
-              <li><a href="recovery_npl" class="nb-item nb-tap">Recovery NPL</a></li>
-              <li><a href="flow_par" class="nb-item nb-tap">Flow Par</a></li>
-              <li><a href="npl_25_besar" class="nb-item nb-tap">25 NPL Besar</a></li>
-              <li><a href="potensi_npl" class="nb-item nb-tap">Potensi NPL</a></li>
-            </ul>
-          </div>
-        </li>
+        </li> -->
 
-        <li class="nb-li">
-          <button data-dropdown="dropdownPH" class="nb-parent nb-tap">
-            <span>PH</span>
-            <svg class="nb-caret" viewBox="0 0 20 20" fill="currentColor" width="16" height="16">
-              <path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.586l3.71-4.354a.75.75 0 111.14.976l-4.25 5a.75.75 0 01-1.14 0l-4.25-5a.75.75 0 01.02-1.06z" clip-rule="evenodd"/>
-            </svg>
-          </button>
-          <div id="dropdownPH" class="dropdown-panel">
-            <ul class="nb-list">
-              <li><a href="recovery_ph" class="nb-item nb-tap">Recovery PH</a></li>
-              <li><a href="lgd" class="nb-item nb-tap">Rekap Recovery (PH LGD)</a></li>
-            </ul>
-          </div>
-        </li>
 
-        <li class="nb-li">
-          <button data-dropdown="dropdownPenagihan" class="nb-parent nb-tap">
-            <span>Collection</span>
-            <svg class="nb-caret" viewBox="0 0 20 20" fill="currentColor" width="16" height="16">
-              <path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.586l3.71-4.354a.75.75 0 111.14.976l-4.25 5a.75.75 0 01-1.14 0l-4.25-5a.75.75 0 01.02-1.06z" clip-rule="evenodd"/>
-            </svg>
-          </button>
-          <div id="dropdownPenagihan" class="dropdown-panel">
-            <ul class="nb-list">
-              <li><a href="actual_kredit" class="nb-item nb-tap">Bucket DPD and Kolek</a></li>
-              <li><a href="migrasi_bucket" class="nb-item nb-tap">Migrasi Bucket</a></li>
-              <li><a href="search_debitur" class="nb-item nb-tap">Seach Debitur Kredit</a></li>
-              <li><a href="migrasi_kolek" class="nb-item nb-tap">Migrasi Kolek</a></li>
-            </ul>
-          </div>
-        </li>
 
-        <li class="nb-li" id="menuMonevDev" style="display: none;">
+        <!-- <li class="nb-li">
           <button data-dropdown="dropdownMonev" class="nb-parent nb-tap">
-            <span>Laporan Keuangan</span>
+            <span>Laporan dan Komitmen</span>
             <svg class="nb-caret" viewBox="0 0 20 20" fill="currentColor" width="16" height="16">
               <path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.586l3.71-4.354a.75.75 0 111.14.976l-4.25 5a.75.75 0 01-1.14 0l-4.25-5a.75.75 0 01.02-1.06z" clip-rule="evenodd"/>
             </svg>
           </button>
-          
           <div id="dropdownMonev" class="dropdown-panel">
             <ul class="nb-list">
-              <li id="menuLapKeu">
+              <li id="menuLapKeu" style="display: none;">
                 <a href="lapkeu_kantor" class="nb-item nb-tap">Laporan Keuangan</a>
               </li>
-              <li>
-                <!-- <a href="dashboard_v2" class="nb-item nb-tap">Dasboard v2</a> -->
-              </li>
+              <li><a href="monev_mingguan" class="nb-item nb-tap">Komitmen dan Realisasi Monev</a></li>
             </ul>
           </div>
-        </li>
+        </li> -->
+
+        <button id="dropdownProfileButton" class="hidden md:flex items-center nb-tap">
+          <span>Menu Profile</span>
+        </button>
+
+        <div id="dropdownProfile" class="dropdown-panel dropdown-profile hidden" role="menu">
+          <ul class="py-1 text-sm text-slate-700">
+            <li><a href="#" id="linkLogoutDesk" class="block px-4 py-2 hover:bg-slate-50 nb-tap">Logout</a></li>
+          </ul>
+        </div>
 
         <li class="nb-li md:hidden">
-          <button data-dropdown="dropdownProfileMobile" class="nb-parent nb-tap">
+          <button id="btnProfileMobile" data-dropdown="dropdownProfileMobile" class="nb-parent nb-tap">
             <span>Profile</span>
             <svg class="nb-caret" viewBox="0 0 20 20" fill="currentColor" width="16" height="16">
               <path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.586l3.71-4.354a.75.75 0 111.14.976l-4.25 5a.75.75 0 01-1.14 0l-4.25-5a.75.75 0 01.02-1.06z" clip-rule="evenodd"/>
             </svg>
           </button>
-          <div id="dropdownProfileMobile" class="dropdown-panel">
+          <div id="dropdownProfileMobile" class="dropdown-panel hidden">
             <ul class="nb-list">
               <li><a href="#" id="linkLogoutMobile" class="nb-item nb-tap">Logout</a></li>
             </ul>
           </div>
         </li>
-      </ul>
-
-      <div id="dropdownProfile" class="dropdown-panel dropdown-profile" role="menu" aria-labelledby="dropdownProfileButton">
-        <ul class="py-1 text-sm text-slate-700">
-          <li><a href="#" id="linkLogoutDesk" class="block px-4 py-2 hover:bg-slate-50 nb-tap">Logout</a></li>
-        </ul>
-      </div>
 
     </div>
   </div>
@@ -356,6 +385,7 @@
 })();
 </script>
 
+<!-- FE-only fallback: isi navbar dari localStorage/JWT bila skrip auth belum sempat nulis -->
 <script>
 (() => {
   const TOKEN_KEY='dpk_token', USER_KEY='dpk_user';
@@ -388,7 +418,7 @@
       id:p.sub||p.user_id||null, 
       kode:p.kode||p.branch_code||null,
       account_handle:p.handle||p.username||p.email||null,
-      role: p.role || null
+      role: p.role || null // 🔥 TAMBAHAN: Ambil properti role
     };
   }
   
@@ -398,7 +428,7 @@
           br=document.getElementById('navBranch'), 
           nav=document.getElementById('mainNavbar'), 
           acc=document.getElementById('accHandle'),
-          menuMonevDev=document.getElementById('menuMonevDev'); // 🔥 Target parent utamanya
+          menuLapKeu=document.getElementById('menuLapKeu'); // 🔥 Tangkap elemen menu
           
     let ok=false;
     
@@ -412,15 +442,12 @@
     }
     if(acc){ acc.textContent=(u.account_handle||u.username||u.email||u.employee_id||u.kode||'-'); ok=true; }
     
-    // 🔥 LOGIKA SAKTI MENAMPILKAN KESELURUHAN MENU LAPORAN & KOMITMEN:
-    if(menuMonevDev) {
-      // Cek apakah user adalah dev atau Super User
-      const isDev = (u.role === 'dev');
-      
-      if(isDev) {
-        menuMonevDev.style.setProperty('display', 'block', 'important'); 
+    // 🔥 LOGIKA SAKTI MENAMPILKAN MENU LAPORAN KEUANGAN:
+    if(menuLapKeu) {
+      if(u.role === 'Super User') {
+        menuLapKeu.style.display = 'block'; // Munculkan kalau rolenya cocok
       } else {
-        menuMonevDev.style.setProperty('display', 'none', 'important'); 
+        menuLapKeu.style.display = 'none';  // Pastikan tetap sembunyi buat yang lain
       }
       ok=true;
     }

@@ -166,7 +166,7 @@
             <th rowspan="2" class="sticky-left px-3 text-left min-w-[90px] md:min-w-[130px] uppercase align-middle border-r border-slate-200 text-blue-900">Bulan Real</th>
             <th rowspan="2" class="px-2 py-2 border-r border-slate-200 bg-[#f8fafc] text-blue-800 align-middle">MOB</th>
             <th rowspan="2" class="px-3 md:px-4 py-2 border-r border-slate-200 bg-[#f8fafc] text-blue-800 text-right w-[140px] md:w-[180px] align-middle">Tot Plafond</th>
-            <th colspan="8" class="py-2 border-b border-slate-200 bg-slate-100 text-slate-700 uppercase tracking-widest">DPD (Days Past Due) / Ember</th>
+            <th colspan="8" class="py-2 border-b border-slate-200 bg-slate-100 text-slate-700 uppercase tracking-widest">DPD (Days Past Due)</th>
           </tr>
           <tr class="mob-row-2 text-[9px] md:text-[11px]">
             <th class="px-2 py-1.5 border-r border-slate-200 bg-[#f0fdf4] text-green-800 w-[110px] md:w-[140px]">0</th>

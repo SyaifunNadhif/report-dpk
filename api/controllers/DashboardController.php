@@ -255,10 +255,15 @@ class DashboardController{
                 $dates[] = date('Y-m-d', strtotime("-$i day", strtotime($harian_date)));
             }
         } elseif ($periode === 'tahunan') {
-            // Mundur 12 bulan ke belakang (ambil data closing akhir bulan)
-            $patokan_mundur = strtotime(date('Y-m-01', strtotime($harian_date))); 
-            for ($i = 1; $i <= 12; $i++) {
-                $dates[] = date('Y-m-d', strtotime("last day of -$i month", $patokan_mundur));
+            /**
+             * LOGIKA TAHUNAN:
+             * Ambil closing 31 Des mulai dari 2020 sampai tahun kemarin.
+             */
+            $startYear = 2020;
+            $currentYear = (int)date('Y', strtotime($harian_date));
+            
+            for ($year = $startYear; $year < $currentYear; $year++) {
+                $dates[] = "$year-12-31";
             }
         } else {
             // Default: Bulanan (Mundur 6 bulan ke belakang)
@@ -268,9 +273,9 @@ class DashboardController{
             }
         }
         
-        // -- START PATCH FIX GAPPING: Urutkan tanggal ASC agar SQL ORDER BY sesuai dan carry-forward berjalan --
-        sort($dates); // ASC [03, 04, 05, 06, 07, 08, 09]
-        // -- END PATCH FIX GAPPING --
+        // -- Urutkan tanggal ASC agar chart mengalir dari lama ke baru --
+        sort($dates);
+        $dates = array_unique($dates); 
 
         // 2. Siapkan Binding Parameter untuk Klausa IN (...)
         $inParams = [];
@@ -282,7 +287,7 @@ class DashboardController{
         }
         $inString = implode(', ', $inQueryParts); 
 
-        // 3. Ambil Filter Cabang/Korwil
+        // 3. Ambil Filter Cabang/Korwil (Method internal Anda)
         $filter = $this->buildFilterQuery($input, 't');
 
         // 4. Susun Query SQL
@@ -313,40 +318,37 @@ class DashboardController{
             $stmt->execute();
             $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-            // -- START PATCH FIX GAPPING: HANDLE MISSING DATES IN RESULT --
-            // 1. Index hasil DB berdasarkan tanggal untuk lookup cepat
+            // Indexing hasil DB untuk handle data yang mungkin kosong (Gapping)
             $dbDataIndexed = [];
             foreach ($rows as $row) {
                 $dbDataIndexed[$row['tanggal']] = $row;
             }
 
-            // 2. Format data output dengan mengisi gap tanggal (Carry Forward Mechanism)
             $formattedData = [];
             $lastValidNplAmt = 0;
             $lastValidTotalKredit = 0;
             $lastValidNplPersen = 0;
 
             foreach ($dates as $expectedDate) {
-                // Formatting label biar cantik di sumbu X pada chart
-                $label = '';
-                if ($periode === 'bulanan' || $periode === 'tahunan') {
-                    $label = date('M Y', strtotime($expectedDate)); // cth: Mar 2026
+                // Penentuan Label agar FE tetap konsisten
+                if ($periode === 'tahunan') {
+                    if ($expectedDate === $harian_date) {
+                        $label = date('d M Y', strtotime($expectedDate)) . ' (Act)';
+                    } else {
+                        // Format: 31 Des 2020
+                        $label = date('d M Y', strtotime($expectedDate)); 
+                    }
+                } elseif ($periode === 'bulanan') {
+                    $label = date('M Y', strtotime($expectedDate));
                 } elseif ($periode === 'mingguan') {
-                    $label = date('d M Y', strtotime($expectedDate)); // cth: 10 Mar 2026
+                    $label = date('d M Y', strtotime($expectedDate));
                 } else {
-                    $label = date('d M', strtotime($expectedDate)); // cth: 10 Mar
-                }
-
-                // Tambah label (Act) jika tanggal hari ini
-                if ($expectedDate === $harian_date) {
-                    $label .= ' (Act)';
+                    $label = date('d M', strtotime($expectedDate));
                 }
 
                 if (isset($dbDataIndexed[$expectedDate])) {
-                    // Data ADA di database
                     $dbItem = $dbDataIndexed[$expectedDate];
                     
-                    // Simpan nilai valid terakhir untuk nanti dipakai kalau ada data bolong
                     $lastValidNplAmt = (float) $dbItem['npl_amt'];
                     $lastValidTotalKredit = (float) $dbItem['total_kredit'];
                     $lastValidNplPersen = (float) $dbItem['npl_persen'];
@@ -359,18 +361,16 @@ class DashboardController{
                         'npl_persen'   => $lastValidNplPersen
                     ];
                 } else {
-                    // Data TIDAK ADA di database (GAPPING, cth: 07 Mar)
-                    // Paksa buat titik data dengan nilai dari hari sebelumnya (Carry Forward)
+                    // Carry Forward: Pakai data terakhir jika tanggal tsb tidak ada di DB
                     $formattedData[] = [
                         'tanggal'      => $expectedDate,
-                        'label'        => $label, // Label tetap tanggal yg hilang
+                        'label'        => $label,
                         'npl_amt'      => $lastValidNplAmt,
                         'total_kredit' => $lastValidTotalKredit,
                         'npl_persen'   => $lastValidNplPersen
                     ];
                 }
             }
-            // -- END PATCH FIX GAPPING --
 
             return $formattedData;
 
@@ -380,14 +380,14 @@ class DashboardController{
         }
     }
 
-/**
+    /**
      * =================================================================
      * FUNGSI TREN PORTOFOLIO KREDIT (OSC TOTAL, NPL, RR)
      * =================================================================
      * Mengambil tren pergerakan Outstanding (OSC) Total, OSC NPL, 
      * dan Repayment Rate (RR) langsung dari tabel nominatif beserta GAP-nya.
      */
-    public function getTrenPortofolioKredit($input) {
+public function getTrenPortofolioKredit($input) {
         $harian_date = $input['harian_date'] ?? date('Y-m-d');
         $periode = $input['periode'] ?? 'bulanan'; 
         
@@ -411,9 +411,15 @@ class DashboardController{
                 $dates[] = date('Y-m-d', strtotime("-$i day", strtotime($harian_date)));
             }
         } elseif ($periode === 'tahunan') {
-            $patokan_mundur = strtotime(date('Y-m-01', strtotime($harian_date))); 
-            for ($i = 1; $i <= 12; $i++) {
-                $dates[] = date('Y-m-d', strtotime("last day of -$i month", $patokan_mundur));
+            /**
+             * LOGIKA TAHUNAN (FIXED):
+             * Ambil closing 31 Des mulai dari 2020 sampai tahun kemarin.
+             */
+            $startYear = 2020;
+            $currentYear = (int)date('Y', strtotime($harian_date));
+            
+            for ($year = $startYear; $year < $currentYear; $year++) {
+                $dates[] = "$year-12-31";
             }
         } else {
             // Default: Bulanan
@@ -423,8 +429,9 @@ class DashboardController{
             }
         }
         
-        // Urutkan tanggal ASC
+        // Urutkan tanggal ASC dan buang duplikat (jika ada)
         sort($dates); 
+        $dates = array_unique($dates);
 
         // 2. Siapkan Binding Parameter untuk Klausa IN (...)
         $inParams = [];
@@ -484,9 +491,11 @@ class DashboardController{
             $prev_rr_persen = null;
 
             foreach ($dates as $expectedDate) {
-                // Formatting label tanggal
+                // Formatting label tanggal (FIXED TAHUNAN)
                 $label = '';
-                if ($periode === 'bulanan' || $periode === 'tahunan') {
+                if ($periode === 'tahunan') {
+                    $label = date('d M Y', strtotime($expectedDate)); // Format: 31 Dec 2020
+                } elseif ($periode === 'bulanan') {
                     $label = date('M Y', strtotime($expectedDate));
                 } elseif ($periode === 'mingguan') {
                     $label = date('d M Y', strtotime($expectedDate));
@@ -494,8 +503,14 @@ class DashboardController{
                     $label = date('d M', strtotime($expectedDate));
                 }
 
+                // Tambahan khusus (Act) jika itu tanggal hari ini
                 if ($expectedDate === $harian_date) {
-                    $label .= ' (Act)';
+                    // Cek jika tahunan dan itu Act, format jadi: 26 Apr 2026 (Act)
+                    if ($periode === 'tahunan' && strpos($label, date('Y')) !== false) {
+                        $label = date('d M Y', strtotime($expectedDate)) . ' (Act)';
+                    } else {
+                        $label .= ' (Act)';
+                    }
                 }
 
                 // Ambil data jika ada, jika tidak pakai data hari sebelumnya (Carry Forward)
@@ -555,6 +570,7 @@ class DashboardController{
             return [];
         }
     }
+
     public function getRepaymentRateCabang($input) {
         $harian_date  = $input['harian_date'] ?? date('Y-m-d');
         $closing_date = $input['closing_date'] ?? date('Y-m-d', strtotime('last day of previous month'));

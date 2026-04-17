@@ -50,7 +50,7 @@ class AuthController {
         }
     
         // Query data user dari database
-        $stmt = $this->pdo->prepare("SELECT id, kode, employee_id, full_name, job_position, branch_name FROM users WHERE employee_id = :employee_id");
+        $stmt = $this->pdo->prepare("SELECT id, kode, employee_id, full_name, job_position, branch_name, level, role FROM users WHERE employee_id = :employee_id");
         $stmt->execute([':employee_id' => $employee_id]);
         $user = $stmt->fetch();
     
