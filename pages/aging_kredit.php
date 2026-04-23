@@ -79,9 +79,12 @@
                 <span class="bg-emerald-600 text-white p-1.5 rounded-lg text-sm shadow-sm">
                     <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>
                 </span> 
-                <span>Aging Kredit (%)</span>
+                <span>Rekap Aging Kredit (% Usia Kredit)</span>
             </h1>
-            <p class="text-[10px] md:text-xs text-slate-500 mt-1 ml-1 font-medium" id="lbl_filter_aktif">*Posisi Harian: Menunggu data...</p>
+             <p class="text-[9px] md:text-xs text-rose-600 font-bold italic ml-8 md:ml-[42px] leading-tight">
+                  *progress usia kredit.
+              </p>
+            <!-- <p class="text-[10px] md:text-xs text-slate-500 mt-1 ml-1 font-medium" id="lbl_filter_aktif">*Posisi Harian: Menunggu data...</p> -->
         </div>
 
         <button id="btnToggleProgFilter" class="xl:hidden flex items-center gap-1.5 px-3 py-1.5 border border-gray-300 rounded-lg bg-white text-sm font-semibold text-slate-700 shadow-sm transition">
@@ -383,7 +386,7 @@
           window.progGtRaw = json.data?.grand_total || null;
           const meta = json.data?.meta || {};
 
-          document.getElementById('lbl_filter_aktif').innerHTML = `Filter: <span class="font-bold text-emerald-700">${meta.filter_aktif || 'ALL'}</span> | Per Tgl: <span class="font-bold text-slate-700">${meta.tanggal || payload.harian_date}</span>`;
+        //   document.getElementById('lbl_filter_aktif').innerHTML = `Filter: <span class="font-bold text-emerald-700">${meta.filter_aktif || 'ALL'}</span> | Per Tgl: <span class="font-bold text-slate-700">${meta.tanggal || payload.harian_date}</span>`;
 
           renderProgTotal(window.progGtRaw);
           renderProgTable(window.progDataRaw);

@@ -124,7 +124,7 @@
                 <a href="lapkeu_kantor" class="nb-item nb-tap">Laporan Keuangan</a>
               </li>
               <li id="menuProgresKredit">
-                <a href="aging_kredit" class="nb-item nb-tap">Aging Kredit</a>
+                <a href="aging_kredit" class="nb-item nb-tap">Rekap Aging Kredit</a>
               </li>
             </ul>
           </div>
