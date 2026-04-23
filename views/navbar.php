@@ -112,7 +112,7 @@
 
         <li class="nb-li" id="menuMonevDev" style="display: none;">
           <button data-dropdown="dropdownMonev" class="nb-parent nb-tap">
-            <span>Laporan Keuangan</span>
+            <span>Laporan</span>
             <svg class="nb-caret" viewBox="0 0 20 20" fill="currentColor" width="16" height="16">
               <path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.586l3.71-4.354a.75.75 0 111.14.976l-4.25 5a.75.75 0 01-1.14 0l-4.25-5a.75.75 0 01.02-1.06z" clip-rule="evenodd"/>
             </svg>
@@ -124,7 +124,7 @@
                 <a href="lapkeu_kantor" class="nb-item nb-tap">Laporan Keuangan</a>
               </li>
               <li id="menuProgresKredit">
-                <a href="persen_kredit" class="nb-item nb-tap">Progres Kredit</a>
+                <a href="aging_kredit" class="nb-item nb-tap">Aging Kredit</a>
               </li>
             </ul>
           </div>
