@@ -123,8 +123,8 @@
               <li id="menuLapKeu">
                 <a href="lapkeu_kantor" class="nb-item nb-tap">Laporan Keuangan</a>
               </li>
-              <li>
-                <!-- <a href="dashboard_v2" class="nb-item nb-tap">Dasboard v2</a> -->
+              <li id="menuProgresKredit">
+                <a href="persen_kredit" class="nb-item nb-tap">Progres Kredit</a>
               </li>
             </ul>
           </div>

@@ -387,7 +387,7 @@ class DashboardController{
      * Mengambil tren pergerakan Outstanding (OSC) Total, OSC NPL, 
      * dan Repayment Rate (RR) langsung dari tabel nominatif beserta GAP-nya.
      */
-public function getTrenPortofolioKredit($input) {
+    public function getTrenPortofolioKredit($input) {
         $harian_date = $input['harian_date'] ?? date('Y-m-d');
         $periode = $input['periode'] ?? 'bulanan'; 
         

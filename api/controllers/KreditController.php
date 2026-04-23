@@ -1718,4 +1718,421 @@ public function getTopRealisasi($input = []) {
         }
     }
 
+    /**
+     * 5. REKAP USIA KREDIT (Berdasarkan Range Bulan)
+     * Filter: Korwil, Cabang, Kankas.
+     * Note: Kolom created bertipe DATE
+     */
+    public function getRekapUsiaKredit($input = null) {
+        set_time_limit(300); ini_set('memory_limit', '1024M');
+
+        $b = is_array($input) ? $input : [];
+        $harian  = $b['harian_date'] ?? date('Y-m-d');
+        $kode_kantor = !empty($b['kode_kantor']) ? str_pad($b['kode_kantor'], 3, '0', STR_PAD_LEFT) : null;
+        $korwil  = !empty($b['korwil']) ? strtoupper($b['korwil']) : null;
+        $kankas  = !empty($b['kode_kankas']) ? $b['kode_kankas'] : null;
+
+        if (!$harian) {
+            return sendResponse(400, "Tanggal Actual (Harian) wajib diisi.", null);
+        }
+
+        // --- 1. BUILD FILTER QUERY ---
+        $sqlFilter = "";
+        $params = [
+            ':harian' => $harian 
+        ];
+
+        // Filter Cabang / Korwil
+        if ($kode_kantor && $kode_kantor !== '000') {
+            $sqlFilter .= " AND t.kode_cabang = :kode_kantor ";
+            $params[':kode_kantor'] = $kode_kantor;
+        } elseif ($korwil) {
+            $kw_start = null; $kw_end = null;
+            switch ($korwil) {
+                case 'SEMARANG':   $kw_start = '001'; $kw_end = '007'; break;
+                case 'SOLO':       $kw_start = '008'; $kw_end = '014'; break;
+                case 'BANYUMAS':   $kw_start = '015'; $kw_end = '021'; break;
+                case 'PEKALONGAN': $kw_start = '022'; $kw_end = '028'; break;
+            }
+            if ($kw_start && $kw_end) {
+                $sqlFilter .= " AND t.kode_cabang BETWEEN :kw_start AND :kw_end ";
+                $params[':kw_start'] = $kw_start;
+                $params[':kw_end'] = $kw_end;
+            }
+        }
+
+        // Filter Kankas
+        if ($kankas) {
+            $sqlFilter .= " AND COALESCE(NULLIF(t.kode_group1, ''), CONCAT(t.kode_cabang, '000')) = :kode_kankas ";
+            $params[':kode_kankas'] = $kankas;
+        }
+
+        // --- 2. MAIN QUERY ---
+        // 🔥 FIX: Kategori umur ditambahkan sampai > 4 Tahun (Tahun ke-5 dst)
+        $sql = "SELECT 
+                    CASE 
+                        WHEN TIMESTAMPDIFF(MONTH, t.tgl_realisasi, p.harian) < 6 THEN '< 6 Bulan'
+                        WHEN TIMESTAMPDIFF(MONTH, t.tgl_realisasi, p.harian) BETWEEN 6 AND 12 THEN '6 - 12 Bulan'
+                        WHEN TIMESTAMPDIFF(MONTH, t.tgl_realisasi, p.harian) BETWEEN 13 AND 24 THEN '1 - 2 Tahun'
+                        WHEN TIMESTAMPDIFF(MONTH, t.tgl_realisasi, p.harian) BETWEEN 25 AND 48 THEN '> 2 - 4 Tahun'
+                        ELSE '> 4 Tahun'
+                    END as kategori,
+                    CASE 
+                        WHEN TIMESTAMPDIFF(MONTH, t.tgl_realisasi, p.harian) < 6 THEN 1
+                        WHEN TIMESTAMPDIFF(MONTH, t.tgl_realisasi, p.harian) BETWEEN 6 AND 12 THEN 2
+                        WHEN TIMESTAMPDIFF(MONTH, t.tgl_realisasi, p.harian) BETWEEN 13 AND 24 THEN 3
+                        WHEN TIMESTAMPDIFF(MONTH, t.tgl_realisasi, p.harian) BETWEEN 25 AND 48 THEN 4
+                        ELSE 5
+                    END as sort_order,
+                    COUNT(t.no_rekening) as total_noa,
+                    SUM(t.baki_debet) as total_os,
+                    
+                    -- Pemilahan berdasarkan Kolektibilitas
+                    SUM(CASE WHEN t.kolektibilitas = 'L' THEN t.baki_debet ELSE 0 END) as os_lancar,
+                    SUM(CASE WHEN t.kolektibilitas IN ('DP', 'DPK') THEN t.baki_debet ELSE 0 END) as os_dpk,
+                    SUM(CASE WHEN t.kolektibilitas IN ('KL', 'D', 'M') THEN t.baki_debet ELSE 0 END) as os_npl,
+                    
+                    SUM(CASE WHEN t.tgl_jatuh_tempo < p.harian THEN t.baki_debet ELSE 0 END) as os_lewat_jt
+                FROM nominatif t
+                CROSS JOIN (SELECT :harian AS harian) p
+                WHERE t.created = p.harian 
+                AND t.baki_debet > 0
+                $sqlFilter
+                GROUP BY kategori, sort_order
+                ORDER BY sort_order ASC";
+
+        try {
+            $stmt = $this->pdo->prepare($sql);
+            foreach ($params as $key => $val) {
+                $stmt->bindValue($key, $val);
+            }
+            $stmt->execute();
+            $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+            // --- 3. DYNAMIC META DATA (NAMA KANTOR) ---
+            $nama_kantor_filter = "SEMUA CABANG (KONSOLIDASI)";
+            if ($kankas) {
+                $stmtK = $this->pdo->prepare("SELECT deskripsi_group1 FROM kankas WHERE kode_group1 = ?");
+                $stmtK->execute([$kankas]);
+                $nama = $stmtK->fetchColumn();
+                $nama_kantor_filter = $nama ?: "KANKAS " . $kankas;
+            } elseif ($kode_kantor && $kode_kantor !== '000') {
+                $stmtK = $this->pdo->prepare("SELECT nama_kantor FROM kode_kantor WHERE kode_kantor = ?");
+                $stmtK->execute([$kode_kantor]);
+                $nama = $stmtK->fetchColumn();
+                $nama_kantor_filter = $nama ?: "CABANG " . $kode_kantor;
+            } elseif ($korwil) {
+                $nama_kantor_filter = "KORWIL " . $korwil;
+            }
+
+            // --- 4. DATA PROCESSING ---
+            $grandTotal = [
+                'total_noa' => 0, 
+                'total_os' => 0, 
+                'os_lancar' => 0, 
+                'os_dpk' => 0, 
+                'os_npl' => 0, 
+                'os_lewat_jt' => 0, 
+                'persen_npl' => 0
+            ];
+
+            foreach ($rows as &$r) {
+                $r['total_noa']   = (int)$r['total_noa'];
+                $r['total_os']    = (float)$r['total_os'];
+                $r['os_lancar']   = (float)$r['os_lancar'];
+                $r['os_dpk']      = (float)$r['os_dpk'];
+                $r['os_npl']      = (float)$r['os_npl'];
+                $r['os_lewat_jt'] = (float)$r['os_lewat_jt'];
+                $r['persen_npl']  = $r['total_os'] > 0 ? round(($r['os_npl'] / $r['total_os']) * 100, 2) : 0;
+
+                $grandTotal['total_noa']   += $r['total_noa'];
+                $grandTotal['total_os']    += $r['total_os'];
+                $grandTotal['os_lancar']   += $r['os_lancar'];
+                $grandTotal['os_dpk']      += $r['os_dpk'];
+                $grandTotal['os_npl']      += $r['os_npl'];
+                $grandTotal['os_lewat_jt'] += $r['os_lewat_jt'];
+            }
+
+            $grandTotal['persen_npl'] = $grandTotal['total_os'] > 0 ? round(($grandTotal['os_npl'] / $grandTotal['total_os']) * 100, 2) : 0;
+
+            $responseData = [
+                'meta' => [
+                    'filter_aktif' => $nama_kantor_filter,
+                    'tanggal'      => $harian
+                ],
+                'grand_total' => $grandTotal,
+                'data' => $rows
+            ];
+
+            return sendResponse(200, "Berhasil ambil rekap usia kredit", $responseData);
+
+        } catch (PDOException $e) {
+            error_log("Error getRekapUsiaKredit: " . $e->getMessage());
+            return sendResponse(500, "PDO Error: " . $e->getMessage(), null);
+        }
+    }
+
+
+
+    /**
+     * 6. REKAP PROGRESS KREDIT (%)
+     */
+    public function getRekapProgressKredit($input = null) {
+        set_time_limit(300); ini_set('memory_limit', '1024M');
+
+        $b = is_array($input) ? $input : [];
+        $harian  = $b['harian_date'] ?? date('Y-m-d');
+        $kode_kantor = !empty($b['kode_kantor']) ? str_pad($b['kode_kantor'], 3, '0', STR_PAD_LEFT) : null;
+        $korwil  = !empty($b['korwil']) ? strtoupper($b['korwil']) : null;
+        $kankas  = !empty($b['kode_kankas']) ? $b['kode_kankas'] : null;
+
+        if (!$harian) return sendResponse(400, "Tanggal Actual (Harian) wajib diisi.", null);
+
+        $sqlFilter = "";
+        $params = [':harian' => $harian];
+
+        if ($kode_kantor && $kode_kantor !== '000') {
+            $sqlFilter .= " AND t.kode_cabang = :kode_kantor ";
+            $params[':kode_kantor'] = $kode_kantor;
+        } elseif ($korwil) {
+            $kw_start = null; $kw_end = null;
+            switch ($korwil) {
+                case 'SEMARANG':   $kw_start = '001'; $kw_end = '007'; break;
+                case 'SOLO':       $kw_start = '008'; $kw_end = '014'; break;
+                case 'BANYUMAS':   $kw_start = '015'; $kw_end = '021'; break;
+                case 'PEKALONGAN': $kw_start = '022'; $kw_end = '028'; break;
+            }
+            if ($kw_start && $kw_end) {
+                $sqlFilter .= " AND t.kode_cabang BETWEEN :kw_start AND :kw_end ";
+                $params[':kw_start'] = $kw_start;
+                $params[':kw_end'] = $kw_end;
+            }
+        }
+
+        // 🔥 FIX KANKAS: Pakai TRIM untuk jaga-jaga spasi kosong di database
+        if ($kankas) {
+            $sqlFilter .= " AND COALESCE(NULLIF(TRIM(t.kode_group1), ''), CONCAT(t.kode_cabang, '000')) = :kode_kankas ";
+            $params[':kode_kankas'] = $kankas;
+        }
+
+        $sql = "SELECT 
+                    CASE 
+                        WHEN t.tgl_jatuh_tempo < p.harian THEN '> 100% (Lewat JT)'
+                        WHEN TIMESTAMPDIFF(MONTH, t.tgl_realisasi, t.tgl_jatuh_tempo) <= 0 THEN 'Data Error'
+                        WHEN (TIMESTAMPDIFF(MONTH, t.tgl_realisasi, p.harian) / TIMESTAMPDIFF(MONTH, t.tgl_realisasi, t.tgl_jatuh_tempo)) * 100 <= 25 THEN '0% - 25% (Awal)'
+                        WHEN (TIMESTAMPDIFF(MONTH, t.tgl_realisasi, p.harian) / TIMESTAMPDIFF(MONTH, t.tgl_realisasi, t.tgl_jatuh_tempo)) * 100 <= 50 THEN '26% - 50%'
+                        WHEN (TIMESTAMPDIFF(MONTH, t.tgl_realisasi, p.harian) / TIMESTAMPDIFF(MONTH, t.tgl_realisasi, t.tgl_jatuh_tempo)) * 100 <= 75 THEN '51% - 75%'
+                        WHEN (TIMESTAMPDIFF(MONTH, t.tgl_realisasi, p.harian) / TIMESTAMPDIFF(MONTH, t.tgl_realisasi, t.tgl_jatuh_tempo)) * 100 <= 95 THEN '76% - 95%'
+                        ELSE '96% - 100% (Pantauan)'
+                    END as kategori,
+                    CASE 
+                        WHEN t.tgl_jatuh_tempo < p.harian THEN 6
+                        WHEN TIMESTAMPDIFF(MONTH, t.tgl_realisasi, t.tgl_jatuh_tempo) <= 0 THEN 7
+                        WHEN (TIMESTAMPDIFF(MONTH, t.tgl_realisasi, p.harian) / TIMESTAMPDIFF(MONTH, t.tgl_realisasi, t.tgl_jatuh_tempo)) * 100 <= 25 THEN 1
+                        WHEN (TIMESTAMPDIFF(MONTH, t.tgl_realisasi, p.harian) / TIMESTAMPDIFF(MONTH, t.tgl_realisasi, t.tgl_jatuh_tempo)) * 100 <= 50 THEN 2
+                        WHEN (TIMESTAMPDIFF(MONTH, t.tgl_realisasi, p.harian) / TIMESTAMPDIFF(MONTH, t.tgl_realisasi, t.tgl_jatuh_tempo)) * 100 <= 75 THEN 3
+                        WHEN (TIMESTAMPDIFF(MONTH, t.tgl_realisasi, p.harian) / TIMESTAMPDIFF(MONTH, t.tgl_realisasi, t.tgl_jatuh_tempo)) * 100 <= 95 THEN 4
+                        ELSE 5
+                    END as sort_order,
+                    COUNT(t.no_rekening) as total_noa,
+                    SUM(t.baki_debet) as total_os,
+                    
+                    SUM(CASE WHEN t.kolektibilitas IN ('L', 'DP', 'DPK') THEN 1 ELSE 0 END) as noa_performing,
+                    SUM(CASE WHEN t.kolektibilitas IN ('L', 'DP', 'DPK') THEN t.baki_debet ELSE 0 END) as os_performing,
+                    
+                    SUM(CASE WHEN t.kolektibilitas IN ('KL', 'D', 'M') THEN 1 ELSE 0 END) as noa_npl,
+                    SUM(CASE WHEN t.kolektibilitas IN ('KL', 'D', 'M') THEN t.baki_debet ELSE 0 END) as os_npl
+                FROM nominatif t
+                CROSS JOIN (SELECT :harian AS harian) p
+                WHERE t.created = p.harian 
+                AND t.baki_debet > 0
+                $sqlFilter
+                GROUP BY kategori, sort_order
+                ORDER BY sort_order ASC";
+
+        try {
+            $stmt = $this->pdo->prepare($sql);
+            foreach ($params as $key => $val) { $stmt->bindValue($key, $val); }
+            $stmt->execute();
+            $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+            $nama_kantor_filter = "SEMUA CABANG (KONSOLIDASI)";
+            if ($kankas) {
+                $stmtK = $this->pdo->prepare("SELECT deskripsi_group1 FROM kankas WHERE kode_group1 = ?");
+                $stmtK->execute([$kankas]);
+                $nama_kantor_filter = $stmtK->fetchColumn() ?: "KANKAS " . $kankas;
+            } elseif ($kode_kantor && $kode_kantor !== '000') {
+                $stmtK = $this->pdo->prepare("SELECT nama_kantor FROM kode_kantor WHERE kode_kantor = ?");
+                $stmtK->execute([$kode_kantor]);
+                $nama_kantor_filter = $stmtK->fetchColumn() ?: "CABANG " . $kode_kantor;
+            } elseif ($korwil) {
+                $nama_kantor_filter = "KORWIL " . $korwil;
+            }
+
+            $grandTotal = ['total_noa'=>0, 'total_os'=>0, 'noa_performing'=>0, 'os_performing'=>0, 'noa_npl'=>0, 'os_npl'=>0, 'persen_npl'=>0];
+
+            foreach ($rows as $r) {
+                $grandTotal['total_noa']      += (int)$r['total_noa'];
+                $grandTotal['total_os']       += (float)$r['total_os'];
+                $grandTotal['noa_performing'] += (int)$r['noa_performing'];
+                $grandTotal['os_performing']  += (float)$r['os_performing'];
+                $grandTotal['noa_npl']        += (int)$r['noa_npl'];
+                $grandTotal['os_npl']         += (float)$r['os_npl'];
+            }
+            $grandTotal['persen_npl'] = $grandTotal['total_os'] > 0 ? round(($grandTotal['os_npl'] / $grandTotal['total_os']) * 100, 2) : 0;
+
+            foreach ($rows as &$r) {
+                $r['total_noa']      = (int)$r['total_noa'];
+                $r['total_os']       = (float)$r['total_os'];
+                $r['noa_performing'] = (int)$r['noa_performing'];
+                $r['os_performing']  = (float)$r['os_performing'];
+                $r['noa_npl']        = (int)$r['noa_npl'];
+                $r['os_npl']         = (float)$r['os_npl'];
+                $r['persen_npl']     = $grandTotal['total_os'] > 0 ? round(($r['os_npl'] / $grandTotal['total_os']) * 100, 2) : 0;
+            }
+
+            return sendResponse(200, "Berhasil", [
+                'meta' => ['filter_aktif' => $nama_kantor_filter, 'tanggal' => $harian],
+                'grand_total' => $grandTotal,
+                'data' => $rows
+            ]);
+        } catch (PDOException $e) { return sendResponse(500, "PDO Error: " . $e->getMessage(), null); }
+    }
+
+    /**
+     * 7. DETAIL PROGRESS KREDIT (Pagination)
+     */
+    public function getDetailProgressKredit($input = null) {
+        set_time_limit(300); ini_set('memory_limit', '1024M');
+
+        $b = is_array($input) ? $input : [];
+        $harian  = $b['harian_date'] ?? date('Y-m-d');
+        $kode_kantor = !empty($b['kode_kantor']) ? str_pad($b['kode_kantor'], 3, '0', STR_PAD_LEFT) : null;
+        $korwil  = !empty($b['korwil']) ? strtoupper($b['korwil']) : null;
+        $kankas  = !empty($b['kode_kankas']) ? $b['kode_kankas'] : null;
+        
+        // 🔥 PASTIKAN 3 BARIS INI ADA AGAR FILTER NPL & AO JALAN!
+        $kategori= $b['kategori'] ?? 'ALL'; 
+        $status  = $b['status'] ?? 'ALL'; 
+        $ao      = $b['kode_ao'] ?? null; 
+        
+        $page    = $b['page'] ?? 1;
+        $limit   = $b['limit'] ?? 20;
+        $offset  = ($page - 1) * $limit;
+
+        if (!$harian) return sendResponse(400, "Tanggal Actual (Harian) wajib diisi.", null);
+
+        $sqlFilter = "";
+        $params = [':harian' => $harian];
+
+        // 1. Filter Area
+        if ($kode_kantor && $kode_kantor !== '000') {
+            $sqlFilter .= " AND t.kode_cabang = :kode_kantor ";
+            $params[':kode_kantor'] = $kode_kantor;
+        } elseif ($korwil) {
+            $kw_start = null; $kw_end = null;
+            switch ($korwil) {
+                case 'SEMARANG':   $kw_start = '001'; $kw_end = '007'; break;
+                case 'SOLO':       $kw_start = '008'; $kw_end = '014'; break;
+                case 'BANYUMAS':   $kw_start = '015'; $kw_end = '021'; break;
+                case 'PEKALONGAN': $kw_start = '022'; $kw_end = '028'; break;
+            }
+            if ($kw_start && $kw_end) {
+                $sqlFilter .= " AND t.kode_cabang BETWEEN :kw_start AND :kw_end ";
+                $params[':kw_start'] = $kw_start;
+                $params[':kw_end'] = $kw_end;
+            }
+        }
+
+        if ($kankas) {
+            $sqlFilter .= " AND COALESCE(NULLIF(TRIM(t.kode_group1), ''), CONCAT(t.kode_cabang, '000')) = :kode_kankas ";
+            $params[':kode_kankas'] = $kankas;
+        }
+
+        // 🔥 2. Filter AO (Dari Dropdown Modal)
+        if ($ao) {
+            $sqlFilter .= " AND t.kode_group2 = :kode_ao ";
+            $params[':kode_ao'] = $ao;
+        }
+
+        // 3. Filter Range Kategori Persentase
+        $pct_calc = "(TIMESTAMPDIFF(MONTH, t.tgl_realisasi, p.harian) / TIMESTAMPDIFF(MONTH, t.tgl_realisasi, t.tgl_jatuh_tempo)) * 100";
+        $catFilter = "";
+
+        if ($kategori === 'Lewat JT') {
+            $catFilter = " AND t.tgl_jatuh_tempo < p.harian ";
+        } elseif ($kategori === 'Error') {
+            $catFilter = " AND t.tgl_jatuh_tempo >= p.harian AND TIMESTAMPDIFF(MONTH, t.tgl_realisasi, t.tgl_jatuh_tempo) <= 0 ";
+        } elseif ($kategori === '0-25') {
+            $catFilter = " AND t.tgl_jatuh_tempo >= p.harian AND TIMESTAMPDIFF(MONTH, t.tgl_realisasi, t.tgl_jatuh_tempo) > 0 AND $pct_calc <= 25 ";
+        } elseif ($kategori === '26-50') {
+            $catFilter = " AND t.tgl_jatuh_tempo >= p.harian AND TIMESTAMPDIFF(MONTH, t.tgl_realisasi, t.tgl_jatuh_tempo) > 0 AND $pct_calc > 25 AND $pct_calc <= 50 ";
+        } elseif ($kategori === '51-75') {
+            $catFilter = " AND t.tgl_jatuh_tempo >= p.harian AND TIMESTAMPDIFF(MONTH, t.tgl_realisasi, t.tgl_jatuh_tempo) > 0 AND $pct_calc > 50 AND $pct_calc <= 75 ";
+        } elseif ($kategori === '76-95') {
+            $catFilter = " AND t.tgl_jatuh_tempo >= p.harian AND TIMESTAMPDIFF(MONTH, t.tgl_realisasi, t.tgl_jatuh_tempo) > 0 AND $pct_calc > 75 AND $pct_calc <= 95 ";
+        } elseif ($kategori === '96-100') {
+            $catFilter = " AND t.tgl_jatuh_tempo >= p.harian AND TIMESTAMPDIFF(MONTH, t.tgl_realisasi, t.tgl_jatuh_tempo) > 0 AND $pct_calc > 95 AND $pct_calc <= 100 ";
+        }
+
+        // 🔥 4. Filter Status Murni (Lancar vs NPL)
+        if ($status === 'PERFORMING') {
+            $catFilter .= " AND t.kolektibilitas IN ('L', 'DP', 'DPK') ";
+        } elseif ($status === 'NPL') {
+            $catFilter .= " AND t.kolektibilitas IN ('KL', 'D', 'M') ";
+        }
+
+        $baseQuery = "FROM nominatif t
+                      CROSS JOIN (SELECT :harian AS harian) p
+                      LEFT JOIN kankas kn ON t.kode_group1 = kn.kode_group1
+                      LEFT JOIN ao_kredit ao ON t.kode_group2 = ao.kode_group2
+                      WHERE t.created = p.harian AND t.baki_debet > 0 
+                      $sqlFilter $catFilter";
+
+        try {
+            $stmtCnt = $this->pdo->prepare("SELECT COUNT(1) $baseQuery");
+            foreach ($params as $key => $val) { $stmtCnt->bindValue($key, $val); }
+            $stmtCnt->execute();
+            $totalRecords = $stmtCnt->fetchColumn();
+
+            $cols = "t.no_rekening, t.nama_nasabah, t.alamat, t.hp as no_hp, 
+                     COALESCE(kn.deskripsi_group1, t.kode_group1) as kankas,
+                     COALESCE(ao.nama_ao, t.kode_group2) as nama_ao,
+                     t.tgl_realisasi, t.tgl_jatuh_tempo, t.jml_pinjaman, t.baki_debet, t.kolektibilitas,
+                     CASE 
+                        WHEN t.tgl_jatuh_tempo < p.harian THEN 100 
+                        WHEN TIMESTAMPDIFF(MONTH, t.tgl_realisasi, t.tgl_jatuh_tempo) <= 0 THEN 0
+                        ELSE ROUND($pct_calc, 2)
+                     END as persen_jalan";
+
+            $sqlData = "SELECT $cols $baseQuery ORDER BY t.baki_debet DESC LIMIT :lim OFFSET :off";
+            
+            $stmt = $this->pdo->prepare($sqlData);
+            foreach ($params as $key => $val) { $stmt->bindValue($key, $val); }
+            $stmt->bindValue(':lim', (int)$limit, PDO::PARAM_INT);
+            $stmt->bindValue(':off', (int)$offset, PDO::PARAM_INT);
+            $stmt->execute();
+            $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+            foreach ($rows as &$r) {
+                $r['baki_debet'] = (float)$r['baki_debet'];
+                $r['jml_pinjaman'] = (float)$r['jml_pinjaman'];
+                $r['persen_jalan'] = (float)$r['persen_jalan'];
+                
+                if (in_array($r['kolektibilitas'], ['L', 'DP', 'DPK'])) {
+                    $r['status_ket'] = 'PERFORMING';
+                } else {
+                    $r['status_ket'] = 'NPL';
+                }
+            }
+
+            return sendResponse(200, "Berhasil", [
+                'pagination' => ['current_page' => (int)$page, 'total_records' => (int)$totalRecords, 'total_pages' => ceil($totalRecords / $limit)],
+                'data' => $rows
+            ]);
+        } catch (PDOException $e) { return sendResponse(500, "PDO Error: " . $e->getMessage(), null); }
+    }
+
+
+
 }

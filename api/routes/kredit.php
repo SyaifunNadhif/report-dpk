@@ -44,6 +44,13 @@ switch ($method) {
             $controller->getDetailPromo($input);
         } elseif ($input['type'] === 'chart_promo') {
             $controller->getChartPromo($input);
+        } elseif ($input['type'] === 'usia_kredit') {
+            $controller->getRekapUsiaKredit($input);
+        } elseif ($input['type'] === 'progress_kredit') {
+            $controller->getRekapProgressKredit($input);
+        } elseif ($input['type'] === 'detail_progress_kredit') {
+            $controller->getDetailProgressKredit($input);
+        
             
 
 

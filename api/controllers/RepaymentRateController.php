@@ -160,6 +160,7 @@ class RepaymentRateController {
         $harian  = $b['harian_date'] ?? null;
         $kc      = $b['kode_kantor'] ?? null;
         $kankas  = $b['kode_kankas'] ?? null; // Filter Kankas
+        $ao      = $b['kode_ao'] ?? null;     // 🔥 Menangkap Filter AO
         $tglMap  = isset($b['tgl_tagih']) ? (int)$b['tgl_tagih'] : null;
         $status  = $b['status'] ?? 'ALL';
         $page    = $b['page'] ?? 1;
@@ -196,12 +197,14 @@ class RepaymentRateController {
             $whereStatus = "AND t2.baki_debet > 0 AND t2.hari_menunggak > 0";
         }
 
-        // Base Query Dengan Relasi Tabungan
+        // Base Query Dengan Relasi Tabungan dan Kankas
+        // 🔥 FIX: Tambah LEFT JOIN kankas
         $baseQuery = "FROM nominatif t1 
                       $joinType nominatif t2 ON t1.no_rekening = t2.no_rekening 
                           AND (t2.created BETWEEN :s2 AND :e2)
                       LEFT JOIN ao_kredit ao ON t1.kode_group2 = ao.kode_group2
                       LEFT JOIN tabungan tb ON t1.norek_tabungan = tb.no_rekening
+                      LEFT JOIN kankas kn ON t1.kode_group1 = kn.kode_group1
                       WHERE (t1.created BETWEEN :s1 AND :e1)
                       AND t1.kolektibilitas = 'L' 
                       AND t1.baki_debet > 0
@@ -211,6 +214,7 @@ class RepaymentRateController {
         
         if ($kc) $baseQuery .= " AND t1.kode_cabang = :kc";
         if ($kankas) $baseQuery .= " AND t1.kode_group1 = :kankas"; 
+        if ($ao) $baseQuery .= " AND t1.kode_group2 = :ao"; // 🔥 Terapkan query Filter AO
 
         // Count
         $stmtCnt = $this->pdo->prepare("SELECT COUNT(1) $baseQuery");
@@ -218,12 +222,14 @@ class RepaymentRateController {
         $stmtCnt->bindValue(':s2', $s2); $stmtCnt->bindValue(':e2', $e2);
         if ($kc) $stmtCnt->bindValue(':kc', $kc);
         if ($kankas) $stmtCnt->bindValue(':kankas', $kankas); 
+        if ($ao) $stmtCnt->bindValue(':ao', $ao); // 🔥 Bind nilai AO
         $stmtCnt->execute();
         $total = $stmtCnt->fetchColumn();
 
-        // FIX: t1.no_hp diganti menjadi t1.hp as no_hp
+        // 🔥 FIX KANKAS: Ambil nama dari kn.deskripsi_group1 dengan alias kankas
         $cols = "t1.no_rekening, t1.nama_nasabah, 
-                 t1.alamat, t1.hp as no_hp, t1.kode_group1 as kankas,
+                 t1.alamat, t1.hp as no_hp, 
+                 COALESCE(kn.deskripsi_group1, t1.kode_group1) as kankas,
                  COALESCE(tb.saldo_akhir, 0) as tabungan,
                  COALESCE(ao.nama_ao, t1.kode_group2) as nama_ao,
                  t1.tgl_jatuh_tempo, t1.jml_pinjaman,
@@ -238,6 +244,7 @@ class RepaymentRateController {
         $stmt->bindValue(':s2', $s2); $stmt->bindValue(':e2', $e2);
         if ($kc) $stmt->bindValue(':kc', $kc);
         if ($kankas) $stmt->bindValue(':kankas', $kankas); 
+        if ($ao) $stmt->bindValue(':ao', $ao); // 🔥 Bind nilai AO
         $stmt->bindValue(':lim', $limit, PDO::PARAM_INT);
         $stmt->bindValue(':off', $offset, PDO::PARAM_INT);
         $stmt->execute();
@@ -279,6 +286,7 @@ class RepaymentRateController {
         $harian  = $b['harian_date'] ?? null;
         $kc      = $b['kode_kantor'] ?? null;
         $kankas  = $b['kode_kankas'] ?? null; // Filter Kankas
+        $ao      = $b['kode_ao'] ?? null;     // 🔥 Menangkap Filter AO
         $tglMap  = isset($b['tgl_tagih']) ? (int)$b['tgl_tagih'] : null;
         $page    = $b['page'] ?? 1;
         $limit   = $b['limit'] ?? 10;
@@ -299,10 +307,12 @@ class RepaymentRateController {
         if (empty($includedDays)) $includedDays = [$tglMap];
         $daysStr = implode(',', $includedDays);
 
+        // 🔥 FIX: Tambah LEFT JOIN kankas
         $baseQuery = "FROM nominatif t1 
                       LEFT JOIN nominatif t2 ON t1.no_rekening = t2.no_rekening 
                           AND (t2.created BETWEEN :s2 AND :e2)
                       LEFT JOIN ao_kredit ao ON t1.kode_group2 = ao.kode_group2
+                      LEFT JOIN kankas kn ON t1.kode_group1 = kn.kode_group1
                       WHERE (t1.created BETWEEN :s1 AND :e1)
                       AND t1.kolektibilitas = 'L' 
                       AND t1.baki_debet > 0
@@ -312,6 +322,7 @@ class RepaymentRateController {
 
         if ($kc) $baseQuery .= " AND t1.kode_cabang = :kc";
         if ($kankas) $baseQuery .= " AND t1.kode_group1 = :kankas"; 
+        if ($ao) $baseQuery .= " AND t1.kode_group2 = :ao"; // 🔥 Terapkan query Filter AO
 
         // Count
         $stmtCnt = $this->pdo->prepare("SELECT COUNT(1) $baseQuery");
@@ -319,12 +330,14 @@ class RepaymentRateController {
         $stmtCnt->bindValue(':s2', $s2); $stmtCnt->bindValue(':e2', $e2);
         if ($kc) $stmtCnt->bindValue(':kc', $kc);
         if ($kankas) $stmtCnt->bindValue(':kankas', $kankas); 
+        if ($ao) $stmtCnt->bindValue(':ao', $ao); // 🔥 Bind nilai AO
         $stmtCnt->execute();
         $total = $stmtCnt->fetchColumn();
 
-        // FIX: t1.no_hp diganti menjadi t1.hp as no_hp
+        // 🔥 FIX KANKAS: Ambil nama dari kn.deskripsi_group1 dengan alias kankas
         $sqlData = "SELECT t1.nasabah_id, t1.no_rekening, t1.nama_nasabah, 
-                           t1.alamat, t1.hp as no_hp, t1.kode_group1 as kankas,
+                           t1.alamat, t1.hp as no_hp, 
+                           COALESCE(kn.deskripsi_group1, t1.kode_group1) as kankas,
                            COALESCE(ao.nama_ao, t1.kode_group2) as nama_ao,
                            t1.jml_pinjaman as plafon_lama, 
                            t1.baki_debet as os_lunas, t1.tgl_realisasi as tgl_lama
@@ -337,6 +350,7 @@ class RepaymentRateController {
         $stmt->bindValue(':s2', $s2); $stmt->bindValue(':e2', $e2);
         if ($kc) $stmt->bindValue(':kc', $kc);
         if ($kankas) $stmt->bindValue(':kankas', $kankas); 
+        if ($ao) $stmt->bindValue(':ao', $ao); // 🔥 Bind nilai AO
         $stmt->bindValue(':lim', $limit, PDO::PARAM_INT);
         $stmt->bindValue(':off', $offset, PDO::PARAM_INT);
         $stmt->execute();

@@ -513,7 +513,7 @@
     } finally { l.classList.add('hidden'); }
   }
 
-  // 🔥 FORMAT TABEL UTAMA (TEXT-CENTER, NOA DI BAWAH) 🔥
+  // 🔥 FORMAT TABEL UTAMA (TEXT-CENTER, NOA DI BAWAH, TOTAL BISA DIKLIK) 🔥
   function renderTableRR(rows, gt) {
       const tb = document.getElementById('bodyRR'); 
       const trTotal = document.getElementById('rowTotalRRAtas');
@@ -521,30 +521,31 @@
       tb.innerHTML = '';
       if(rows.length === 0){ tb.innerHTML = `<tr><td colspan="8" class="py-20 text-center text-slate-500 text-xs md:text-base">Tidak ada data penagihan.</td></tr>`; return; }
 
+      // GRAND TOTAL BISA DIKLIK JUGA YAA (Kirim tgl = 'ALL')
       if(gt && trTotal) {
         trTotal.innerHTML = `
             <th class="px-2 sticky left-0 text-center uppercase tracking-widest shadow-[1px_0_0_#cbd5e1] text-[10px] md:text-[13px] text-slate-700 bg-slate-200/50">TOTAL</th>
             <th class="border-r border-slate-300 px-2 md:px-3 text-center bg-slate-100">
-                <div class="text-blue-800 font-black text-[11px] md:text-base mb-0.5">${fmt(gt.target_os)}</div>
+                <div class="text-blue-800 font-black text-[11px] md:text-base mb-0.5"><a href="javascript:void(0)" onclick="initModalDetail('ALL','ALL')" class="hover:underline">${fmt(gt.target_os)}</a></div>
                 <div class="text-[8px] md:text-[10px] text-slate-500 font-medium">NOA: <span class="font-bold text-slate-700">${fmt(gt.target_noa)}</span></div>
             </th>
             <th class="border-r border-slate-300 px-2 md:px-3 text-center bg-slate-100">
-                <div class="text-green-700 font-black text-[11px] md:text-base mb-0.5">${fmt(gt.lancar_os)}</div>
+                <div class="text-green-700 font-black text-[11px] md:text-base mb-0.5"><a href="javascript:void(0)" onclick="initModalDetail('ALL','LANCAR')" class="hover:underline">${fmt(gt.lancar_os)}</a></div>
                 <div class="text-[8px] md:text-[10px] text-slate-500 font-medium">NOA: <span class="font-bold text-slate-700">${fmt(gt.lancar_noa)}</span></div>
             </th>
             <th class="border-r border-slate-300 px-2 md:px-3 text-center bg-slate-100">
-                <div class="text-red-600 font-black text-[11px] md:text-base mb-0.5">${fmt(gt.macet_os)}</div>
+                <div class="text-red-600 font-black text-[11px] md:text-base mb-0.5"><a href="javascript:void(0)" onclick="initModalDetail('ALL','MENUNGGAK')" class="hover:underline">${fmt(gt.macet_os)}</a></div>
                 <div class="text-[8px] md:text-[10px] text-slate-500 font-medium">NOA: <span class="font-bold text-slate-700">${fmt(gt.macet_noa)}</span></div>
             </th>
             <th class="border-r border-slate-300 px-2 md:px-3 text-center bg-slate-100">
-                <div class="text-slate-700 font-black text-[11px] md:text-base mb-0.5">${fmt(gt.lunas_os)}</div>
+                <div class="text-slate-700 font-black text-[11px] md:text-base mb-0.5"><a href="javascript:void(0)" onclick="initModalLunas('ALL')" class="hover:underline">${fmt(gt.lunas_os)}</a></div>
                 <div class="text-[8px] md:text-[10px] text-slate-500 font-medium">NOA: <span class="font-bold text-slate-700">${fmt(gt.lunas_noa)}</span></div>
             </th>
             <th class="border-r border-slate-300 px-2 md:px-3 text-center bg-slate-100">
-                <div class="text-slate-800 font-black text-[11px] md:text-base align-middle pt-1 md:pt-2">${fmt(gt.angsuran)}</div>
+                <div class="text-slate-800 font-black text-[11px] md:text-base align-middle pt-1 md:pt-2"><a href="javascript:void(0)" onclick="initModalDetail('ALL','ANGSURAN')" class="hover:underline">${fmt(gt.angsuran)}</a></div>
             </th>
             <th class="px-2 md:px-3 text-center bg-slate-100">
-                <div class="text-purple-700 font-black text-[11px] md:text-base align-middle pt-1 md:pt-2">${fmt(gt.total_bayar)}</div>
+                <div class="text-purple-700 font-black text-[11px] md:text-base align-middle pt-1 md:pt-2"><a href="javascript:void(0)" onclick="initModalDetail('ALL','TOTAL_BAYAR')" class="hover:underline">${fmt(gt.total_bayar)}</a></div>
             </th>
             <th class="px-2 text-center text-blue-700 font-black text-[12px] md:text-xl align-middle bg-slate-200/50 border-l border-slate-300">${gt.persen}%</th>
         `;
@@ -558,6 +559,10 @@
           const clkLcr = `<a href="javascript:void(0)" onclick="initModalDetail('${r.tgl}','LANCAR')" class="font-bold text-green-600 hover:text-green-700 hover:underline cursor-pointer block mb-0.5 text-[10px] md:text-sm">${fmt(r.lancar_os)}</a>`;
           const clkTgh = `<a href="javascript:void(0)" onclick="initModalDetail('${r.tgl}','MENUNGGAK')" class="font-bold text-red-600 hover:text-red-700 hover:underline cursor-pointer block mb-0.5 text-[10px] md:text-sm">${fmt(r.macet_os)}</a>`;
           const clkLns = `<a href="javascript:void(0)" onclick="initModalLunas('${r.tgl}')" class="font-bold text-slate-700 hover:text-blue-700 hover:underline cursor-pointer block mb-0.5 text-[10px] md:text-sm">${fmt(r.lunas_os)}</a>`;
+          
+          // 🔥 PENAMBAHAN AGAR TOTAL BAYAR BISA DIKLIK 🔥
+          const clkAng = `<a href="javascript:void(0)" onclick="initModalDetail('${r.tgl}','ANGSURAN')" class="font-bold text-slate-600 hover:text-blue-700 hover:underline cursor-pointer block text-[10px] md:text-sm">${fmt(r.angsuran)}</a>`;
+          const clkTotByr = `<a href="javascript:void(0)" onclick="initModalDetail('${r.tgl}','TOTAL_BAYAR')" class="font-bold text-purple-700 hover:text-purple-800 hover:underline cursor-pointer block text-[10px] md:text-sm">${fmt(r.total_bayar)}</a>`;
 
           h += `
             <tr class="transition border-b border-slate-100 group h-[46px] md:h-[52px] ${bg}">
@@ -578,8 +583,12 @@
                     ${clkLns}
                     <div class="text-[8px] md:text-[10px] text-slate-500">NOA: <span class="font-bold text-slate-600">${fmt(r.lunas_noa)}</span></div>
                 </td>
-                <td class="px-2 md:px-3 py-1.5 md:py-2 border-r border-slate-100 text-center font-bold text-slate-600 text-[10px] md:text-sm align-top pt-2 md:pt-3">${fmt(r.angsuran)}</td>
-                <td class="px-2 md:px-3 py-1.5 md:py-2 text-center font-extrabold text-purple-700 bg-purple-50/10 text-[10px] md:text-sm align-top pt-2 md:pt-3 border-r border-slate-100">${fmt(r.total_bayar)}</td>
+                <td class="px-2 md:px-3 py-1.5 md:py-2 border-r border-slate-100 text-center bg-slate-50 hover:bg-slate-100 transition align-top pt-2 md:pt-3">
+                    ${clkAng}
+                </td>
+                <td class="px-2 md:px-3 py-1.5 md:py-2 text-center bg-purple-50/10 hover:bg-purple-50 transition align-top pt-2 md:pt-3 border-r border-slate-100">
+                    ${clkTotByr}
+                </td>
                 <td class="px-2 py-1.5 md:py-2 font-extrabold text-center text-[10px] md:text-lg align-middle ${r.persen>=90?'text-green-600':'text-orange-500'} bg-slate-50/30">${r.persen}%</td>
             </tr>`;
       });
