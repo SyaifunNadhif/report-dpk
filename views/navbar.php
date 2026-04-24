@@ -126,6 +126,9 @@
               <li id="menuProgresKredit">
                 <a href="aging_kredit" class="nb-item nb-tap">Rekap Aging Kredit</a>
               </li>
+              <li id="menuLayananDigital">
+                <a href="layanan_digital" class="nb-item nb-tap">Layanan Digital</a>
+              </li>
             </ul>
           </div>
         </li>

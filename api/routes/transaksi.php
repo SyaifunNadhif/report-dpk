@@ -24,6 +24,23 @@ switch ($method) {
         } elseif ($input['type'] === 'rekap_transaksi_channel') {
             $controller->getRekapTransaksiChannel($input);
 
+        } elseif ($input['type'] === 'distribusi_va') {
+            $controller->getDistribusiVa($input);
+        
+        } elseif ($input['type'] === 'summary_cards_transaksi') {
+            $controller->getSummaryCardsTransaksi($input);
+        
+        } elseif ($input['type'] === 'detail_breakdown_transaksi') {
+            $controller->getDetailBreakdownTransaksi($input);
+
+        } elseif ($input['type'] === 'rekap_device_branchless') {
+            $controller->getRekapDeviceBranchless($input);
+        
+        } elseif ($input['type'] === 'detail_device_branchless') {
+            $controller->getDetailDeviceBranchless($input);
+
+        
+
 
         } else {
             sendResponse(400, "Type tidak dikenali. Gunakan 'Flow Par', 'KL Baru', atau 'Last Created Nominatif'");
