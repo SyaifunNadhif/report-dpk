@@ -21,12 +21,15 @@
   
   .card-shadow { box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06); }
   
-  .tab-btn { padding: 6px 16px; border-radius: 8px; font-size: 12px; font-weight: 800; color: #64748b; transition: all 0.2s; border: 1px solid transparent; }
-  .tab-btn.active { background-color: #fff; color: #0284c7; box-shadow: 0 1px 3px rgba(0,0,0,0.1); border-color: #e2e8f0; }
-  .tab-btn:hover:not(.active) { color: #0f172a; }
+  .tab-btn { padding: 8px 24px; border-radius: 8px; font-size: 13px; font-weight: 800; color: #64748b; transition: all 0.2s; border: 1px solid transparent; cursor: pointer; }
+  .tab-btn.active { background-color: #0284c7; color: #fff; box-shadow: 0 4px 6px -1px rgba(2, 132, 199, 0.4); border-color: #0284c7; }
+  .tab-btn:hover:not(.active) { color: #0f172a; background-color: #e2e8f0; }
 
   .local-loader { position: absolute; inset: 0; background: rgba(255,255,255,0.7); z-index: 50; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(2px); border-radius: inherit; }
   .local-loader.hidden { display: none; }
+
+  /* CSS ApexCharts */
+  .apexcharts-tooltip { z-index: 99999 !important; background: transparent !important; border: none !important; box-shadow: none !important; }
 </style>
 
 <div class="max-w-[1600px] mx-auto px-3 md:px-4 py-4 flex flex-col gap-5">
@@ -74,15 +77,23 @@
 
   <div class="relative rounded-xl min-h-[100px]">
       <div id="loadSummary" class="local-loader hidden"><div class="animate-spin h-8 w-8 border-4 border-blue-200 border-t-blue-600 rounded-full"></div></div>
-      <div id="summaryCardsContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-3">
+      <div id="summaryCardsContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3">
           </div>
   </div>
 
+  <div class="flex justify-center md:justify-start mt-2">
+      <div class="flex gap-2 bg-slate-200/60 p-1.5 rounded-2xl shadow-inner overflow-x-auto custom-scrollbar">
+          <button onclick="changeChannel('VA')" id="tab_VA" class="tab-btn active">Virtual Account (VA)</button>
+          <button onclick="changeChannel('BRANCHLESS')" id="tab_BRANCHLESS" class="tab-btn">Branchless</button>
+          <button onclick="changeChannel('QRIS')" id="tab_QRIS" class="tab-btn">QRIS</button>
+      </div>
+  </div>
+
   <div class="grid grid-cols-1 xl:grid-cols-12 gap-4 mt-2">
-      <div class="xl:col-span-7 bg-white rounded-xl card-shadow p-5 flex flex-col relative h-[380px] border border-slate-100">
+      <div class="xl:col-span-7 bg-white rounded-xl card-shadow p-5 flex flex-col relative h-[430px] border border-slate-100">
           <div id="loadTrend" class="local-loader hidden"><div class="animate-spin h-8 w-8 border-4 border-blue-200 border-t-blue-600 rounded-full"></div></div>
           <div class="flex justify-between items-center mb-2 border-b border-slate-100 pb-2">
-              <h2 class="font-bold text-slate-800">Tren Transaksi VA</h2>
+              <h2 class="font-bold text-slate-800" id="titleTrend">Tren Transaksi VA</h2>
               <select id="trendPeriode" class="inp h-8 text-[11px] w-[140px]" onchange="fetchTrend()">
                   <option value="bulanan">6 Bulan Terakhir</option>
                   <option value="7_hari">7 Hari Terakhir</option>
@@ -90,25 +101,20 @@
                   <option value="tahunan">Tahunan</option>
               </select>
           </div>
-          <div id="chartTrend" class="flex-1 w-full min-h-0"></div>
+          <div id="chartTrend" class="w-full mt-2"></div>
       </div>
 
-      <div class="xl:col-span-5 bg-white rounded-xl card-shadow p-5 flex flex-col relative h-[380px] border border-slate-100">
+      <div class="xl:col-span-5 bg-white rounded-xl card-shadow p-5 flex flex-col relative h-[430px] border border-slate-100">
           <div id="loadDist" class="local-loader hidden"><div class="animate-spin h-8 w-8 border-4 border-blue-200 border-t-blue-600 rounded-full"></div></div>
           
           <div class="flex justify-between items-center mb-4 border-b border-slate-100 pb-2">
               <h2 class="font-bold text-slate-800" id="titleDistribusi">Distribusi per Wilayah (VA)</h2>
-              <select id="optBankDist" class="inp h-8 text-[11px] w-[120px] text-blue-700" onchange="fetchDistribusi()">
-                  <option value="ALL">Semua Bank</option>
-                  <option value="1">Mandiri</option>
-                  <option value="4">Permata Syariah</option>
-              </select>
           </div>
 
-          <div class="flex-1 flex flex-col md:flex-row overflow-hidden gap-4">
-              <div class="flex-1 overflow-y-auto custom-scrollbar pr-2 flex flex-col gap-3" id="listTop5"></div>
+          <div class="flex-1 flex flex-col md:flex-row gap-4">
+              <div class="flex-1 overflow-y-auto custom-scrollbar pr-2 flex flex-col gap-4 h-full" id="listTop5"></div>
               
-              <div class="w-full md:w-[220px] flex items-center justify-center shrink-0">
+              <div class="w-full md:w-[220px] flex items-center justify-center shrink-0 h-full pb-2">
                   <div id="chartDonut" class="w-full"></div>
               </div>
           </div>
@@ -118,19 +124,13 @@
   <div class="bg-white rounded-xl card-shadow flex flex-col overflow-hidden mt-2 border border-slate-100 relative min-h-[200px]">
       <div id="loadTable" class="local-loader hidden"><div class="animate-spin h-8 w-8 border-4 border-blue-200 border-t-blue-600 rounded-full"></div></div>
       
-      <div class="p-4 border-b border-slate-200 bg-slate-50 flex flex-col md:flex-row justify-between items-center gap-3">
-          <h2 class="text-base font-black text-slate-800">Breakdown Transaksi Wilayah</h2>
-          <div class="flex gap-1 bg-slate-200/60 p-1.5 rounded-xl shadow-inner overflow-x-auto custom-scrollbar">
-              <button onclick="changeChannel('ALL')" id="tab_ALL" class="tab-btn active">Semua Channel</button>
-              <button onclick="changeChannel('VA')" id="tab_VA" class="tab-btn">Virtual Account</button>
-              <button onclick="changeChannel('BRANCHLESS')" id="tab_BRANCHLESS" class="tab-btn">Branchless</button>
-              <button onclick="changeChannel('QRIS')" id="tab_QRIS" class="tab-btn">QRIS</button>
-          </div>
+      <div class="p-4 border-b border-slate-200 bg-slate-50 flex justify-between items-center">
+          <h2 class="text-base font-black text-slate-800">Breakdown Transaksi Area</h2>
       </div>
 
       <div class="overflow-x-auto custom-scrollbar max-h-[500px]">
           <table class="w-full text-left">
-              <thead>
+              <thead class="sticky top-0 z-10">
                   <tr>
                       <th class="w-[250px] pl-4">NAMA AREA</th>
                       <th class="text-right">NOMINAL BULAN INI</th>
@@ -159,7 +159,7 @@
   
   let chartTrendObj = null;
   let chartDonutObj = null;
-  let currentActiveChannel = 'ALL'; 
+  let currentActiveChannel = 'VA'; 
 
   const showLoad = (id) => document.getElementById(id)?.classList.remove('hidden');
   const hideLoad = (id) => document.getElementById(id)?.classList.add('hidden');
@@ -169,6 +169,9 @@
       catch { return null; }
   }
 
+  // ==========================================
+  // INISIALISASI AWAL
+  // ==========================================
   window.addEventListener('DOMContentLoaded', async () => {
     const user = (window.getUser && window.getUser()) || null;
     let uKode = user?.kode ? String(user.kode).padStart(3,'0') : '000';
@@ -235,7 +238,14 @@
       currentActiveChannel = ch;
       document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
       document.getElementById('tab_' + ch).classList.add('active');
-      fetchBreakdown(); 
+
+      const namaCh = ch === 'VA' ? 'VA' : (ch === 'BRANCHLESS' ? 'Branchless' : 'QRIS');
+      document.getElementById('titleTrend').innerText = `Tren Transaksi ${namaCh}`;
+      document.getElementById('titleDistribusi').innerText = `Distribusi per Wilayah (${namaCh})`;
+
+      fetchTrend();
+      fetchDistribusi();
+      fetchBreakdown();
   }
 
   async function runFullSync() {
@@ -245,10 +255,19 @@
       fetchBreakdown();
   }
 
+  // ==========================================
+  // 1. SUMMARY CARDS 
+  // ==========================================
   async function fetchSummaryCards() {
       showLoad('loadSummary');
       const area = parseAreaValue();
-      const payload = { type: "summary_cards_transaksi", harian_date: document.getElementById('harian_date').value, closing_date: document.getElementById('closing_date').value, kode_kantor: area.kode_kantor, korwil: area.korwil };
+      const payload = { 
+          type: "summary_cards_transaksi",
+          harian_date: document.getElementById('harian_date').value,
+          closing_date: document.getElementById('closing_date').value,
+          kode_kantor: area.kode_kantor,
+          korwil: area.korwil
+      };
       try {
           const res = await fetch(API_URL, { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(payload) });
           const j = await res.json();
@@ -256,11 +275,23 @@
               document.getElementById('lbl_periode_aktif').innerHTML = `Periode: <span class="text-blue-700 font-bold">${j.data.meta.closing_date} s/d ${j.data.meta.harian_date}</span>`;
               const container = document.getElementById('summaryCardsContainer');
               container.innerHTML = '';
-              j.data.cards.forEach((c, idx) => {
+              
+              const filteredCards = j.data.cards.filter(c => 
+                  !c.title.toUpperCase().includes('SEMUA CHANNEL') && 
+                  !c.title.toUpperCase().includes('TOTAL DIGITAL')
+              );
+
+              filteredCards.forEach((c, idx) => {
                   const isUp = parseFloat(c.growth) >= 0;
                   const bColor = isUp ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700';
                   const arrow = isUp ? '▲' : '▼';
-                  const bTop = idx === 0 ? 'border-t-4 border-t-blue-600' : (idx===1 ? 'border-t-4 border-t-blue-400' : 'border-t-4 border-t-slate-200');
+                  
+                  let bTop = 'border-t-4 border-t-slate-200';
+                  if (c.title.includes('VA') && !c.title.includes('BANK')) bTop = 'border-t-4 border-t-blue-600';
+                  else if (c.title.includes('MANDIRI')) bTop = 'border-t-4 border-t-blue-400';
+
+                  const pLabel = c.prev_label || 'Bulan Lalu';
+                  const pNominal = c.prev_nominal || 'Rp -';
 
                   container.innerHTML += `
                       <div class="bg-white rounded-xl card-shadow p-3.5 flex flex-col justify-between ${bTop}">
@@ -272,8 +303,8 @@
                           <div class="mt-3 flex items-center justify-between border-t border-slate-100 pt-2">
                               <span class="${bColor} px-2 py-0.5 rounded font-bold text-[11px]">${arrow} ${Math.abs(c.growth)}%</span>
                               <div class="text-right leading-tight">
-                                  <span class="text-[9px] text-slate-400">${c.prev_label}</span><br>
-                                  <span class="text-[10px] font-bold text-slate-600">${c.prev_nominal}</span>
+                                  <span class="text-[9px] text-slate-400">${pLabel}</span><br>
+                                  <span class="text-[10px] font-bold text-slate-600">${pNominal}</span>
                               </div>
                           </div>
                       </div>`;
@@ -283,56 +314,80 @@
   }
 
   // ==========================================
-  // 2. GRAFIK TREN & PIE (KHUSUS VA)
+  // 2. GRAFIK TREN & PIE
   // ==========================================
   function initCharts() {
-      // 🔥 FIX 1: TREN CHART (2 GARIS & TOOLTIP CUSTOM)
+      // 🔥 FIX TREN CHART: Fix pixel height & padding bottom ditarik ke dalam
       chartTrendObj = new ApexCharts(document.querySelector("#chartTrend"), {
-          series: [], chart: { type: 'area', height: '100%', toolbar: { show: false } },
-          colors: ['#2563eb', '#f59e0b'], // Biru Mandiri, Oren Permata
+          series: [], 
+          chart: { 
+              type: 'area', 
+              height: 340, // Paksa tinggi fix 340px agar tidak overflow flex container
+              parentHeightOffset: 0,
+              toolbar: { show: false } 
+          },
+          colors: ['#0284c7'], 
           dataLabels: { enabled: false }, 
-          legend: { position: 'top', horizontalAlign: 'center' },
+          legend: { show: false }, 
           stroke: { curve: 'smooth', width: 3 },
           fill: { type: 'gradient', gradient: { shadeIntensity: 1, opacityFrom: 0.3, opacityTo: 0.05, stops: [0, 100] } },
-          xaxis: { categories: [], labels: { style: { fontSize: '10px' } } },
+          grid: { 
+              padding: { bottom: 15, left: 10, right: 10 } // Memberi bantalan agar label x-axis masuk
+          },
+          xaxis: { 
+              categories: [], 
+              labels: { 
+                  style: { fontSize: '10px' }, 
+                  offsetY: -5 // Menarik text bulan ke atas sedikit agar aman
+              },
+              tooltip: { enabled: false }
+          },
           yaxis: { labels: { formatter: (val) => val >= 1000000000 ? (val/1000000000).toFixed(1)+' M' : (val >= 1000000 ? (val/1000000).toFixed(0)+' Jt' : val) } },
           tooltip: {
-              custom: function({series, seriesIndex, dataPointIndex, w}) {
-                  const val = series[seriesIndex][dataPointIndex];
-                  const name = w.globals.seriesNames[seriesIndex];
-                  const color = w.globals.colors[seriesIndex];
-                  const trx = w.config.series[seriesIndex].trx ? w.config.series[seriesIndex].trx[dataPointIndex] : 0;
-                  
-                  return `
-                    <div style="padding: 8px 12px; background: #fff; border: 1px solid #e2e8f0; border-radius: 6px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);">
-                        <div style="font-size: 11px; font-weight: 800; color: ${color}; margin-bottom: 4px;">${name}</div>
-                        <div style="font-size: 13px; font-weight: 900; color: #1e293b;">Rp ${nf.format(val)}</div>
-                        <div style="font-size: 10px; font-weight: 600; color: #64748b; margin-top: 2px;">${nf.format(trx)} Transaksi</div>
-                    </div>`;
+              theme: 'light',
+              y: {
+                  formatter: function(val, opts) {
+                      const trx = opts.w.config.series[opts.seriesIndex].trx ? opts.w.config.series[opts.seriesIndex].trx[opts.dataPointIndex] : 0;
+                      return `Rp ${nf.format(val)} <span style="color:#64748b; font-size:11px; margin-left:8px; font-weight:normal;">(${nf.format(trx)} Trx)</span>`; 
+                  },
+                  title: { formatter: () => '' }
               }
           }
       });
       chartTrendObj.render();
 
-      // 🔥 FIX 2: DONUT CHART (TOOLTIP CUSTOM)
+      // 🔥 FIX PIE CHART: Fix height
       chartDonutObj = new ApexCharts(document.querySelector("#chartDonut"), {
-          series: [], chart: { type: 'donut', height: '100%' }, labels: [],
+          series: [], 
+          chart: { 
+              type: 'donut', 
+              height: 330, // Paksa tinggi fix
+              parentHeightOffset: 0 
+          }, 
+          labels: [],
           colors: ['#8b5cf6', '#0ea5e9', '#10b981', '#f59e0b', '#f43f5e', '#64748b'],
           plotOptions: { donut: { size: '70%' } }, 
           dataLabels: { enabled: false }, 
-          legend: { show: true, position: 'bottom', fontSize: '10px' },
+          legend: { 
+              show: true, 
+              position: 'bottom', 
+              fontSize: '9.5px',
+              fontFamily: 'Inter',
+              offsetY: -5,
+              markers: { width: 8, height: 8, radius: 2 },
+              itemMargin: { horizontal: 5, vertical: 2 } 
+          },
           tooltip: {
               custom: function({series, seriesIndex, dataPointIndex, w}) {
                   const val = series[seriesIndex];
                   const name = w.globals.labels[seriesIndex];
                   const color = w.globals.colors[seriesIndex];
                   const trx = w.config.customTrx ? w.config.customTrx[seriesIndex] : 0;
-                  
                   return `
-                    <div style="padding: 8px 12px; background: #fff; border: 1px solid #e2e8f0; border-radius: 6px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);">
-                        <div style="font-size: 11px; font-weight: 800; color: ${color}; margin-bottom: 4px;">${name}</div>
-                        <div style="font-size: 13px; font-weight: 900; color: #1e293b;">Rp ${nf.format(val)}</div>
-                        <div style="font-size: 10px; font-weight: 600; color: #64748b; margin-top: 2px;">${nf.format(trx)} Transaksi</div>
+                    <div style="padding: 6px 10px; background: #fff; border: 1px solid #e2e8f0; border-radius: 4px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); transform: translateY(-20px);">
+                        <div style="font-size: 10px; font-weight: 800; color: ${color}; margin-bottom: 2px;">${name}</div>
+                        <div style="font-size: 12px; font-weight: 900; color: #1e293b;">Rp ${nf.format(val)}</div>
+                        <div style="font-size: 10px; font-weight: 600; color: #64748b;">${nf.format(trx)} Transaksi</div>
                     </div>`;
               }
           }
@@ -343,7 +398,7 @@
   async function fetchTrend() {
       showLoad('loadTrend');
       const area = parseAreaValue();
-      const payload = { type: "tren_nominal_va", harian_date: document.getElementById('harian_date').value, kode_kantor: area.kode_kantor, korwil: area.korwil, periode: document.getElementById('trendPeriode').value, channel: 'VA' };
+      const payload = { type: "tren_nominal_va", harian_date: document.getElementById('harian_date').value, kode_kantor: area.kode_kantor, korwil: area.korwil, periode: document.getElementById('trendPeriode').value, channel: currentActiveChannel };
       try {
           const r = await fetch(API_URL, { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(payload) });
           const j = await r.json();
@@ -357,8 +412,7 @@
   async function fetchDistribusi() {
       showLoad('loadDist');
       const area = parseAreaValue();
-      const selectedBank = document.getElementById('optBankDist').value;
-      const payload = { type: "distribusi_va", harian_date: document.getElementById('harian_date').value, closing_date: document.getElementById('closing_date').value, kode_kantor: area.kode_kantor, korwil: area.korwil, channel: 'VA', bank: selectedBank };
+      const payload = { type: "distribusi_va", harian_date: document.getElementById('harian_date').value, closing_date: document.getElementById('closing_date').value, kode_kantor: area.kode_kantor, korwil: area.korwil, channel: currentActiveChannel };
       
       try {
           const r = await fetch(API_URL, { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(payload) });
@@ -391,6 +445,9 @@
       } catch(e){} finally { hideLoad('loadDist'); }
   }
 
+  // ==========================================
+  // 3. TABEL BREAKDOWN 
+  // ==========================================
   async function fetchBreakdown() {
       showLoad('loadTable');
       const area = parseAreaValue();
@@ -422,11 +479,19 @@
           tbody.innerHTML += rHtml('GRAND TOTAL', gt.curr_nom, gt.prev_nom, gt.growth_nom, gt.curr_trx, gt.prev_trx, gt.growth_trx, true);
 
           if (isKonsolidasi) {
-              dt.forEach(kw => { tbody.innerHTML += rHtml(kw.korwil, kw.curr_nom, kw.prev_nom, kw.growth_nom, kw.curr_trx, kw.prev_trx, kw.growth_trx); });
+              dt.forEach(kw => {
+                  tbody.innerHTML += rHtml(kw.korwil, kw.curr_nom, kw.prev_nom, kw.growth_nom, kw.curr_trx, kw.prev_trx, kw.growth_trx);
+              });
           } else if (isSpecificKorwil) {
-              dt.forEach(kw => { kw.cabang.forEach(cb => { tbody.innerHTML += rHtml(cb.nama, cb.curr_nom, cb.prev_nom, cb.growth_nom, cb.curr_trx, cb.prev_trx, cb.growth_trx); }); });
+              dt.forEach(kw => {
+                  kw.cabang.forEach(cb => {
+                      tbody.innerHTML += rHtml(cb.nama, cb.curr_nom, cb.prev_nom, cb.growth_nom, cb.curr_trx, cb.prev_trx, cb.growth_trx);
+                  });
+              });
           } else {
-              dt.forEach(kk => { tbody.innerHTML += rHtml(kk.nama, kk.curr_nom, kk.prev_nom, kk.growth_nom, kk.curr_trx, kk.prev_trx, kk.growth_trx); });
+              dt.forEach(kk => {
+                  tbody.innerHTML += rHtml(kk.nama, kk.curr_nom, kk.prev_nom, kk.growth_nom, kk.curr_trx, kk.prev_trx, kk.growth_trx);
+              });
           }
       } catch(e){} finally { hideLoad('loadTable'); }
   }

@@ -149,9 +149,9 @@ class TransaksiController {
     }
 
     /**
-     * 9. TREN NOMINAL & NOA VA (Chart Line)
-     * Tabel: va
-     * Syarat VA: kode_transaksi = '320'
+     * 9. TREN NOMINAL & TRX (Chart Line)
+     * Filter Dinamis Berdasarkan Channel (VA, Branchless, QRIS)
+     * Menampilkan 1 Garis Total Gabungan
      */
     public function getTrenNominalVa($input = null) {
         set_time_limit(300); ini_set('memory_limit', '1024M');
@@ -162,58 +162,40 @@ class TransaksiController {
         $kode_kantor = !empty($b['kode_kantor']) ? str_pad($b['kode_kantor'], 3, '0', STR_PAD_LEFT) : null;
         $korwil      = !empty($b['korwil']) ? strtoupper($b['korwil']) : null;
         $kankas      = !empty($b['kode_kankas']) ? $b['kode_kankas'] : null;
-        $bank_filter = !empty($b['bank']) ? $b['bank'] : 'ALL'; // '1' = Mandiri, '4' = Permata
+        
+        // 🔥 Ganti bank filter jadi channel filter
+        $channel     = !empty($b['channel']) ? strtoupper($b['channel']) : 'VA';
 
         if (!$harian_date) return sendResponse(400, "Tanggal Actual (Harian) wajib diisi.", null);
 
         // --- 1. GENERATE PERIODE & TANGGAL (X-AXIS CHART) ---
-        $keys = [];
-        $labels = [];
-        $startDate = "";
-        $endDate = "";
-        $sqlGroup = "";
+        $keys = []; $labels = []; $startDate = ""; $endDate = ""; $sqlGroup = "";
 
         if ($periode === '7_hari') {
             for ($i = 6; $i >= 0; $i--) {
                 $d = date('Y-m-d', strtotime("-$i day", strtotime($harian_date)));
-                $keys[] = $d;
-                $labels[] = date('d M', strtotime($d));
+                $keys[] = $d; $labels[] = date('d M', strtotime($d));
             }
-            $startDate = $keys[0] . " 00:00:00";
-            $endDate   = $harian_date . " 23:59:59";
-            $sqlGroup  = "DATE(t.tgl_transaksi)";
-
+            $startDate = $keys[0] . " 00:00:00"; $endDate = $harian_date . " 23:59:59"; $sqlGroup = "DATE(t.tgl_transaksi)";
         } elseif ($periode === '30_hari') {
             for ($i = 29; $i >= 0; $i--) {
                 $d = date('Y-m-d', strtotime("-$i day", strtotime($harian_date)));
-                $keys[] = $d;
-                $labels[] = date('d M', strtotime($d));
+                $keys[] = $d; $labels[] = date('d M', strtotime($d));
             }
-            $startDate = $keys[0] . " 00:00:00";
-            $endDate   = $harian_date . " 23:59:59";
-            $sqlGroup  = "DATE(t.tgl_transaksi)";
-
+            $startDate = $keys[0] . " 00:00:00"; $endDate = $harian_date . " 23:59:59"; $sqlGroup = "DATE(t.tgl_transaksi)";
         } elseif ($periode === 'tahunan') {
-            $startYear = 2020;
-            $currentYear = (int)date('Y', strtotime($harian_date));
+            $startYear = 2020; $currentYear = (int)date('Y', strtotime($harian_date));
             for ($year = $startYear; $year <= $currentYear; $year++) {
-                $keys[] = (string)$year;
-                $labels[] = (string)$year;
+                $keys[] = (string)$year; $labels[] = (string)$year;
             }
-            $startDate = "2020-01-01 00:00:00";
-            $endDate   = date('Y-12-31 23:59:59', strtotime($harian_date));
-            $sqlGroup  = "YEAR(t.tgl_transaksi)";
-
+            $startDate = "2020-01-01 00:00:00"; $endDate = date('Y-12-31 23:59:59', strtotime($harian_date)); $sqlGroup = "YEAR(t.tgl_transaksi)";
         } else {
             // Default: bulanan (6 Bulan Terakhir)
             for ($i = 5; $i >= 0; $i--) {
                 $d = date('Y-m', strtotime("-$i month", strtotime($harian_date)));
-                $keys[] = $d;
-                $labels[] = date('M Y', strtotime($d . '-01'));
+                $keys[] = $d; $labels[] = date('M Y', strtotime($d . '-01'));
             }
-            $startDate = $keys[0] . "-01 00:00:00";
-            $endDate   = date('Y-m-t 23:59:59', strtotime($harian_date));
-            $sqlGroup  = "DATE_FORMAT(t.tgl_transaksi, '%Y-%m')";
+            $startDate = $keys[0] . "-01 00:00:00"; $endDate = date('Y-m-t 23:59:59', strtotime($harian_date)); $sqlGroup = "DATE_FORMAT(t.tgl_transaksi, '%Y-%m')";
         }
 
         // --- 2. BUILD FILTER QUERY ---
@@ -247,29 +229,27 @@ class TransaksiController {
             $params[':kode_kankas'] = $kankas;
         }
 
-        // Filter Bank (Akhiran norek_aba)
-        if ($bank_filter === '1') {
-            $sqlFilter .= " AND t.norek_aba LIKE '%0001000001' ";
-        } elseif ($bank_filter === '4') {
-            $sqlFilter .= " AND t.norek_aba LIKE '%0001000004' ";
-        } else {
-            $sqlFilter .= " AND (t.norek_aba LIKE '%0001000001' OR t.norek_aba LIKE '%0001000004') ";
+        // 🔥 Filter Channel (Murni tanpa embel-embel Bank)
+        $chanFilter = "";
+        if ($channel === 'BRANCHLESS') { 
+            $chanFilter = " AND TRIM(t.kode_transaksi) IN ('150', '152') "; 
+        } elseif ($channel === 'QRIS') { 
+            $chanFilter = " AND TRIM(t.kode_transaksi) IN ('140', '16', '162') "; 
+        } else { 
+            $chanFilter = " AND TRIM(t.kode_transaksi) = '320' "; // VA default
         }
 
-        // --- 3. MAIN QUERY ---
+        // --- 3. MAIN QUERY (Hanya 1 Garis Total) ---
         $sql = "SELECT 
                     $sqlGroup as periode_key,
-                    CASE 
-                        WHEN t.norek_aba LIKE '%0001000001' THEN 'Mandiri'
-                        WHEN t.norek_aba LIKE '%0001000004' THEN 'Permata'
-                    END as nama_bank,
                     SUM(t.jumlah) as total_nominal,
+                    COUNT(1) as total_trx,
                     COUNT(DISTINCT t.no_rekening) as total_noa
                 FROM va t 
                 WHERE t.tgl_transaksi >= :start_date AND t.tgl_transaksi <= :end_date
-                AND TRIM(t.kode_transaksi) = '320'
+                $chanFilter
                 $sqlFilter
-                GROUP BY periode_key, nama_bank
+                GROUP BY periode_key
                 ORDER BY periode_key ASC";
 
         try {
@@ -279,10 +259,9 @@ class TransaksiController {
             $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
             // --- 4. FORMAT DATA UNTUK CHART (MAPPING) ---
-            $dataMandiriNominal = array_fill(0, count($keys), 0);
-            $dataPermataNominal = array_fill(0, count($keys), 0);
-            $dataMandiriNoa     = array_fill(0, count($keys), 0);
-            $dataPermataNoa     = array_fill(0, count($keys), 0);
+            $dataNominal = array_fill(0, count($keys), 0);
+            $dataTrx     = array_fill(0, count($keys), 0);
+            $dataNoa     = array_fill(0, count($keys), 0);
 
             // Buat index pencarian cepat (Lookup)
             $keyIndex = array_flip($keys);
@@ -296,42 +275,33 @@ class TransaksiController {
                 
                 $idx = $keyIndex[$pkey];
                 $nominal = (float)$r['total_nominal'];
+                $trx = (int)$r['total_trx'];
                 $noa = (int)$r['total_noa'];
 
                 $grandTotalNominal += $nominal;
                 $grandTotalNoa += $noa;
                 
-                if ($r['nama_bank'] === 'Mandiri') {
-                    $dataMandiriNominal[$idx] = $nominal;
-                    $dataMandiriNoa[$idx]     = $noa;
-                } elseif ($r['nama_bank'] === 'Permata') {
-                    $dataPermataNominal[$idx] = $nominal;
-                    $dataPermataNoa[$idx]     = $noa;
-                }
+                $dataNominal[$idx] = $nominal;
+                $dataTrx[$idx]     = $trx;
+                $dataNoa[$idx]     = $noa;
             }
 
-            // Siapkan Series Nominal
-            $seriesNominal = [];
-            if ($bank_filter === '1' || $bank_filter === 'ALL') {
-                $seriesNominal[] = ['name' => 'Bank Mandiri', 'data' => $dataMandiriNominal];
-            }
-            if ($bank_filter === '4' || $bank_filter === 'ALL') {
-                $seriesNominal[] = ['name' => 'Bank Permata Syariah', 'data' => $dataPermataNominal];
-            }
+            // 🔥 Siapkan 1 Series Gabungan Saja
+            $seriesName = ($channel === 'VA') ? 'Virtual Account' : ($channel === 'BRANCHLESS' ? 'Branchless' : 'QRIS');
+            if ($channel === 'ALL') $seriesName = 'Total Digital';
 
-            // Siapkan Series NOA
-            $seriesNoa = [];
-            if ($bank_filter === '1' || $bank_filter === 'ALL') {
-                $seriesNoa[] = ['name' => 'Bank Mandiri', 'data' => $dataMandiriNoa];
-            }
-            if ($bank_filter === '4' || $bank_filter === 'ALL') {
-                $seriesNoa[] = ['name' => 'Bank Permata Syariah', 'data' => $dataPermataNoa];
-            }
+            $seriesNominal = [
+                ['name' => $seriesName, 'data' => $dataNominal, 'trx' => $dataTrx] // TRX disisipkan buat tooltip FE
+            ];
+            
+            $seriesNoa = [
+                ['name' => $seriesName, 'data' => $dataNoa]
+            ];
 
-            return sendResponse(200, "Berhasil ambil tren VA", [
+            return sendResponse(200, "Berhasil ambil tren", [
                 'meta' => [
-                    'periode_aktif'   => $periode,
-                    'bank_aktif'      => $bank_filter,
+                    'periode_aktif'           => $periode,
+                    'channel_aktif'           => $channel,
                     'total_akumulasi_nominal' => $grandTotalNominal,
                     'total_akumulasi_noa'     => $grandTotalNoa
                 ],
@@ -346,17 +316,14 @@ class TransaksiController {
             ]);
 
         } catch (PDOException $e) { 
-            error_log("Error Tren VA: " . $e->getMessage());
+            error_log("Error Tren: " . $e->getMessage());
             return sendResponse(500, "PDO Error: " . $e->getMessage(), null); 
         }
     }
 
     /**
-     * 10. DISTRIBUSI & TOP 5 NOMINAL VA
-     * Hierarki Dinamis: 
-     * - Konsolidasi -> Top: Cabang, Donut: Korwil
-     * - Korwil      -> Top: Cabang, Donut: Cabang
-     * - Cabang      -> Top: Kankas, Donut: Kankas
+     * 10. DISTRIBUSI & TOP 5 NOMINAL
+     * Hierarki Dinamis & Filter Murni Berdasarkan Channel
      */
     public function getDistribusiVa($input = null) {
         set_time_limit(300); ini_set('memory_limit', '1024M');
@@ -367,7 +334,8 @@ class TransaksiController {
         $korwil  = !empty($b['korwil']) ? strtoupper($b['korwil']) : null;
         $kankas  = !empty($b['kode_kankas']) ? $b['kode_kankas'] : null;
         
-        $bank_filter = !empty($b['bank']) ? $b['bank'] : 'ALL'; // '1' = Mandiri, '4' = Permata
+        // 🔥 Ganti default jadi 'VA' (All Channel dihapus sesuai request)
+        $channel = !empty($b['channel']) ? strtoupper($b['channel']) : 'VA';
 
         if (!$harian) return sendResponse(400, "Tanggal Actual (Harian) wajib diisi.", null);
 
@@ -379,17 +347,12 @@ class TransaksiController {
         }
 
         // --- 1. BUILD FILTER QUERY ---
-        $sqlFilter = "";
-        $params = [
-            ':harian'  => $harian,
-            ':closing' => $closing_date
-        ];
-
+        $sqlFilter = ""; $params = [':harian' => $harian, ':closing' => $closing_date];
         $mode_hirarki = 'KONSOLIDASI';
 
+        // Filter Area
         if ($kode_kantor && $kode_kantor !== '000') {
-            $sqlFilter .= " AND t.kantor = :kode_kantor ";
-            $params[':kode_kantor'] = $kode_kantor;
+            $sqlFilter .= " AND t.kantor = :kode_kantor "; $params[':kode_kantor'] = $kode_kantor;
             $mode_hirarki = 'CABANG';
         } elseif ($korwil) {
             $kw_start = null; $kw_end = null;
@@ -401,40 +364,34 @@ class TransaksiController {
             }
             if ($kw_start && $kw_end) {
                 $sqlFilter .= " AND t.kantor BETWEEN :kw_start AND :kw_end ";
-                $params[':kw_start'] = $kw_start;
-                $params[':kw_end'] = $kw_end;
+                $params[':kw_start'] = $kw_start; $params[':kw_end'] = $kw_end;
             }
             $mode_hirarki = 'KORWIL';
         }
-
         if ($kankas) {
-            $sqlFilter .= " AND TRIM(t.kankas) = :kode_kankas ";
-            $params[':kode_kankas'] = $kankas;
+            $sqlFilter .= " AND TRIM(t.kankas) = :kode_kankas "; $params[':kode_kankas'] = $kankas;
             $mode_hirarki = 'KANKAS_SPECIFIC';
         }
 
-        if ($bank_filter === '1') {
-            $sqlFilter .= " AND t.norek_aba LIKE '%0001000001' ";
-        } elseif ($bank_filter === '4') {
-            $sqlFilter .= " AND t.norek_aba LIKE '%0001000004' ";
-        } else {
-            $sqlFilter .= " AND (t.norek_aba LIKE '%0001000001' OR t.norek_aba LIKE '%0001000004') ";
+        // 🔥 Filter Channel (Murni tanpa embel-embel Bank)
+        $chanFilter = "";
+        if ($channel === 'BRANCHLESS') { 
+            $chanFilter = " AND TRIM(t.kode_transaksi) IN ('150', '152') "; 
+        } elseif ($channel === 'QRIS') { 
+            $chanFilter = " AND TRIM(t.kode_transaksi) IN ('140', '16', '162') "; 
+        } else { 
+            $chanFilter = " AND TRIM(t.kode_transaksi) = '320' "; // Default selalu ke VA
         }
 
         // --- 2. MAIN QUERY EFFICIENT ---
         $sql = "SELECT 
-                    t.kantor,
-                    kk.nama_kantor,
-                    TRIM(t.kankas) as kankas,
-                    kn.deskripsi_group1 as nama_kankas,
-                    SUM(t.jumlah) as total_nominal,
-                    COUNT(1) as total_trx,
-                    COUNT(DISTINCT t.no_rekening) as total_noa
+                    t.kantor, kk.nama_kantor, TRIM(t.kankas) as kankas, kn.deskripsi_group1 as nama_kankas,
+                    SUM(t.jumlah) as total_nominal, COUNT(1) as total_trx, COUNT(DISTINCT t.no_rekening) as total_noa
                 FROM va t
                 LEFT JOIN kode_kantor kk ON t.kantor = kk.kode_kantor
                 LEFT JOIN kankas kn ON TRIM(t.kankas) = TRIM(kn.kode_group1)
                 WHERE t.tgl_transaksi > :closing AND t.tgl_transaksi <= :harian
-                AND TRIM(t.kode_transaksi) = '320'
+                $chanFilter
                 $sqlFilter
                 GROUP BY t.kantor, kk.nama_kantor, kankas, kn.deskripsi_group1";
 
@@ -445,9 +402,7 @@ class TransaksiController {
             $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
             // --- 3. MAPPING DINAMIS DATA ---
-            $aggCabang = [];
-            $aggKankas = [];
-            $aggKorwil = [];
+            $aggCabang = []; $aggKankas = []; $aggKorwil = [];
 
             $getKorwil = function($cabang) {
                 $c = (int)$cabang;
@@ -466,31 +421,21 @@ class TransaksiController {
                 
                 $nom = (float)$r['total_nominal'];
                 $trx = (int)$r['total_trx'];
-                $noa = (int)$r['total_noa'];
-
                 $kw = $getKorwil($cab);
 
-                if (!isset($aggCabang[$cab])) $aggCabang[$cab] = ['label' => $nama_cab, 'nominal' => 0, 'trx' => 0, 'noa' => 0];
-                $aggCabang[$cab]['nominal'] += $nom;
-                $aggCabang[$cab]['trx'] += $trx;
-                $aggCabang[$cab]['noa'] += $noa;
+                if (!isset($aggCabang[$cab])) $aggCabang[$cab] = ['label' => $nama_cab, 'nominal' => 0, 'trx' => 0];
+                $aggCabang[$cab]['nominal'] += $nom; $aggCabang[$cab]['trx'] += $trx;
 
                 $kanKey = $cab . '_' . $kan;
-                if (!isset($aggKankas[$kanKey])) $aggKankas[$kanKey] = ['label' => $nama_kan, 'nominal' => 0, 'trx' => 0, 'noa' => 0];
-                $aggKankas[$kanKey]['nominal'] += $nom;
-                $aggKankas[$kanKey]['trx'] += $trx;
-                $aggKankas[$kanKey]['noa'] += $noa;
+                if (!isset($aggKankas[$kanKey])) $aggKankas[$kanKey] = ['label' => $nama_kan, 'nominal' => 0, 'trx' => 0];
+                $aggKankas[$kanKey]['nominal'] += $nom; $aggKankas[$kanKey]['trx'] += $trx;
 
-                if (!isset($aggKorwil[$kw])) $aggKorwil[$kw] = ['label' => $kw, 'nominal' => 0, 'trx' => 0, 'noa' => 0];
-                $aggKorwil[$kw]['nominal'] += $nom;
-                $aggKorwil[$kw]['trx'] += $trx;
-                $aggKorwil[$kw]['noa'] += $noa;
+                if (!isset($aggKorwil[$kw])) $aggKorwil[$kw] = ['label' => $kw, 'nominal' => 0, 'trx' => 0];
+                $aggKorwil[$kw]['nominal'] += $nom; $aggKorwil[$kw]['trx'] += $trx;
             }
 
             // --- 4. TENTUKAN SUMBER DATA SESUAI HIERARKI ---
-            $sourceTop5 = [];
-            $sourceDonut = [];
-
+            $sourceTop5 = []; $sourceDonut = [];
             if ($mode_hirarki === 'KONSOLIDASI') {
                 $sourceTop5  = array_values($aggCabang);
                 $sourceDonut = array_values($aggKorwil);
@@ -502,42 +447,32 @@ class TransaksiController {
                 $sourceDonut = array_values($aggKankas);
             }
 
-            // --- 5. SORTING (Top 5 & Donut) ---
             usort($sourceTop5, function($a, $b) { return $b['nominal'] <=> $a['nominal']; });
             $finalTop5 = array_slice($sourceTop5, 0, 5);
-
             usort($sourceDonut, function($a, $b) { return $b['nominal'] <=> $a['nominal']; });
             
-            // 🔥 FIX: Tambahkan mapping array TRX untuk dilempar ke Donut Chart FE
-            $donutLabels = [];
-            $donutSeries = [];
-            $donutTrx    = []; // <-- Array baru penyimpan data frekuensi (TRX)
-
+            $donutLabels = []; $donutSeries = []; $donutTrx = [];
             foreach ($sourceDonut as $d) {
                 if ($d['nominal'] > 0) { 
                     $donutLabels[] = $d['label'];
                     $donutSeries[] = $d['nominal'];
-                    $donutTrx[]    = $d['trx']; // <-- Masukkan frekuensi transaksinya
+                    $donutTrx[]    = $d['trx']; 
                 }
             }
 
-            return sendResponse(200, "Berhasil ambil distribusi VA", [
+            return sendResponse(200, "Berhasil ambil distribusi", [
                 'meta' => [
                     'hierarki_aktif' => $mode_hirarki,
-                    'bank_aktif'     => $bank_filter,
+                    'channel_aktif'  => $channel,
                     'harian_date'    => $harian,
                     'closing_date'   => $closing_date
                 ],
                 'top_5' => $finalTop5,
-                'donut_chart' => [
-                    'labels' => $donutLabels,
-                    'series' => $donutSeries,
-                    'trx'    => $donutTrx // <-- Output array TRX baru
-                ]
+                'donut_chart' => ['labels' => $donutLabels, 'series' => $donutSeries, 'trx' => $donutTrx]
             ]);
 
         } catch (PDOException $e) { 
-            error_log("Error Distribusi VA: " . $e->getMessage());
+            error_log("Error Distribusi: " . $e->getMessage());
             return sendResponse(500, "PDO Error: " . $e->getMessage(), null); 
         }
     }
@@ -557,7 +492,6 @@ class TransaksiController {
 
         if (!$harian) return sendResponse(400, "Tanggal Actual (Harian) wajib diisi.", null);
 
-        // --- 1. LOGIC PERIODE (Bulan Ini vs Bulan Lalu) ---
         $ts_harian = strtotime($harian);
         $prev_harian = date('Y-m-d', strtotime('-1 month', $ts_harian));
 
@@ -570,27 +504,18 @@ class TransaksiController {
         }
 
         $label_periode = date('M Y', $ts_harian);
+        $prev_label_periode = date('M Y', strtotime($prev_harian));
 
-        // --- 2. BUILD FILTER QUERY & PARAMS AMAN (Anti HY093) ---
         $sqlFilter = "";
-        
-        // Kita bedakan nama parameter untuk SELECT (s_) dan WHERE (w_) agar PDO tidak bingung
         $params = [
-            ':s_closing'  => $closing_date,
-            ':s_harian'   => $harian,
-            ':s_pclosing' => $prev_closing,
-            ':s_pharian'  => $prev_harian,
-            
-            ':w_closing'  => $closing_date,
-            ':w_harian'   => $harian,
-            ':w_pclosing' => $prev_closing,
-            ':w_pharian'  => $prev_harian
+            ':s_closing'  => $closing_date, ':s_harian'   => $harian,
+            ':s_pclosing' => $prev_closing, ':s_pharian'  => $prev_harian,
+            ':w_closing'  => $closing_date, ':w_harian'   => $harian,
+            ':w_pclosing' => $prev_closing, ':w_pharian'  => $prev_harian
         ];
 
-        // Filter Hanya Konsolidasi, Korwil, dan Cabang
         if ($kode_kantor && $kode_kantor !== '000') {
-            $sqlFilter .= " AND t.kantor = :kode_kantor ";
-            $params[':kode_kantor'] = $kode_kantor;
+            $sqlFilter .= " AND t.kantor = :kode_kantor "; $params[':kode_kantor'] = $kode_kantor;
         } elseif ($korwil) {
             $kw_start = null; $kw_end = null;
             switch ($korwil) {
@@ -601,15 +526,12 @@ class TransaksiController {
             }
             if ($kw_start && $kw_end) {
                 $sqlFilter .= " AND t.kantor BETWEEN :kw_start AND :kw_end ";
-                $params[':kw_start'] = $kw_start;
-                $params[':kw_end'] = $kw_end;
+                $params[':kw_start'] = $kw_start; $params[':kw_end'] = $kw_end;
             }
         }
 
-        // --- 3. MAIN QUERY (Semua Data Sekali Tarik) ---
         $sql = "
             SELECT 
-                -- METRIK CURRENT (Bulan Ini)
                 SUM(CASE WHEN is_curr=1 THEN jumlah ELSE 0 END) as curr_nom_all,
                 SUM(CASE WHEN is_curr=1 THEN 1 ELSE 0 END) as curr_trx_all,
                 
@@ -628,7 +550,6 @@ class TransaksiController {
                 SUM(CASE WHEN is_curr=1 AND is_qris=1 THEN jumlah ELSE 0 END) as curr_nom_qris,
                 SUM(CASE WHEN is_curr=1 AND is_qris=1 THEN 1 ELSE 0 END) as curr_trx_qris,
 
-                -- METRIK PREVIOUS (Bulan Lalu)
                 SUM(CASE WHEN is_prev=1 THEN jumlah ELSE 0 END) as prev_nom_all,
                 SUM(CASE WHEN is_prev=1 THEN 1 ELSE 0 END) as prev_trx_all,
 
@@ -636,7 +557,10 @@ class TransaksiController {
                 SUM(CASE WHEN is_prev=1 AND is_va=1 THEN 1 ELSE 0 END) as prev_trx_va,
                 
                 SUM(CASE WHEN is_prev=1 AND is_mandiri=1 THEN jumlah ELSE 0 END) as prev_nom_mandiri,
+                SUM(CASE WHEN is_prev=1 AND is_mandiri=1 THEN 1 ELSE 0 END) as prev_trx_mandiri, -- 🔥 FIX ADA DISINI
+                
                 SUM(CASE WHEN is_prev=1 AND is_permata=1 THEN jumlah ELSE 0 END) as prev_nom_permata,
+                SUM(CASE WHEN is_prev=1 AND is_permata=1 THEN 1 ELSE 0 END) as prev_trx_permata, -- 🔥 FIX ADA DISINI
                 
                 SUM(CASE WHEN is_prev=1 AND is_br=1 THEN jumlah ELSE 0 END) as prev_nom_br,
                 SUM(CASE WHEN is_prev=1 AND is_br=1 THEN 1 ELSE 0 END) as prev_trx_br,
@@ -667,7 +591,6 @@ class TransaksiController {
             $stmt->execute();
             $d = $stmt->fetch(PDO::FETCH_ASSOC);
 
-            // --- 4. HELPER PERHITUNGAN GROWTH (%) & FORMAT NOMINAL ---
             $calcGrowth = function($curr, $prev) {
                 if ($prev > 0) return round((($curr - $prev) / $prev) * 100, 1);
                 return $curr > 0 ? 100 : 0;
@@ -679,56 +602,69 @@ class TransaksiController {
                 return 'Rp ' . number_format($num, 0, ',', '.');
             };
 
-            // --- 5. RAKIT SEMUA CARD SEKALIGUS ---
             $cards = [
                 [
                     'title' => 'TOTAL DIGITAL (Semua Channel)',
-                    'value' => $fmtNominal($d['curr_nom_all']),
-                    'subtitle' => number_format($d['curr_trx_all'], 0, ',', '.') . ' transaksi (' . $label_periode . ')',
-                    'growth' => $calcGrowth($d['curr_nom_all'], $d['prev_nom_all'])
+                    'value' => $fmtNominal($d['curr_nom_all'] ?? 0),
+                    'subtitle' => number_format($d['curr_trx_all'] ?? 0, 0, ',', '.') . ' transaksi (' . $label_periode . ')',
+                    'growth' => $calcGrowth($d['curr_nom_all'] ?? 0, $d['prev_nom_all'] ?? 0),
+                    'prev_nominal' => $fmtNominal($d['prev_nom_all'] ?? 0),
+                    'prev_trx' => number_format($d['prev_trx_all'] ?? 0, 0, ',', '.'),
+                    'prev_label' => $prev_label_periode
                 ],
                 [
                     'title' => 'TOTAL VIRTUAL ACCOUNT (VA)',
-                    'value' => $fmtNominal($d['curr_nom_va']),
-                    'subtitle' => number_format($d['curr_trx_va'], 0, ',', '.') . ' transaksi (' . $label_periode . ')',
-                    'growth' => $calcGrowth($d['curr_nom_va'], $d['prev_nom_va'])
+                    'value' => $fmtNominal($d['curr_nom_va'] ?? 0),
+                    'subtitle' => number_format($d['curr_trx_va'] ?? 0, 0, ',', '.') . ' transaksi (' . $label_periode . ')',
+                    'growth' => $calcGrowth($d['curr_nom_va'] ?? 0, $d['prev_nom_va'] ?? 0),
+                    'prev_nominal' => $fmtNominal($d['prev_nom_va'] ?? 0),
+                    'prev_trx' => number_format($d['prev_trx_va'] ?? 0, 0, ',', '.'),
+                    'prev_label' => $prev_label_periode
                 ],
                 [
                     'title' => 'BANK MANDIRI (VA)',
-                    'value' => $fmtNominal($d['curr_nom_mandiri']),
-                    'subtitle' => number_format($d['curr_trx_mandiri'], 0, ',', '.') . ' transaksi (' . $label_periode . ')',
-                    'growth' => $calcGrowth($d['curr_nom_mandiri'], $d['prev_nom_mandiri'])
+                    'value' => $fmtNominal($d['curr_nom_mandiri'] ?? 0),
+                    'subtitle' => number_format($d['curr_trx_mandiri'] ?? 0, 0, ',', '.') . ' transaksi (' . $label_periode . ')',
+                    'growth' => $calcGrowth($d['curr_nom_mandiri'] ?? 0, $d['prev_nom_mandiri'] ?? 0),
+                    'prev_nominal' => $fmtNominal($d['prev_nom_mandiri'] ?? 0),
+                    'prev_trx' => number_format($d['prev_trx_mandiri'] ?? 0, 0, ',', '.'),
+                    'prev_label' => $prev_label_periode
                 ],
                 [
                     'title' => 'BANK PERMATA (VA)',
-                    'value' => $fmtNominal($d['curr_nom_permata']),
-                    'subtitle' => number_format($d['curr_trx_permata'], 0, ',', '.') . ' transaksi (' . $label_periode . ')',
-                    'growth' => $calcGrowth($d['curr_nom_permata'], $d['prev_nom_permata'])
+                    'value' => $fmtNominal($d['curr_nom_permata'] ?? 0),
+                    'subtitle' => number_format($d['curr_trx_permata'] ?? 0, 0, ',', '.') . ' transaksi (' . $label_periode . ')',
+                    'growth' => $calcGrowth($d['curr_nom_permata'] ?? 0, $d['prev_nom_permata'] ?? 0),
+                    'prev_nominal' => $fmtNominal($d['prev_nom_permata'] ?? 0),
+                    'prev_trx' => number_format($d['prev_trx_permata'] ?? 0, 0, ',', '.'),
+                    'prev_label' => $prev_label_periode
                 ],
                 [
                     'title' => 'TOTAL BRANCHLESS',
-                    'value' => $fmtNominal($d['curr_nom_br']),
-                    'subtitle' => number_format($d['curr_trx_br'], 0, ',', '.') . ' transaksi (' . $label_periode . ')',
-                    'growth' => $calcGrowth($d['curr_nom_br'], $d['prev_nom_br'])
+                    'value' => $fmtNominal($d['curr_nom_br'] ?? 0),
+                    'subtitle' => number_format($d['curr_trx_br'] ?? 0, 0, ',', '.') . ' transaksi (' . $label_periode . ')',
+                    'growth' => $calcGrowth($d['curr_nom_br'] ?? 0, $d['prev_nom_br'] ?? 0),
+                    'prev_nominal' => $fmtNominal($d['prev_nom_br'] ?? 0),
+                    'prev_trx' => number_format($d['prev_trx_br'] ?? 0, 0, ',', '.'),
+                    'prev_label' => $prev_label_periode
                 ],
                 [
                     'title' => 'TOTAL QRIS',
-                    'value' => $fmtNominal($d['curr_nom_qris']),
-                    'subtitle' => number_format($d['curr_trx_qris'], 0, ',', '.') . ' transaksi (' . $label_periode . ')',
-                    'growth' => $calcGrowth($d['curr_nom_qris'], $d['prev_nom_qris'])
+                    'value' => $fmtNominal($d['curr_nom_qris'] ?? 0),
+                    'subtitle' => number_format($d['curr_trx_qris'] ?? 0, 0, ',', '.') . ' transaksi (' . $label_periode . ')',
+                    'growth' => $calcGrowth($d['curr_nom_qris'] ?? 0, $d['prev_nom_qris'] ?? 0),
+                    'prev_nominal' => $fmtNominal($d['prev_nom_qris'] ?? 0),
+                    'prev_trx' => number_format($d['prev_trx_qris'] ?? 0, 0, ',', '.'),
+                    'prev_label' => $prev_label_periode
                 ]
             ];
 
             return sendResponse(200, "Berhasil ambil Summary Cards", [
-                'meta' => [
-                    'harian_date'  => $harian,
-                    'closing_date' => $closing_date
-                ],
+                'meta' => ['harian_date' => $harian, 'closing_date' => $closing_date],
                 'cards' => $cards
             ]);
 
         } catch (PDOException $e) { 
-            error_log("Error Summary Cards: " . $e->getMessage());
             return sendResponse(500, "PDO Error: " . $e->getMessage(), null); 
         }
     }
