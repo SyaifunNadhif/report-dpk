@@ -297,7 +297,6 @@ window.addEventListener('DOMContentLoaded', async () => {
     const uKode = (user?.kode ? String(user.kode).padStart(3,'0') : '000');
     
     await populateKantor(uKode);
-    await loadKankasModalDropdown();
     
     const d = await getLastHarianData();
     if(d){ 
@@ -336,21 +335,24 @@ async function populateKantor(uKode){
     } catch{}
 }
 
+// 🔥 PERBAIKAN 1: Hapus validasi branch kosong agar tetap menarik data kankas
 async function loadKankasModalDropdown() {
     const elKankas = document.getElementById('opt_kankas_modal');
     const branch = document.getElementById('opt_kantor').value;
     elKankas.innerHTML = '<option value="">Semua Kankas</option>';
-    if(!branch || branch === '') return;
-
+    
     try {
         const r = await apiCall(API_KODE, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({type: 'kode_kankas', kode_kantor: branch}) });
         const j = await r.json();
         let h = '<option value="">Semua Kankas</option>';
         if(j.data && Array.isArray(j.data)) {
-            j.data.forEach(x => { h += `<option value="${x.kode_group1}">${x.deskripsi_group1 || x.kode_group1}</option>`; });
+            j.data.forEach(x => { 
+                const namaKankas = x.deskripsi_group1 || x.kode_group1;
+                h += `<option value="${x.kode_group1}">${namaKankas}</option>`; 
+            });
         }
         elKankas.innerHTML = h;
-    } catch(err) { }
+    } catch(err) { console.error("Gagal load kankas dropdown", err); }
 }
 
 async function loadAOModalDropdown(kode_cabang) {
@@ -619,6 +621,7 @@ function createWABtn(phone) {
     `;
 }
 
+// 🔥 PERBAIKAN 2: Panggil fungsi load Kankas bersamaan dengan AO saat klik open detail
 function openDetail(f,t){ 
     modalState={from:f,to:t,page:1,limit:50}; 
     document.getElementById('modalDetail').classList.remove('hidden'); 
@@ -631,7 +634,12 @@ function openDetail(f,t){
     document.getElementById('badgeMigrasi').innerText = badgeText; 
     
     const branch = document.getElementById('opt_kantor').value;
-    loadAOModalDropdown(branch).then(() => {
+    
+    // Panggil dua dropdown filter secara pararel, lalu render tabelnya
+    Promise.all([
+        loadKankasModalDropdown(),
+        loadAOModalDropdown(branch)
+    ]).then(() => {
         renderModalHeaderMigrasi();
         loadDetail(); 
     });

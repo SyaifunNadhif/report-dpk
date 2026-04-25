@@ -165,7 +165,7 @@ class BucketFeController {
 
     /**
      * ENDPOINT 2: DETAIL DATA 
-     * Tambah Alamat, HP, Tabungan, Kankas (beserta filter Kankas)
+     * Tambah Alamat, HP, Tabungan, Kankas (Nama), dan AO (Nama)
      */
     public function getMigrasiDetail($input = null) {
         $b = is_array($input) ? $input : [];
@@ -173,7 +173,8 @@ class BucketFeController {
         $harian  = $b['harian_date'] ?? null;
         $kc      = $b['kode_kantor'] ?? null;
         $kankas  = $b['kode_kankas'] ?? null; // Filter Kankas
-        
+        $ao      = $b['kode_ao'] ?? null;     // Filter AO
+
         $fromLbl = isset($b['from_bucket']) ? trim((string)$b['from_bucket']) : '';
         $toLbl   = isset($b['to_bucket']) ? trim((string)$b['to_bucket']) : '';
         
@@ -186,9 +187,11 @@ class BucketFeController {
         [$s1, $e1] = $this->getDayRange($closing);
         [$s2, $e2] = $this->getDayRange($harian);
 
-        // Base Columns
+        // Base Columns - Menggunakan COALESCE agar jika data di tabel kankas/ao kosong, kodenya tetap muncul
         $cols = "t2.no_rekening, t2.nama_nasabah, t2.alamat, t2.hp as no_hp, 
-                 t2.kode_group1 as kankas, COALESCE(tb.saldo_akhir, 0) as tabungan,
+                 COALESCE(k.deskripsi_group1, t2.kode_group1) as kankas, 
+                 COALESCE(ak.nama_ao, t2.kode_group2) as nama_ao,
+                 COALESCE(tb.saldo_akhir, 0) as tabungan,
                  t2.baki_debet, t2.hari_menunggak, t2.kode_produk, 
                  t2.kolektibilitas, t2.tunggakan_pokok, t2.tunggakan_bunga";
         
@@ -201,12 +204,15 @@ class BucketFeController {
             
             if ($kc) $baseWhere .= " AND t2.kode_cabang = :kc";
             if ($kankas) $baseWhere .= " AND t2.kode_group1 = :kankas";
+            if ($ao) $baseWhere .= " AND t2.kode_group2 = :ao"; 
             if ($toLbl !== '') $baseWhere .= " AND " . $this->getBucketConditionSql("t2.hari_menunggak", $toLbl);
 
             $sqlCount = "SELECT COUNT(1) FROM nominatif t2 WHERE $baseWhere";
             $sqlData  = "SELECT $cols, 0 as os_m1, 0 as dpd_m1, 'New' as status_migrasi 
                          FROM nominatif t2 
                          LEFT JOIN tabungan tb ON t2.norek_tabungan = tb.no_rekening
+                         LEFT JOIN ao_kredit ak ON t2.kode_group2 = ak.kode_group2 AND (t2.kode_cabang = ak.kode_kantor OR ak.kode_kantor IS NULL)
+                         LEFT JOIN kankas k ON t2.kode_group1 = k.kode_group1
                          WHERE $baseWhere";
 
         // 2. DETAIL LUNAS
@@ -221,18 +227,23 @@ class BucketFeController {
             
             if ($kc) $baseWhere .= " AND t1.kode_cabang = :kc";
             if ($kankas) $baseWhere .= " AND t1.kode_group1 = :kankas";
+            if ($ao) $baseWhere .= " AND t1.kode_group2 = :ao"; 
             if ($fromLbl !== '') $baseWhere .= " AND " . $this->getBucketConditionSql("t1.hari_menunggak", $fromLbl);
 
             $sqlCount = "SELECT COUNT(1) FROM nominatif t1 WHERE $baseWhere";
             
             $colsLunas = "t1.no_rekening, t1.nama_nasabah, t1.alamat, t1.hp as no_hp, 
-                          t1.kode_group1 as kankas, COALESCE(tb.saldo_akhir, 0) as tabungan,
+                          COALESCE(k.deskripsi_group1, t1.kode_group1) as kankas, 
+                          COALESCE(ak.nama_ao, t1.kode_group2) as nama_ao,
+                          COALESCE(tb.saldo_akhir, 0) as tabungan,
                           0 as baki_debet, 0 as hari_menunggak, t1.kode_produk,
                           t1.kolektibilitas, t1.tunggakan_pokok, t1.tunggakan_bunga";
 
             $sqlData  = "SELECT $colsLunas, t1.baki_debet as os_m1, t1.hari_menunggak as dpd_m1, 'Lunas' as status_migrasi 
                          FROM nominatif t1 
                          LEFT JOIN tabungan tb ON t1.norek_tabungan = tb.no_rekening
+                         LEFT JOIN ao_kredit ak ON t1.kode_group2 = ak.kode_group2 AND (t1.kode_cabang = ak.kode_kantor OR ak.kode_kantor IS NULL)
+                         LEFT JOIN kankas k ON t1.kode_group1 = k.kode_group1
                          WHERE $baseWhere"; 
 
         // 3. DETAIL ACTIVE
@@ -244,6 +255,7 @@ class BucketFeController {
             
             if ($kc) $baseWhere .= " AND t1.kode_cabang = :kc";
             if ($kankas) $baseWhere .= " AND t1.kode_group1 = :kankas";
+            if ($ao) $baseWhere .= " AND t1.kode_group2 = :ao"; 
             if ($fromLbl !== '') $baseWhere .= " AND " . $this->getBucketConditionSql("t1.hari_menunggak", $fromLbl);
             if ($toLbl !== '')   $baseWhere .= " AND " . $this->getBucketConditionSql("t2.hari_menunggak", $toLbl);
 
@@ -253,6 +265,8 @@ class BucketFeController {
                          FROM nominatif t1 
                          JOIN nominatif t2 ON t1.no_rekening=t2.no_rekening 
                          LEFT JOIN tabungan tb ON t2.norek_tabungan = tb.no_rekening
+                         LEFT JOIN ao_kredit ak ON t2.kode_group2 = ak.kode_group2 AND (t2.kode_cabang = ak.kode_kantor OR ak.kode_kantor IS NULL)
+                         LEFT JOIN kankas k ON t2.kode_group1 = k.kode_group1
                          WHERE $baseWhere";
         }
 
@@ -262,6 +276,7 @@ class BucketFeController {
         $stmtCnt->bindValue(':s2', $s2); $stmtCnt->bindValue(':e2', $e2);
         if ($kc) $stmtCnt->bindValue(':kc', $kc);
         if ($kankas) $stmtCnt->bindValue(':kankas', $kankas);
+        if ($ao) $stmtCnt->bindValue(':ao', $ao); 
         $stmtCnt->execute();
         $total = $stmtCnt->fetchColumn();
 
@@ -273,6 +288,7 @@ class BucketFeController {
         $stmt->bindValue(':s2', $s2); $stmt->bindValue(':e2', $e2);
         if ($kc) $stmt->bindValue(':kc', $kc);
         if ($kankas) $stmt->bindValue(':kankas', $kankas);
+        if ($ao) $stmt->bindValue(':ao', $ao); 
         $stmt->bindValue(':lim', $limit, PDO::PARAM_INT);
         $stmt->bindValue(':off', $offset, PDO::PARAM_INT);
         $stmt->execute();
@@ -305,6 +321,7 @@ class BucketFeController {
             'data' => $rows
         ]);
     }
+
 
     private function send($status, $msg, $data = []) {
         header('Content-Type: application/json');
