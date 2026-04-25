@@ -163,39 +163,55 @@ class TransaksiController {
         $korwil      = !empty($b['korwil']) ? strtoupper($b['korwil']) : null;
         $kankas      = !empty($b['kode_kankas']) ? $b['kode_kankas'] : null;
         
-        // 🔥 Ganti bank filter jadi channel filter
         $channel     = !empty($b['channel']) ? strtoupper($b['channel']) : 'VA';
 
         if (!$harian_date) return sendResponse(400, "Tanggal Actual (Harian) wajib diisi.", null);
 
-        // --- 1. GENERATE PERIODE & TANGGAL (X-AXIS CHART) ---
+        $ts_harian = strtotime($harian_date);
+
+        // --- 1. GENERATE PERIODE & TANGGAL (X-AXIS CHART) YANG FLEKSIBEL ---
         $keys = []; $labels = []; $startDate = ""; $endDate = ""; $sqlGroup = "";
 
         if ($periode === '7_hari') {
             for ($i = 6; $i >= 0; $i--) {
-                $d = date('Y-m-d', strtotime("-$i day", strtotime($harian_date)));
+                $d = date('Y-m-d', strtotime("-$i day", $ts_harian));
                 $keys[] = $d; $labels[] = date('d M', strtotime($d));
             }
-            $startDate = $keys[0] . " 00:00:00"; $endDate = $harian_date . " 23:59:59"; $sqlGroup = "DATE(t.tgl_transaksi)";
+            $startDate = $keys[0] . " 00:00:00"; 
+            $endDate   = $harian_date . " 23:59:59"; 
+            $sqlGroup  = "DATE(t.tgl_transaksi)";
+
         } elseif ($periode === '30_hari') {
             for ($i = 29; $i >= 0; $i--) {
-                $d = date('Y-m-d', strtotime("-$i day", strtotime($harian_date)));
+                $d = date('Y-m-d', strtotime("-$i day", $ts_harian));
                 $keys[] = $d; $labels[] = date('d M', strtotime($d));
             }
-            $startDate = $keys[0] . " 00:00:00"; $endDate = $harian_date . " 23:59:59"; $sqlGroup = "DATE(t.tgl_transaksi)";
+            $startDate = $keys[0] . " 00:00:00"; 
+            $endDate   = $harian_date . " 23:59:59"; 
+            $sqlGroup  = "DATE(t.tgl_transaksi)";
+
         } elseif ($periode === 'tahunan') {
-            $startYear = 2020; $currentYear = (int)date('Y', strtotime($harian_date));
+            $startYear = 2020; 
+            $currentYear = (int)date('Y', $ts_harian);
             for ($year = $startYear; $year <= $currentYear; $year++) {
                 $keys[] = (string)$year; $labels[] = (string)$year;
             }
-            $startDate = "2020-01-01 00:00:00"; $endDate = date('Y-12-31 23:59:59', strtotime($harian_date)); $sqlGroup = "YEAR(t.tgl_transaksi)";
+            $startDate = "2020-01-01 00:00:00"; 
+            $endDate   = date('Y-12-31 23:59:59', $ts_harian); 
+            $sqlGroup  = "YEAR(t.tgl_transaksi)";
+
         } else {
-            // Default: bulanan (6 Bulan Terakhir)
+            // Default: bulanan (6 Bulan Terakhir dari harian_date)
             for ($i = 5; $i >= 0; $i--) {
-                $d = date('Y-m', strtotime("-$i month", strtotime($harian_date)));
-                $keys[] = $d; $labels[] = date('M Y', strtotime($d . '-01'));
+                $d = date('Y-m', strtotime("-$i month", $ts_harian));
+                $keys[] = $d; 
+                $labels[] = date('M Y', strtotime($d . '-01'));
             }
-            $startDate = $keys[0] . "-01 00:00:00"; $endDate = date('Y-m-t 23:59:59', strtotime($harian_date)); $sqlGroup = "DATE_FORMAT(t.tgl_transaksi, '%Y-%m')";
+            // 🔥 FIX: Tarik Start Date dari awal bulan (tanggal 1) pada 6 bulan lalu
+            $startDate = $keys[0] . "-01 00:00:00"; 
+            // 🔥 FIX: End Date tepat di harian_date (jam 23:59:59) agar tidak kelebihan/kepotong
+            $endDate   = $harian_date . " 23:59:59"; 
+            $sqlGroup  = "DATE_FORMAT(t.tgl_transaksi, '%Y-%m')";
         }
 
         // --- 2. BUILD FILTER QUERY ---
@@ -229,7 +245,7 @@ class TransaksiController {
             $params[':kode_kankas'] = $kankas;
         }
 
-        // 🔥 Filter Channel (Murni tanpa embel-embel Bank)
+        // Filter Channel
         $chanFilter = "";
         if ($channel === 'BRANCHLESS') { 
             $chanFilter = " AND TRIM(t.kode_transaksi) IN ('150', '152') "; 
@@ -239,7 +255,7 @@ class TransaksiController {
             $chanFilter = " AND TRIM(t.kode_transaksi) = '320' "; // VA default
         }
 
-        // --- 3. MAIN QUERY (Hanya 1 Garis Total) ---
+        // --- 3. MAIN QUERY ---
         $sql = "SELECT 
                     $sqlGroup as periode_key,
                     SUM(t.jumlah) as total_nominal,
@@ -258,12 +274,11 @@ class TransaksiController {
             $stmt->execute();
             $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-            // --- 4. FORMAT DATA UNTUK CHART (MAPPING) ---
+            // --- 4. FORMAT DATA UNTUK CHART ---
             $dataNominal = array_fill(0, count($keys), 0);
             $dataTrx     = array_fill(0, count($keys), 0);
             $dataNoa     = array_fill(0, count($keys), 0);
 
-            // Buat index pencarian cepat (Lookup)
             $keyIndex = array_flip($keys);
 
             $grandTotalNominal = 0;
@@ -286,12 +301,11 @@ class TransaksiController {
                 $dataNoa[$idx]     = $noa;
             }
 
-            // 🔥 Siapkan 1 Series Gabungan Saja
             $seriesName = ($channel === 'VA') ? 'Virtual Account' : ($channel === 'BRANCHLESS' ? 'Branchless' : 'QRIS');
             if ($channel === 'ALL') $seriesName = 'Total Digital';
 
             $seriesNominal = [
-                ['name' => $seriesName, 'data' => $dataNominal, 'trx' => $dataTrx] // TRX disisipkan buat tooltip FE
+                ['name' => $seriesName, 'data' => $dataNominal, 'trx' => $dataTrx] 
             ];
             
             $seriesNoa = [
@@ -316,7 +330,6 @@ class TransaksiController {
             ]);
 
         } catch (PDOException $e) { 
-            error_log("Error Tren: " . $e->getMessage());
             return sendResponse(500, "PDO Error: " . $e->getMessage(), null); 
         }
     }
@@ -477,10 +490,10 @@ class TransaksiController {
         }
     }
 
-    /**
+/**
      * 11. SUMMARY CARDS DASHBOARD TRANSAKSI
-     * Menampilkan semua data (Keseluruhan, VA, Branchless, QRIS, Mandiri, Permata) sekaligus.
-     * Bebas Bug HY093 (Duplicate Named Parameters).
+     * Menampilkan semua data (Keseluruhan, VA, Branchless, QRIS, Mandiri, Permata).
+     * Bebas Bug HY093 & Fix Bug Tanggal PHP strtotime('-1 month') pada tanggal 31.
      */
     public function getSummaryCardsTransaksi($input = null) {
         set_time_limit(300); ini_set('memory_limit', '1024M');
@@ -493,15 +506,34 @@ class TransaksiController {
         if (!$harian) return sendResponse(400, "Tanggal Actual (Harian) wajib diisi.", null);
 
         $ts_harian = strtotime($harian);
-        $prev_harian = date('Y-m-d', strtotime('-1 month', $ts_harian));
 
+        // 🔥 FIX BUG TANGGAL: Perhitungan aman untuk Harian Bulan Lalu (MTD)
+        $y = (int)date('Y', $ts_harian);
+        $m = (int)date('m', $ts_harian);
+        $d = (int)date('d', $ts_harian);
+        
+        $prev_m = $m - 1;
+        $prev_y = $y;
+        if ($prev_m == 0) { 
+            $prev_m = 12; 
+            $prev_y--; 
+        }
+        
+        // Mencegah error jika tanggal 31 mundur ke bulan yang hanya ada 30/28 hari
+        $max_days = cal_days_in_month(CAL_GREGORIAN, $prev_m, $prev_y);
+        $prev_d = min($d, $max_days);
+        $prev_harian = sprintf("%04d-%02d-%02d", $prev_y, $prev_m, $prev_d);
+
+        // 🔥 FIX BUG TANGGAL: Perhitungan aman untuk Prev Closing
         if (!empty($b['closing_date'])) {
             $closing_date = $b['closing_date'];
-            $prev_closing = date('Y-m-d', strtotime('-1 month', strtotime($closing_date)));
         } else {
-            $closing_date = date('Y-m-t', strtotime(date('Y-m-01', $ts_harian) . ' -1 day'));
-            $prev_closing = date('Y-m-t', strtotime(date('Y-m-01', strtotime($prev_harian)) . ' -1 day'));
+            $closing_date = date('Y-m-t', strtotime(sprintf("%04d-%02d-01", $y, $m) . ' -1 day'));
         }
+        
+        // Cara paling aman mundur 1 bulan untuk akhir bulan: 
+        // Ambil tanggal 1 closing, mundurin 1 bulan, lalu ambil tanggal akhirnya ('t')
+        $prev_closing = date('Y-m-t', strtotime(date('Y-m-01', strtotime($closing_date)) . ' -1 month'));
 
         $label_periode = date('M Y', $ts_harian);
         $prev_label_periode = date('M Y', strtotime($prev_harian));
@@ -557,10 +589,10 @@ class TransaksiController {
                 SUM(CASE WHEN is_prev=1 AND is_va=1 THEN 1 ELSE 0 END) as prev_trx_va,
                 
                 SUM(CASE WHEN is_prev=1 AND is_mandiri=1 THEN jumlah ELSE 0 END) as prev_nom_mandiri,
-                SUM(CASE WHEN is_prev=1 AND is_mandiri=1 THEN 1 ELSE 0 END) as prev_trx_mandiri, -- 🔥 FIX ADA DISINI
+                SUM(CASE WHEN is_prev=1 AND is_mandiri=1 THEN 1 ELSE 0 END) as prev_trx_mandiri, 
                 
                 SUM(CASE WHEN is_prev=1 AND is_permata=1 THEN jumlah ELSE 0 END) as prev_nom_permata,
-                SUM(CASE WHEN is_prev=1 AND is_permata=1 THEN 1 ELSE 0 END) as prev_trx_permata, -- 🔥 FIX ADA DISINI
+                SUM(CASE WHEN is_prev=1 AND is_permata=1 THEN 1 ELSE 0 END) as prev_trx_permata, 
                 
                 SUM(CASE WHEN is_prev=1 AND is_br=1 THEN jumlah ELSE 0 END) as prev_nom_br,
                 SUM(CASE WHEN is_prev=1 AND is_br=1 THEN 1 ELSE 0 END) as prev_trx_br,
