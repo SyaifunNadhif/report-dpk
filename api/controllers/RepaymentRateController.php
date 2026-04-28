@@ -558,5 +558,326 @@ class RepaymentRateController {
         ]);
     }
 
+    /**
+     * 1. REKAP UTAMA OTP BUCKET (Group by Tgl Jatuh Tempo + Migration)
+     */
+    public function getRekapOtpBucket($input = null) {
+        set_time_limit(300); ini_set('memory_limit', '1024M');
+
+        $b = is_array($input) ? $input : [];
+        $closing = $b['closing_date'] ?? null;
+        $harian  = $b['harian_date'] ?? null;
+        $kc      = !empty($b['kode_kantor']) ? str_pad($b['kode_kantor'], 3, '0', STR_PAD_LEFT) : null;
+        $korwil  = !empty($b['korwil']) ? strtoupper($b['korwil']) : null;
+        $typeB   = $b['type_bucket'] ?? 'fe_all'; // fe_all, 31-60, 61-90
+
+        if (!$closing || !$harian) return $this->send(400, "Tanggal wajib diisi.");
+
+        [$s1, $e1] = $this->getDayRange($closing);
+        [$s2, $e2] = $this->getDayRange($harian);
+
+        $curTime  = strtotime($harian);
+        $curMonth = date('n', $curTime);
+        $curYear  = date('Y', $curTime);
+
+        $kw_start = null; $kw_end = null;
+        if ($korwil) {
+            switch ($korwil) {
+                case 'SEMARANG':   $kw_start = '001'; $kw_end = '007'; break;
+                case 'SOLO':       $kw_start = '008'; $kw_end = '014'; break;
+                case 'BANYUMAS':   $kw_start = '015'; $kw_end = '021'; break;
+                case 'PEKALONGAN': $kw_start = '022'; $kw_end = '028'; break;
+            }
+        }
+
+        // Tentukan Filter Bucket di M-1
+        $whereBucket = "AND hari_menunggak BETWEEN 31 AND 90"; 
+        if ($typeB === '31-60') $whereBucket = "AND hari_menunggak BETWEEN 31 AND 60";
+        elseif ($typeB === '61-90') $whereBucket = "AND hari_menunggak BETWEEN 61 AND 90";
+
+        // AMBIL DATA CLOSING (M1)
+        $sqlM1 = "SELECT no_rekening, baki_debet, hari_menunggak as dpd_ori, DAY(tgl_jatuh_tempo) as tgl_ori 
+                  FROM nominatif 
+                  WHERE created BETWEEN :s1 AND :e1 
+                  AND baki_debet > 0
+                  $whereBucket"; 
+        
+        if ($kc && $kc !== '000') $sqlM1 .= " AND kode_cabang = :kc";
+        elseif ($korwil && $kw_start && $kw_end) $sqlM1 .= " AND kode_cabang BETWEEN :kw_start AND :kw_end";
+
+        $stmt1 = $this->pdo->prepare($sqlM1);
+        $stmt1->bindValue(':s1', $s1); $stmt1->bindValue(':e1', $e1);
+        if ($kc && $kc !== '000') $stmt1->bindValue(':kc', $kc);
+        elseif ($korwil && $kw_start && $kw_end) { $stmt1->bindValue(':kw_start', $kw_start); $stmt1->bindValue(':kw_end', $kw_end); }
+        $stmt1->execute();
+        $dataM1 = $stmt1->fetchAll(PDO::FETCH_UNIQUE | PDO::FETCH_ASSOC);
+
+        // AMBIL DATA HARIAN (CURRENT)
+        $sqlCur = "SELECT no_rekening, baki_debet, hari_menunggak 
+                   FROM nominatif 
+                   WHERE created BETWEEN :s2 AND :e2";
+        if ($kc && $kc !== '000') $sqlCur .= " AND kode_cabang = :kc";
+        elseif ($korwil && $kw_start && $kw_end) $sqlCur .= " AND kode_cabang BETWEEN :kw_start AND :kw_end";
+
+        $stmt2 = $this->pdo->prepare($sqlCur);
+        $stmt2->bindValue(':s2', $s2); $stmt2->bindValue(':e2', $e2);
+        if ($kc && $kc !== '000') $stmt2->bindValue(':kc', $kc);
+        elseif ($korwil && $kw_start && $kw_end) { $stmt2->bindValue(':kw_start', $kw_start); $stmt2->bindValue(':kw_end', $kw_end); }
+        $stmt2->execute();
+        $dataCur = $stmt2->fetchAll(PDO::FETCH_UNIQUE | PDO::FETCH_ASSOC);
+
+        // INISIALISASI BUCKET TANGGAL (1 - 31)
+        $report = [];
+        for ($i = 1; $i <= 31; $i++) {
+            $report[$i] = [
+                'tgl' => $i, 'm1_noa' => 0, 'm1_os' => 0,
+                'btc_noa' => 0, 'btc_os' => 0, 'btc_pct' => 0,
+                'backflow_noa' => 0, 'backflow_os' => 0, 'backflow_pct' => 0,
+                'stay_noa' => 0, 'stay_os' => 0, 'stay_pct' => 0,
+                'migrasi_noa' => 0, 'migrasi_os' => 0, 'migrasi_pct' => 0,
+                'runoff_noa' => 0, 'runoff_os' => 0, 'runoff_pct' => 0
+            ];
+        }
+
+        $grandTotal = [
+            'm1_noa'=>0, 'm1_os'=>0, 'btc_noa'=>0, 'btc_os'=>0, 'btc_pct'=>0,
+            'backflow_noa'=>0, 'backflow_os'=>0, 'backflow_pct'=>0,
+            'stay_noa'=>0, 'stay_os'=>0, 'stay_pct'=>0,
+            'migrasi_noa'=>0, 'migrasi_os'=>0, 'migrasi_pct'=>0,
+            'runoff_noa'=>0, 'runoff_os'=>0, 'runoff_pct'=>0
+        ];
+
+        foreach ($dataM1 as $norek => $row) {
+            $tglOri = (int)$row['tgl_ori']; 
+            if ($tglOri < 1 || $tglOri > 31) continue;
+            
+            // Gunakan fungsi map tanggal yang Anda miliki
+            $tglMap = $this->getMappedDay($tglOri, $curMonth, $curYear);
+            $dpdOri = (int)$row['dpd_ori']; 
+            $osM1   = (float)$row['baki_debet'];
+
+            // Tentukan dynamic limit per nasabah
+            if ($dpdOri >= 31 && $dpdOri <= 60) { $minB = 31; $maxB = 60; }
+            else { $minB = 61; $maxB = 90; }
+
+            $report[$tglMap]['m1_noa']++; $report[$tglMap]['m1_os'] += $osM1;
+            $grandTotal['m1_noa']++; $grandTotal['m1_os'] += $osM1;
+
+            if (!isset($dataCur[$norek])) {
+                $report[$tglMap]['runoff_noa']++; $report[$tglMap]['runoff_os'] += $osM1;
+                $grandTotal['runoff_noa']++; $grandTotal['runoff_os'] += $osM1;
+            } else {
+                $osCur  = (float)$dataCur[$norek]['baki_debet'];
+                $dpdCur = (int)$dataCur[$norek]['hari_menunggak'];
+
+                if ($osCur <= 0) {
+                    $report[$tglMap]['runoff_noa']++; $report[$tglMap]['runoff_os'] += $osM1;
+                    $grandTotal['runoff_noa']++; $grandTotal['runoff_os'] += $osM1;
+                } else {
+                    if ($dpdCur == 0) {
+                        $report[$tglMap]['btc_noa']++; $report[$tglMap]['btc_os'] += $osM1;
+                        $grandTotal['btc_noa']++; $grandTotal['btc_os'] += $osM1;
+                    } elseif ($dpdCur > 0 && $dpdCur < $minB) {
+                        $report[$tglMap]['backflow_noa']++; $report[$tglMap]['backflow_os'] += $osM1;
+                        $grandTotal['backflow_noa']++; $grandTotal['backflow_os'] += $osM1;
+                    } elseif ($dpdCur >= $minB && $dpdCur <= $maxB) {
+                        $report[$tglMap]['stay_noa']++; $report[$tglMap]['stay_os'] += $osM1;
+                        $grandTotal['stay_noa']++; $grandTotal['stay_os'] += $osM1;
+                    } elseif ($dpdCur > $maxB) {
+                        $report[$tglMap]['migrasi_noa']++; $report[$tglMap]['migrasi_os'] += $osM1;
+                        $grandTotal['migrasi_noa']++; $grandTotal['migrasi_os'] += $osM1;
+                    }
+                }
+            }
+        }
+
+        // Kalkulasi Persentase
+        $calcPct = function($val, $tot) { return $tot > 0 ? round(($val / $tot) * 100, 2) : 0; };
+        
+        foreach ($report as &$r) {
+            $r['btc_pct']      = $calcPct($r['btc_os'], $r['m1_os']);
+            $r['backflow_pct'] = $calcPct($r['backflow_os'], $r['m1_os']);
+            $r['stay_pct']     = $calcPct($r['stay_os'], $r['m1_os']);
+            $r['migrasi_pct']  = $calcPct($r['migrasi_os'], $r['m1_os']);
+            $r['runoff_pct']   = $calcPct($r['runoff_os'], $r['m1_os']);
+        }
+
+        $grandTotal['btc_pct']      = $calcPct($grandTotal['btc_os'], $grandTotal['m1_os']);
+        $grandTotal['backflow_pct'] = $calcPct($grandTotal['backflow_os'], $grandTotal['m1_os']);
+        $grandTotal['stay_pct']     = $calcPct($grandTotal['stay_os'], $grandTotal['m1_os']);
+        $grandTotal['migrasi_pct']  = $calcPct($grandTotal['migrasi_os'], $grandTotal['m1_os']);
+        $grandTotal['runoff_pct']   = $calcPct($grandTotal['runoff_os'], $grandTotal['m1_os']);
+
+        return $this->send(200, "Sukses Rekap OTP Per Tanggal & Migration", [
+            'meta' => ['m1' => $closing, 'cur' => $harian, 'type_bucket' => $typeB],
+            'grand_total' => $grandTotal,
+            'data' => array_values($report)
+        ]);
+    }
+
+    /**
+     * 2. DETAIL DATA OTP BUCKET (Filter per Tanggal Tagih + Status Migration)
+     */
+    public function getDetailOtpBucket($input = null) {
+        $b = is_array($input) ? $input : [];
+        $closing = $b['closing_date'] ?? null;
+        $harian  = $b['harian_date'] ?? null;
+        $kc      = !empty($b['kode_kantor']) ? str_pad($b['kode_kantor'], 3, '0', STR_PAD_LEFT) : null;
+        $korwil  = !empty($b['korwil']) ? strtoupper($b['korwil']) : null;
+        $kankas  = $b['kode_kankas'] ?? null; 
+        $ao      = $b['kode_ao'] ?? null;     
+        
+        $tglMap  = isset($b['tgl_tagih']) ? (int)$b['tgl_tagih'] : null;
+        $typeB   = $b['type_bucket'] ?? 'fe_all'; 
+        $status  = strtoupper($b['status'] ?? 'ALL'); 
+        $page    = $b['page'] ?? 1;
+        $limit   = $b['limit'] ?? 10;
+        $offset  = ($page - 1) * $limit;
+
+        if (!$closing || !$harian) return $this->send(400, "Data kurang lengkap.");
+
+        [$s1, $e1] = $this->getDayRange($closing);
+        [$s2, $e2] = $this->getDayRange($harian);
+
+        // Logika Map Hari
+        $daysStr = "1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31";
+        if ($tglMap) {
+            $curTime = strtotime($harian);
+            $month = date('n', $curTime); $year = date('Y', $curTime);
+            $includedDays = [];
+            for ($d = 1; $d <= 31; $d++) {
+                if ($this->getMappedDay($d, $month, $year) == $tglMap) {
+                    $includedDays[] = $d;
+                }
+            }
+            if (!empty($includedDays)) $daysStr = implode(',', $includedDays);
+            else $daysStr = $tglMap;
+        }
+
+        $kw_start = null; $kw_end = null;
+        if ($korwil) {
+            switch ($korwil) {
+                case 'SEMARANG':   $kw_start = '001'; $kw_end = '007'; break;
+                case 'SOLO':       $kw_start = '008'; $kw_end = '014'; break;
+                case 'BANYUMAS':   $kw_start = '015'; $kw_end = '021'; break;
+                case 'PEKALONGAN': $kw_start = '022'; $kw_end = '028'; break;
+            }
+        }
+
+        // Tentukan Filter Type Bucket Asal (M-1)
+        $whereBucket = "AND t1.hari_menunggak BETWEEN 31 AND 90"; 
+        if ($typeB === '31-60') $whereBucket = "AND t1.hari_menunggak BETWEEN 31 AND 60";
+        elseif ($typeB === '61-90') $whereBucket = "AND t1.hari_menunggak BETWEEN 61 AND 90";
+
+        // Filter Logic Roll Rate / Migration Status pakai SQL Logic Aman
+        $joinType = "LEFT JOIN";
+        $whereStatus = "";
+        
+        if ($status === 'RUNOFF') {
+            $whereStatus = "AND (t2.no_rekening IS NULL OR t2.baki_debet <= 0)";
+        } elseif ($status === 'BTC') {
+            $joinType = "JOIN";
+            $whereStatus = "AND t2.baki_debet > 0 AND t2.hari_menunggak = 0";
+        } elseif ($status === 'BACKFLOW') {
+            $joinType = "JOIN";
+            $whereStatus = "AND t2.baki_debet > 0 AND (
+                (t1.hari_menunggak BETWEEN 31 AND 60 AND t2.hari_menunggak > 0 AND t2.hari_menunggak < 31) 
+                OR 
+                (t1.hari_menunggak BETWEEN 61 AND 90 AND t2.hari_menunggak > 0 AND t2.hari_menunggak < 61)
+            )";
+        } elseif ($status === 'STAY') {
+            $joinType = "JOIN";
+            $whereStatus = "AND t2.baki_debet > 0 AND (
+                (t1.hari_menunggak BETWEEN 31 AND 60 AND t2.hari_menunggak BETWEEN 31 AND 60) 
+                OR 
+                (t1.hari_menunggak BETWEEN 61 AND 90 AND t2.hari_menunggak BETWEEN 61 AND 90)
+            )";
+        } elseif ($status === 'MIGRASI') {
+            $joinType = "JOIN";
+            $whereStatus = "AND t2.baki_debet > 0 AND (
+                (t1.hari_menunggak BETWEEN 31 AND 60 AND t2.hari_menunggak > 60) 
+                OR 
+                (t1.hari_menunggak BETWEEN 61 AND 90 AND t2.hari_menunggak > 90)
+            )";
+        }
+
+        // Base Query 
+        $baseQuery = "FROM nominatif t1 
+                      $joinType nominatif t2 ON t1.no_rekening = t2.no_rekening 
+                          AND (t2.created BETWEEN :s2 AND :e2)
+                      LEFT JOIN ao_kredit ao ON t1.kode_group2 = ao.kode_group2
+                      LEFT JOIN tabungan tb ON t1.norek_tabungan = tb.no_rekening
+                      LEFT JOIN kankas kn ON t1.kode_group1 = kn.kode_group1
+                      WHERE (t1.created BETWEEN :s1 AND :e1)
+                      AND t1.baki_debet > 0
+                      AND DAY(t1.tgl_jatuh_tempo) IN ($daysStr)
+                      $whereBucket
+                      $whereStatus";
+        
+        if ($kc && $kc !== '000') $baseQuery .= " AND t1.kode_cabang = :kc";
+        elseif ($korwil && $kw_start && $kw_end) $baseQuery .= " AND t1.kode_cabang BETWEEN :kw_start AND :kw_end";
+        
+        if ($kankas) $baseQuery .= " AND t1.kode_group1 = :kankas"; 
+        if ($ao) $baseQuery .= " AND t1.kode_group2 = :ao"; 
+
+        $bindParams = function($stmt) use ($s1, $e1, $s2, $e2, $kc, $korwil, $kw_start, $kw_end, $kankas, $ao) {
+            $stmt->bindValue(':s1', $s1); $stmt->bindValue(':e1', $e1);
+            $stmt->bindValue(':s2', $s2); $stmt->bindValue(':e2', $e2);
+            if ($kc && $kc !== '000') $stmt->bindValue(':kc', $kc);
+            elseif ($korwil && $kw_start && $kw_end) { $stmt->bindValue(':kw_start', $kw_start); $stmt->bindValue(':kw_end', $kw_end); }
+            if ($kankas) $stmt->bindValue(':kankas', $kankas); 
+            if ($ao) $stmt->bindValue(':ao', $ao); 
+        };
+
+        // Count Total Row
+        $stmtCnt = $this->pdo->prepare("SELECT COUNT(1) $baseQuery");
+        $bindParams($stmtCnt);
+        $stmtCnt->execute();
+        $total = $stmtCnt->fetchColumn();
+
+        $cols = "t1.no_rekening, t1.nama_nasabah, t1.hari_menunggak as dpd_m1,
+                 t1.alamat, t1.hp as no_hp, 
+                 COALESCE(kn.deskripsi_group1, t1.kode_group1) as kankas,
+                 COALESCE(tb.saldo_akhir, 0) as tabungan,
+                 COALESCE(ao.nama_ao, t1.kode_group2) as nama_ao,
+                 t1.tgl_jatuh_tempo, t1.jml_pinjaman,
+                 t1.baki_debet as os_m1, 
+                 COALESCE(t2.baki_debet, 0) as os_curr, 
+                 COALESCE(t2.hari_menunggak, 0) as dpd_curr,
+                 (COALESCE(t2.tunggakan_pokok, 0) + COALESCE(t2.tunggakan_bunga, 0)) as totung";
+        
+        $sqlData = "SELECT $cols $baseQuery ORDER BY t1.baki_debet DESC LIMIT :lim OFFSET :off";
+        $stmt = $this->pdo->prepare($sqlData);
+        $bindParams($stmt);
+        $stmt->bindValue(':lim', $limit, PDO::PARAM_INT);
+        $stmt->bindValue(':off', $offset, PDO::PARAM_INT);
+        $stmt->execute();
+        $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        foreach ($rows as &$r) {
+            $osM1 = (float)$r['os_m1']; $osCur = (float)$r['os_curr']; 
+            $dpdCur = (int)$r['dpd_curr']; $dpdM1 = (int)$r['dpd_m1'];
+            $totung = (float)$r['totung']; $tabungan = (float)$r['tabungan'];
+            
+            if ($dpdM1 >= 31 && $dpdM1 <= 60) { $cMin = 31; $cMax = 60; }
+            else { $cMin = 61; $cMax = 90; }
+
+            if ($osCur <= 0) { $r['status_ket'] = 'RUNOFF (LUNAS)'; }
+            elseif ($dpdCur == 0) { $r['status_ket'] = 'BTC (LANCAR)'; }
+            elseif ($dpdCur > 0 && $dpdCur < $cMin) { $r['status_ket'] = 'BACKFLOW'; }
+            elseif ($dpdCur >= $cMin && $dpdCur <= $cMax) { $r['status_ket'] = 'STAY'; }
+            elseif ($dpdCur > $cMax) { $r['status_ket'] = 'MIGRASI (MEMBURUK)'; }
+
+            $r['os_m1']=$osM1; $r['os_curr']=$osCur; 
+            $r['bayar_pokok'] = ($osM1 > $osCur) ? ($osM1 - $osCur) : 0;
+            $r['status_tabungan'] = (($tabungan * 0.015) > $totung) ? 'Aman' : 'Belum Aman';
+        }
+
+        return $this->send(200, "Detail Data OTP By Tgl & Migration", [
+            'pagination' => ['current_page' => $page, 'total_records' => (int)$total, 'total_pages' => ceil($total / $limit)],
+            'data' => $rows
+        ]);
+    }
+
 }
 ?>

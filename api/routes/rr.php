@@ -64,6 +64,12 @@ switch ($method) {
         // --- D. DETAIL PELUNASAN ---
         } elseif ($type === 'rr') {
             $controller->getRekapRr($input);
+        
+        } elseif ($type === 'otp_fe') {
+            $controller->getRekapOtpBucket($input);
+
+        } elseif ($type === 'detail_otp_fe') {
+            $controller->getDetailOtpBucket($input);
 
         // --- ERROR: TYPE TIDAK DIKENAL ---
         } else {

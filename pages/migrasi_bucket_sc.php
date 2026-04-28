@@ -19,23 +19,21 @@
   
   /* Kunci Background Murni Biar Gak Tembus Pandang Saat Scroll */
   #tabelMigrasiSC, #tableExportMigrasi { border-collapse: separate; border-spacing: 0; }
-  #tabelMigrasiSC th, #tabelMigrasiSC td, #tableExportMigrasi th, #tableExportMigrasi td { background-clip: padding-box; background-color: #fff; }
+  #tabelMigrasiSC th, #tabelMigrasiSC td, #tableExportMigrasi th, #tableExportMigrasi td { background-clip: padding-box; }
   
   /* --- Tabel Utama Migrasi --- */
   #tabelMigrasiSC thead th { position: sticky !important; z-index: 40 !important; box-shadow: inset 0 -1px 0 #cbd5e1; }
   
   /* Lapis 1 (Header Utama) */
   .mig-row-1 th { top: 0 !important; height: 46px; background-color: #f8fafc !important;}
-  .mig-row-1 th.sticky-left { z-index: 60 !important; left: 0 !important; box-shadow: inset -1px -1px 0 #cbd5e1; background-color: #dcedc8 !important; } 
+  #tabelMigrasiSC thead th.sticky-left { z-index: 60 !important; left: 0 !important; box-shadow: inset -1px -1px 0 #cbd5e1; background-color: #dcedc8 !important; } 
   
   /* Lapis 2 (Grand Total) */
   .mig-row-tot th { top: 46px !important; z-index: 45 !important; height: 50px; box-shadow: inset 0 -2px 0 #93c5fd; background-color: #eff6ff !important; }
-  .mig-row-tot th.sticky-left { z-index: 62 !important; left: 0 !important; box-shadow: inset -1px -2px 0 #93c5fd; background-color: #e2e8f0 !important; }
+  #tabelMigrasiSC thead tr.mig-row-tot th.sticky-left { z-index: 62 !important; left: 0 !important; box-shadow: inset -1px -2px 0 #93c5fd; background-color: #e2e8f0 !important; }
 
   /* Freeze Kiri Body Utama */
-  #bodyMatrix td { position: relative; z-index: 1 !important; }
-  .sticky-left { position: sticky !important; left: 0 !important; }
-  #bodyMatrix td.sticky-left { z-index: 20 !important; background-color: #ffffff !important; box-shadow: inset -1px 0 0 #e2e8f0; }
+  .sticky-left { position: sticky !important; left: 0 !important; z-index: 30 !important; background-color: #ffffff !important; box-shadow: inset -1px 0 0 #e2e8f0; }
   
   /* Hover Effects Utama */
   #bodyMatrix tr:hover td { background-color: #f8fafc !important; cursor: pointer; }
@@ -44,29 +42,34 @@
   /* ========================================================
      🔥 TABEL MODAL DETAIL MIGRASI (FIX FREEZE & OVERLAP) 🔥
      ======================================================== */
-  #tableExportMigrasi thead th { height: 46px; background-color: #f1f5f9 !important; box-shadow: inset 0 -1px 0 #cbd5e1, 0 1px 0 #cbd5e1; top: 0 !important; position: sticky !important; z-index: 40 !important; }
+  #tableExportMigrasi thead th { height: 46px; background-color: #f1f5f9 !important; box-shadow: inset 0 -1px 0 #cbd5e1, 0 1px 0 #cbd5e1; top: 0 !important; position: sticky !important; z-index: 50 !important; }
   @media (min-width: 768px) { #tableExportMigrasi thead th { height: 48px; } }
 
-  /* Body Data Normal */
-  #tableExportMigrasi tbody td { position: relative; z-index: 1 !important; }
-
-  /* Kunci Lebar & Z-Index Modal Sticky (Responsif Hide Rekening) */
-  .mod-freeze-rek { position: sticky !important; left: 0 !important; z-index: 60 !important; box-shadow: inset -1px 0 0 #cbd5e1; background-color: #e2e8f0 !important; min-width: 100px; max-width: 100px;}
-  .mod-freeze-nas { position: sticky !important; left: 0 !important; z-index: 60 !important; box-shadow: inset -1px 0 0 #cbd5e1; background-color: #e2e8f0 !important; min-width: 160px; max-width: 160px;}
+  /* Kunci Lebar & Z-Index Modal Sticky (Responsif) 
+     🔥 DITAMBAHKAN ID TABEL AGAR CSS LEBIH KUAT DARI TH BIASA 🔥 */
+  #tableExportMigrasi thead th.mod-freeze-rek { position: sticky !important; left: 0 !important; z-index: 70 !important; box-shadow: inset -1px 0 0 #cbd5e1; background-color: #f1f5f9 !important; min-width: 100px; max-width: 100px;}
+  #tableExportMigrasi thead th.mod-freeze-nas { position: sticky !important; left: 0 !important; z-index: 70 !important; box-shadow: inset -1px 0 0 #cbd5e1; background-color: #f1f5f9 !important; min-width: 160px; max-width: 160px;}
+  #tableExportMigrasi thead th.mod-freeze-nas-lunas { position: sticky !important; left: 0 !important; z-index: 70 !important; box-shadow: inset -1px 0 0 #cbd5e1; background-color: #f1f5f9 !important; min-width: 160px; max-width: 160px;}
   
-  .mod-td-rek { position: sticky !important; left: 0 !important; z-index: 20 !important; background-color: #fff !important; box-shadow: inset -1px 0 0 #e2e8f0; min-width: 100px; max-width: 100px;}
-  .mod-td-nas { position: sticky !important; left: 0 !important; z-index: 20 !important; background-color: #fff !important; box-shadow: inset -1px 0 0 #e2e8f0; min-width: 160px; max-width: 160px;}
+  .mod-td-rek { position: sticky !important; left: 0 !important; z-index: 30 !important; background-color: #ffffff !important; box-shadow: inset -1px 0 0 #e2e8f0; min-width: 100px; max-width: 100px;}
+  .mod-td-nas { position: sticky !important; left: 0 !important; z-index: 30 !important; background-color: #ffffff !important; box-shadow: inset -1px 0 0 #e2e8f0; min-width: 160px; max-width: 160px;}
+  .mod-td-nas-lunas { position: sticky !important; left: 0 !important; z-index: 30 !important; background-color: #ffffff !important; box-shadow: inset -1px 0 0 #e2e8f0; min-width: 160px; max-width: 160px;}
   
   @media (min-width: 768px) { 
-      .mod-freeze-rek, .mod-td-rek { min-width: 120px; max-width: 120px; }
+      #tableExportMigrasi thead th.mod-freeze-rek, .mod-td-rek { min-width: 120px; max-width: 120px; }
+      
       /* Nasabah geser karena ada rekening di kiri */
-      .mod-freeze-nas { left: 120px !important; min-width: 250px; max-width: 250px; } 
-      .mod-td-nas { left: 120px !important; min-width: 250px; max-width: 250px; box-shadow: 2px 0 4px -2px rgba(0,0,0,0.1); } 
+      #tableExportMigrasi thead th.mod-freeze-nas { left: 120px !important; min-width: 250px; max-width: 250px; box-shadow: inset -1px 0 0 #cbd5e1 !important; } 
+      .mod-td-nas { left: 120px !important; min-width: 250px; max-width: 250px; box-shadow: inset -1px 0 0 #e2e8f0 !important; } 
+
+      /* Lunas tidak ada rekening, jadi tetap nempel di left 0 */
+      #tableExportMigrasi thead th.mod-freeze-nas-lunas { min-width: 250px; max-width: 250px; }
+      .mod-td-nas-lunas { min-width: 250px; max-width: 250px; }
   }
 
   /* Hover Effect Modal Detail */
   #bodyDetail tr:hover td { background-color: #f8fafc !important; }
-  #bodyDetail tr:hover td.mod-td-rek, #bodyDetail tr:hover td.mod-td-nas { filter: brightness(0.98); }
+  #bodyDetail tr:hover td.mod-td-rek, #bodyDetail tr:hover td.mod-td-nas, #bodyDetail tr:hover td.mod-td-nas-lunas { filter: brightness(0.98); }
 
   /* Form Inputs */
   .inp { border:1px solid #cbd5e1; border-radius:6px; padding:0 8px; background:#fff; outline:none; transition: border 0.2s;}
@@ -335,7 +338,6 @@ async function populateKantor(uKode){
     } catch{}
 }
 
-// 🔥 PERBAIKAN 1: Hapus validasi branch kosong agar tetap menarik data kankas
 async function loadKankasModalDropdown() {
     const elKankas = document.getElementById('opt_kankas_modal');
     const branch = document.getElementById('opt_kantor').value;
@@ -487,11 +489,11 @@ function renderMatrix(data){
     let h = '';
     
     // Baris Realisasi
-    h += `<tr class="bg-emerald-50/40 hover:bg-emerald-100 transition border-b border-emerald-100 h-[48px] md:h-[52px]">
+    h += `<tr class="bg-emerald-50/40 hover:bg-emerald-100 border-b border-emerald-100 h-[48px] md:h-[52px]">
             <td class="sticky-left px-2 md:px-3 text-left font-bold text-emerald-800 bg-emerald-50 border-r border-emerald-200 text-[10px] md:text-sm align-middle leading-tight min-w-[90px] md:min-w-[130px] truncate shadow-[inset_-1px_0_0_#a7f3d0]">REALISASI BARU</td>
             <td class="border-r border-emerald-100 text-slate-400 align-middle text-center">-</td>
             <td class="border-r border-emerald-100 px-2 md:px-3 align-middle text-center">
-                <div class="cursor-pointer transition flex flex-col justify-center h-full" onclick="openDetail('REALISASI','0')">
+                <div class="cursor-pointer flex flex-col justify-center h-full" onclick="openDetail('REALISASI','0')">
                     <div class="font-bold text-emerald-800 text-[10.5px] md:text-sm mb-0.5">${fmtK(real.os)}</div>
                     <div class="text-[8px] md:text-[10px] text-emerald-600 font-medium">NOA: <span class="font-bold text-emerald-800">${fmt(real.noa)}</span></div>
                 </div>
@@ -505,7 +507,7 @@ function renderMatrix(data){
     // Loop Matrix Bucket
     BUCKETS.forEach((f, i) => {
         const m1 = data.summary_m1[f];
-        h += `<tr class="hover:bg-slate-50 transition border-b border-slate-200 h-[48px] md:h-[52px]">
+        h += `<tr class="hover:bg-slate-50 border-b border-slate-200 h-[48px] md:h-[52px]">
                 <td class="sticky-left px-2 md:px-3 text-left font-bold text-slate-700 bg-white border-r border-slate-200 text-[11px] md:text-sm align-middle min-w-[90px] md:min-w-[130px] truncate shadow-[inset_-1px_0_0_#e2e8f0]">${f}</td>
                 <td class="border-r border-slate-200 text-center px-2 md:px-3 align-middle bg-slate-50/30">
                     <div class="font-bold text-slate-800 text-[10.5px] md:text-sm mb-0.5">${fmtK(m1.os_m1)}</div>
@@ -533,7 +535,7 @@ function renderMatrix(data){
             let cursor = (c.os > 0) ? 'cursor-pointer hover:brightness-95 hover:shadow-inner' : '';
 
             h += `<td class="border-r border-slate-200 px-2 md:px-3 align-middle text-center ${bgClass}">
-                    <div class="h-full flex flex-col justify-center ${cursor} transition" ${clickEv}>
+                    <div class="h-full flex flex-col justify-center ${cursor}" ${clickEv}>
                         <div class="font-bold text-[10.5px] md:text-sm ${textClass} mb-0.5">${fmtK(c.os)}</div>
                         <div class="text-[8px] md:text-[10px] ${noaClass} font-medium">NOA: <span class="font-bold">${fmt(c.noa)}</span></div>
                     </div>
@@ -545,7 +547,7 @@ function renderMatrix(data){
                 <div class="font-bold text-blue-700 text-[10.5px] md:text-sm align-top pt-2 md:pt-3">${fmtK(ar)}</div>
               </td>
               <td class="border-r border-slate-200 px-2 md:px-3 text-center align-middle bg-slate-50/30">
-                <div class="h-full flex flex-col justify-center cursor-pointer hover:bg-blue-50 transition" onclick="openDetail('${f}','O')">
+                <div class="h-full flex flex-col justify-center cursor-pointer hover:bg-blue-50" onclick="openDetail('${f}','O')">
                     <div class="font-bold text-blue-800 text-[10.5px] md:text-sm mb-0.5">${fmtK(l.pelunasan)}</div>
                     <div class="text-[8px] md:text-[10px] text-blue-500">NOA: <span class="font-bold text-blue-700">${fmt(l.noa)}</span></div>
                 </div>
@@ -597,28 +599,12 @@ window.exportExcelRekapMigrasi = function() {
     a.click();
 }
 
-function formatWA(phone) {
-    if (!phone) return null;
-    let cleaned = phone.replace(/\D/g, ''); 
-    if (cleaned.startsWith('0')) { cleaned = '62' + cleaned.substring(1); } 
-    else if (cleaned.startsWith('8')) { cleaned = '62' + cleaned; }
-    if (cleaned.length < 10) return null;
-    return cleaned;
-}
-
+// 🔥 FUNGSI TAMPIL NOMOR HP TANPA TOMBOL WA 🔥
 function createWABtn(phone) {
-    const formatted = formatWA(phone);
-    if (!formatted) return `<span class="text-slate-400 font-mono text-[9px] md:text-xs">${phone || '-'}</span>`;
-    
-    // 🔥 Pesan default dicomment, langsung tembak no WA aja 🔥
-    const waUrl = `https://wa.me/${formatted}`;
-    
-    return `
-        <a href="${waUrl}" target="_blank" class="inline-flex items-center gap-1 md:gap-1.5 px-2 md:px-3 py-1 bg-emerald-50 hover:bg-emerald-500 hover:text-white text-emerald-600 rounded-md md:rounded-lg border border-emerald-200 transition font-bold text-[9px] md:text-xs" title="Hubungi via WhatsApp">
-            <svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor" class="md:w-[14px] md:h-[14px]"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.319-.883-.665-1.479-1.488-1.653-1.787-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51a12.8 12.8 0 0 0-.57-.01c-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413z"/></svg>
-            <span class="ml-1 md:ml-1.5">WA</span>
-        </a>
-    `;
+    if (!phone || phone.trim() === '') {
+        return `<span class="text-slate-400 font-mono text-[9px] md:text-[11px]">-</span>`;
+    }
+    return `<span class="text-slate-600 font-mono font-bold text-[9px] md:text-[11px] tracking-wider">${phone}</span>`;
 }
 
 // 🔥 PERBAIKAN 2: Panggil fungsi load Kankas bersamaan dengan AO saat klik open detail
@@ -645,7 +631,7 @@ function openDetail(f,t){
     });
 }
 
-// 🔥 HEADER MODAL SESUAI MODE (HILANGKAN OS M-1) 🔥
+// 🔥 HEADER MODAL SESUAI MODE (UBAH HEADER JADI No HP) 🔥
 function renderModalHeaderMigrasi() {
     const mHead = document.getElementById('headModalMigrasi');
     if (modalState.to !== 'O') {
@@ -654,7 +640,7 @@ function renderModalHeaderMigrasi() {
                 <th class="mod-freeze-rek hidden md:table-cell px-2 md:px-3 py-1.5 md:py-2 border-b border-r border-slate-300 w-[100px] md:w-[120px] rounded-tl-xl text-blue-900 text-left md:text-center">Rekening</th>
                 <th class="mod-freeze-nas px-2 md:px-4 py-1.5 md:py-2 border-b border-r border-slate-300 w-[160px] md:w-[250px] text-blue-900 text-left md:text-center">Nama Nasabah</th>
                 <th class="px-2 md:px-4 py-1.5 md:py-2 border-b border-r border-slate-300 w-[180px] md:w-[250px] text-center">Alamat</th>
-                <th class="px-2 md:px-3 py-1.5 md:py-2 border-b border-r border-slate-300 w-[110px] md:w-[130px] text-center">No HP (WA)</th>
+                <th class="px-2 md:px-3 py-1.5 md:py-2 border-b border-r border-slate-300 w-[110px] md:w-[130px] text-center">No HP</th>
                 <th class="px-2 md:px-3 py-1.5 md:py-2 border-b border-r border-slate-300 w-[100px] md:w-[120px] text-center">Kankas</th>
                 <th class="px-2 md:px-4 py-1.5 md:py-2 border-b border-r border-slate-300 w-[110px] md:w-[140px] text-center text-blue-700">AO</th>
                 <th class="px-2 md:px-4 py-1.5 md:py-2 border-b border-r border-green-200 w-[110px] md:w-[140px] text-right bg-green-50 text-green-700">OS Current</th>
@@ -752,7 +738,7 @@ async function loadDetail(){
                 else if(x.status_migrasi === 'New') bgStat = 'bg-emerald-50 text-emerald-700 border-emerald-200';
 
                 // 🔥 NILAI ASLI MURNI (TANPA DIBAGI 1000) 🔥
-                h+=`<tr class="transition border-b border-slate-100 h-[40px] md:h-[48px]">
+                h+=`<tr class="border-b border-slate-100 hover:bg-slate-50 h-[40px] md:h-[48px]">
                       <td class="mod-td-rek hidden md:table-cell px-2 md:px-3 py-1.5 md:py-2 font-mono text-[9.5px] md:text-[11px] text-slate-500">${x.no_rekening}</td>
                       <td class="mod-td-nas px-2 md:px-4 py-1.5 md:py-2 font-bold text-[9.5px] md:text-[11px] text-slate-700 truncate" title="${x.nama_nasabah}">${x.nama_nasabah}</td>
                       <td class="px-2 md:px-4 py-1.5 md:py-2 text-slate-500 text-[9.5px] md:text-[11px] border-r border-slate-100 whitespace-nowrap text-center" title="${alamatLengkap}">${alamatPendek}</td>
@@ -771,8 +757,8 @@ async function loadDetail(){
                 let badge = `<span class="inline-flex items-center px-1.5 md:px-2.5 py-0.5 md:py-1 rounded text-[9px] md:text-xs font-bold bg-blue-100 text-blue-700 border border-blue-200">PROSPEK</span>`;
                 if(x.status_lunas === 'REFINANCING / Top Up') badge = `<span class="inline-flex items-center px-1.5 md:px-2.5 py-0.5 md:py-1 rounded text-[9px] md:text-xs font-bold bg-green-100 text-green-700 border border-green-200">REFINANCING</span>`;
 
-                h += `<tr class="transition border-b border-slate-100 h-[40px] md:h-[48px]">
-                      <td class="mod-td-nas px-2 md:px-4 py-1.5 md:py-2 font-bold text-slate-700 truncate shadow-[2px_0_4px_-2px_rgba(0,0,0,0.1)] text-[9.5px] md:text-sm">
+                h += `<tr class="border-b border-slate-100 hover:bg-slate-50 h-[40px] md:h-[48px]">
+                      <td class="mod-td-nas-lunas px-2 md:px-4 py-1.5 md:py-2 font-bold text-slate-700 truncate text-[9.5px] md:text-sm">
                           ${x.nama_nasabah}
                           <div class="text-[8px] md:text-xs text-slate-400 font-mono mt-0.5 font-normal">ID: ${x.nasabah_id}</div>
                       </td>

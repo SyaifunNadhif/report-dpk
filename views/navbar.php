@@ -102,10 +102,11 @@
           </button>
           <div id="dropdownPenagihan" class="dropdown-panel">
             <ul class="nb-list">
+              <li><a href="migrasi_kolek" class="nb-item nb-tap">Migrasi Kolek</a></li>
               <li><a href="actual_kredit" class="nb-item nb-tap">Bucket DPD and Kolek</a></li>
               <li><a href="migrasi_bucket" class="nb-item nb-tap">Migrasi Bucket</a></li>
               <li><a href="search_debitur" class="nb-item nb-tap">Seach Debitur Kredit</a></li>
-              <li><a href="migrasi_kolek" class="nb-item nb-tap">Migrasi Kolek</a></li>
+              <li><a href="otp_bucket_fe" class="nb-item nb-tap">Otp Bucket FE (31 - 90)</a></li>
             </ul>
           </div>
         </li>
