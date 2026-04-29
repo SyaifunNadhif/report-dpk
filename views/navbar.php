@@ -130,6 +130,9 @@
               <li id="menuLayananDigital">
                 <a href="layanan_digital" class="nb-item nb-tap">Layanan Digital</a>
               </li>
+              <li id="menuProspek">
+                <a href="prospek" class="nb-item nb-tap">Prosek</a>
+              </li>
             </ul>
           </div>
         </li>

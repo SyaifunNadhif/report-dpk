@@ -24,53 +24,59 @@
   }
   
   table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 12px; }
-  th, td { white-space: nowrap; padding: 8px 10px; border-bottom: 1px solid #f1f5f9; vertical-align: middle; }
+  th, td { white-space: nowrap; padding: 6px 8px; vertical-align: middle; }
   tr:hover td { background-color: #f8fafc; }
 
-  /* --- HEADER TABEL UTAMA --- */
+  /* --- HEADER TABEL UTAMA (FIX ANTI BOCOR/CELAH) --- */
   thead th { 
       position: sticky; z-index: 60; 
       background: #e2e8f0; color: #1e293b; font-weight: 800; 
       text-transform: uppercase; 
       font-size: 11px; letter-spacing: 0.05em; text-align: center;
-      /* Menggunakan box-shadow agar border tidak bocor saat di-scroll */
-      box-shadow: inset 0 -2px 0 #cbd5e1; 
+      /* Pakai box-shadow agar tidak ada spasi putih antar cell */
+      box-shadow: inset -1px 0 0 #cbd5e1, inset 0 1px 0 #cbd5e1; 
   }
   
-  /* Multilevel Header Fix - Patok tinggi baris pertama 38px */
-  thead tr:nth-child(1) th { top: 0; height: 38px; }
-  thead tr:nth-child(2) th { top: 38px; } 
+  /* Multilevel Header Fix - Patok Tinggi Statis */
+  thead tr:nth-child(1) th { top: 0; height: 40px; }
+  /* Khusus TGL & TARGET (Gabung 2 Baris) */
+  thead tr:nth-child(1) th[rowspan="2"] { height: 80px; box-shadow: inset -1px 0 0 #cbd5e1, inset 0 -2px 0 #cbd5e1, inset 0 1px 0 #cbd5e1; }
+  
+  thead tr:nth-child(2) th { top: 40px; height: 40px; box-shadow: inset -1px 0 0 #cbd5e1, inset 0 -2px 0 #cbd5e1; }
 
-  .col-kategori { position: sticky; left: 0; z-index: 45; background: white; border-right: 1px solid #e2e8f0; min-width: 60px; font-weight: bold; text-align: center;}
-  thead th.col-kategori { z-index: 70; background: #e2e8f0; box-shadow: inset -1px -2px 0 #cbd5e1; }
-
-  /* Row Grand Total - Sesuaikan top-nya dengan total tinggi 2 header di atas (sekitar 82px) */
-  .sticky-total td { 
-      position: sticky; top: 82px; z-index: 55; 
-      background: #f4f7fb; font-weight: 800; border-bottom: 2px solid #bfdbfe; 
-      box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); text-align: right;
+  .col-kategori { 
+      position: sticky; left: 0; z-index: 45; background: white; 
+      min-width: 60px; font-weight: bold; text-align: center;
+      box-shadow: inset -1px 0 0 #e2e8f0, inset 0 -1px 0 #f1f5f9;
   }
-  .sticky-total td.col-kategori { z-index: 65; background: #f4f7fb; border-right: 1px solid #bfdbfe; text-align: center; }
+  thead th.col-kategori { z-index: 70; background: #e2e8f0; box-shadow: inset -1px 0 0 #cbd5e1, inset 0 -2px 0 #cbd5e1, inset 0 1px 0 #cbd5e1; }
 
-  /* Animasi Modal */
+  /* Row Grand Total */
+  .sticky-total td { 
+      position: sticky; top: 80px; z-index: 55; 
+      background: #f4f7fb; font-weight: 800; 
+      box-shadow: inset -1px 0 0 #e2e8f0, inset 0 -2px 0 #bfdbfe; text-align: right;
+  }
+  .sticky-total td.col-kategori { z-index: 65; background: #f4f7fb; box-shadow: inset -1px 0 0 #bfdbfe, inset 0 -2px 0 #bfdbfe; text-align: center; }
+
   @keyframes scaleUp { from { transform: scale(0.95); opacity: 0; } to { transform: scale(1); opacity: 1; } }
   .animate-scale-up { animation: scaleUp 0.2s ease-out forwards; }
 
   /* --- TABEL DETAIL MODAL --- */
   #tableDetailProg th, #tableDetailProg td { background-color: #fff; } 
-  #tableDetailProg thead th { position: sticky; top: 0; z-index: 40; background-color: #f1f5f9; box-shadow: inset 0 -2px 0 #cbd5e1; height: 38px;}
-  .mod-freeze-rek { position: sticky; left: 0; z-index: 42 !important; background-color: #f1f5f9 !important; box-shadow: inset -1px 0 0 #cbd5e1; min-width: 100px; max-width: 100px;}
-  .mod-freeze-nas { position: sticky; left: 100px; z-index: 41 !important; background-color: #f1f5f9 !important; box-shadow: inset -1px 0 0 #cbd5e1; min-width: 200px; max-width: 250px;}
-  .mod-td-rek { position: sticky; left: 0; z-index: 32 !important; background-color: #fff !important; box-shadow: inset -1px 0 0 #f1f5f9;}
-  .mod-td-nas { position: sticky; left: 100px; z-index: 31 !important; background-color: #fff !important; box-shadow: inset -1px 0 0 #f1f5f9; }
+  #tableDetailProg thead th { position: sticky; top: 0; z-index: 40; background-color: #f1f5f9; box-shadow: inset -1px 0 0 #cbd5e1, inset 0 -2px 0 #cbd5e1, inset 0 1px 0 #cbd5e1; height: 36px;}
+  .mod-freeze-rek { position: sticky; left: 0; z-index: 42 !important; background-color: #f1f5f9 !important; box-shadow: inset -1px 0 0 #cbd5e1, inset 0 -2px 0 #cbd5e1; min-width: 90px; max-width: 90px;}
+  .mod-freeze-nas { position: sticky; left: 90px; z-index: 41 !important; background-color: #f1f5f9 !important; box-shadow: inset -1px 0 0 #cbd5e1, inset 0 -2px 0 #cbd5e1; min-width: 160px; max-width: 180px;}
+  .mod-td-rek { position: sticky; left: 0; z-index: 32 !important; background-color: #fff !important; box-shadow: inset -1px 0 0 #f1f5f9, inset 0 -1px 0 #f1f5f9;}
+  .mod-td-nas { position: sticky; left: 90px; z-index: 31 !important; background-color: #fff !important; box-shadow: inset -1px 0 0 #f1f5f9, inset 0 -1px 0 #f1f5f9; }
   tbody.mod-body tr:hover td { background-color: #f8fafc !important; }
   tbody.mod-body tr:hover td.mod-td-rek, tbody.mod-body tr:hover td.mod-td-nas { filter: brightness(0.97); }
 
   @media (max-width: 767px) {
-      .col-kategori { left: 0 !important; z-index: 45 !important; min-width: 60px; }
+      .col-kategori { left: 0 !important; z-index: 45 !important; min-width: 50px; font-size: 10px;}
       thead th.col-kategori { z-index: 70 !important; }
       .sticky-total td.col-kategori { z-index: 65 !important; }
-      .mod-freeze-nas, .mod-td-nas { left: 0 !important; box-shadow: inset -1px 0 0 #f1f5f9; min-width: 150px;}
+      .mod-freeze-nas, .mod-td-nas { left: 0 !important; box-shadow: inset -1px 0 0 #f1f5f9; min-width: 120px;}
       .mod-freeze-rek, .mod-td-rek { display: none !important; }
   }
 </style>
@@ -80,52 +86,52 @@
   <div class="flex flex-col xl:flex-row xl:items-end justify-between gap-3 mb-4 shrink-0">
     <div class="flex items-start justify-between w-full xl:w-auto">
         <div>
-            <h1 class="text-xl md:text-2xl font-bold flex items-center gap-2 text-slate-800">
+            <h1 class="text-lg md:text-2xl font-bold flex items-center gap-2 text-slate-800">
                 <span class="bg-emerald-600 text-white p-1.5 rounded-lg text-sm shadow-sm">
                     <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path></svg>
                 </span> 
-                <span>Otp Bucket FE (31 - 90)</span>
+                <span>Rekap OTP Migration</span>
             </h1>
-             <p class="text-[9px] md:text-xs text-rose-600 font-bold italic ml-8 md:ml-[42px] leading-tight">
+             <p class="text-[8px] md:text-xs text-rose-600 font-bold italic ml-8 md:ml-[42px] leading-tight">
                  *Berdasarkan Tanggal Jatuh Tempo
               </p>
         </div>
 
-        <button id="btnToggleProgFilter" class="xl:hidden flex items-center gap-1.5 px-3 py-1.5 border border-gray-300 rounded-lg bg-white text-sm font-semibold text-slate-700 shadow-sm transition">
+        <button id="btnToggleProgFilter" class="xl:hidden flex items-center gap-1.5 px-3 py-1.5 border border-gray-300 rounded-lg bg-white text-xs font-semibold text-slate-700 shadow-sm transition">
             Filter
         </button>
     </div>
 
     <div id="panelFilterProg" class="hidden xl:block bg-white border border-gray-200 rounded-xl p-3 shadow-sm w-full xl:w-auto transition-all">
         <form id="formFilterProg" class="flex flex-col md:flex-row items-end gap-2 md:gap-3 w-full">
-            <div class="flex flex-col w-full md:w-[130px]">
-                <label class="text-[9px] font-extrabold text-slate-500 uppercase ml-1 mb-1 tracking-wider">CLOSING (M-1)</label>
+            <div class="flex flex-col w-full md:w-[120px]">
+                <label class="text-[8px] md:text-[9px] font-extrabold text-slate-500 uppercase ml-1 mb-1 tracking-wider">CLOSING (M-1)</label>
                 <input type="date" id="closing_date_otp" class="inp shadow-sm text-slate-700" required>
             </div>
 
-            <div class="flex flex-col w-full md:w-[130px]">
-                <label class="text-[9px] font-extrabold text-slate-500 uppercase ml-1 mb-1 tracking-wider">HARIAN (ACTUAL)</label>
+            <div class="flex flex-col w-full md:w-[120px]">
+                <label class="text-[8px] md:text-[9px] font-extrabold text-slate-500 uppercase ml-1 mb-1 tracking-wider">HARIAN (ACTUAL)</label>
                 <input type="date" id="harian_date_otp" class="inp shadow-sm text-slate-700" required>
             </div>
 
-            <div class="flex flex-col w-full md:w-[120px]">
-                <label class="text-[9px] font-extrabold text-slate-500 uppercase ml-1 mb-1 tracking-wider">TYPE BUCKET</label>
+            <div class="flex flex-col w-full md:w-[100px]">
+                <label class="text-[8px] md:text-[9px] font-extrabold text-slate-500 uppercase ml-1 mb-1 tracking-wider">BUCKET</label>
                 <select id="type_bucket_otp" class="inp text-slate-700 shadow-sm" onchange="triggerAutoRefresh()">
-                    <option value="fe_all">GABUNGAN</option>
+                    <option value="fe_all">ALL</option>
                     <option value="31-60">31 - 60</option>
                     <option value="61-90">61 - 90</option>
                 </select>
             </div>
 
-            <div class="flex flex-col w-full md:w-[180px]" id="wrap-cabang">
-                <label class="text-[9px] font-extrabold text-slate-500 uppercase ml-1 mb-1 tracking-wider">CABANG</label>
+            <div class="flex flex-col w-full md:w-[150px]" id="wrap-cabang">
+                <label class="text-[8px] md:text-[9px] font-extrabold text-slate-500 uppercase ml-1 mb-1 tracking-wider">CABANG</label>
                 <select id="opt_kantor_otp" class="inp text-slate-700 shadow-sm truncate" onchange="handleCabangChange()">
                     <option value="">ALL | SEMUA CABANG</option>
                 </select>
             </div>
 
-            <div class="flex flex-col w-full md:w-[150px]">
-                <label id="lbl_sub_otp" class="text-[9px] font-extrabold text-slate-500 uppercase ml-1 mb-1 tracking-wider">KORWIL</label>
+            <div class="flex flex-col w-full md:w-[130px]">
+                <label id="lbl_sub_otp" class="text-[8px] md:text-[9px] font-extrabold text-slate-500 uppercase ml-1 mb-1 tracking-wider">KORWIL</label>
                 <select id="opt_sub_otp" class="inp text-slate-700 shadow-sm truncate" onchange="triggerAutoRefresh()">
                     <option value="">ALL KORWIL</option>
                     <option value="SEMARANG">SEMARANG</option>
@@ -136,11 +142,11 @@
             </div>
             
             <div class="flex gap-2 shrink-0 mt-2 md:mt-0 w-full md:w-auto">
-                <button type="submit" class="flex-1 md:flex-none bg-emerald-600 hover:bg-emerald-700 text-white h-9 px-4 rounded-lg font-bold text-sm shadow-sm flex items-center justify-center gap-2 transition">
-                    <span class="hidden md:inline">CARI</span>
+                <button type="submit" class="flex-1 md:flex-none bg-emerald-600 hover:bg-emerald-700 text-white h-[36px] w-[36px] md:w-[40px] rounded-lg shadow-sm flex items-center justify-center transition" title="Cari Data">
+                    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
                 </button>
-                <button type="button" onclick="exportProgExcel()" class="bg-indigo-600 hover:bg-indigo-700 text-white h-9 px-3 md:w-11 rounded-lg shadow-sm flex items-center justify-center transition" title="Export Rekap">
-                    <span class="md:hidden ml-1 font-bold text-xs">EXCEL</span>
+                <button type="button" onclick="exportProgExcel()" class="bg-indigo-600 hover:bg-indigo-700 text-white h-[36px] w-[36px] md:w-[40px] rounded-lg shadow-sm flex items-center justify-center transition" title="Export Excel Rekap">
+                    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
                 </button>
             </div>
         </form>
@@ -148,25 +154,25 @@
   </div>
 
   <div class="flex-1 min-h-0 relative flex flex-col bg-white rounded-xl shadow-sm border border-slate-200">
-    <div id="loadingProg" class="hidden absolute inset-0 bg-white/80 z-[100] flex flex-col items-center justify-center text-emerald-600 font-bold text-sm backdrop-blur-sm rounded-xl">
-        <div class="animate-spin h-8 w-8 border-4 border-emerald-200 border-t-emerald-600 rounded-full mb-2"></div>
-        Mengkalkulasi Roll Rate...
+    <div id="loadingProg" class="hidden absolute inset-0 bg-white/80 z-[100] flex flex-col items-center justify-center text-emerald-600 font-bold text-xs backdrop-blur-sm rounded-xl">
+        <div class="animate-spin h-6 w-6 border-4 border-emerald-200 border-t-emerald-600 rounded-full mb-2"></div>
+        Kalkulasi...
     </div>
 
     <div class="table-wrapper custom-scrollbar" id="progScroller">
       <table id="tabelProgKredit">
         <thead id="theadProg">
           <tr>
-            <th class="col-kategori border-r border-slate-300" rowspan="2" style="vertical-align: middle;">TGL</th>
-            <th class="border-r border-slate-300 text-blue-800" rowspan="2" style="vertical-align: middle;">TARGET (M-1)</th>
-            <th class="border-b border-slate-300" colspan="5" style="vertical-align: middle;">STATUS MIGRASI (M)</th>
+            <th class="col-kategori" rowspan="2">TGL</th>
+            <th rowspan="2" class="text-blue-800">TARGET (M-1)</th>
+            <th colspan="5">STATUS MIGRASI (M)</th>
           </tr>
           <tr>
-              <th class="border-r border-slate-300 text-emerald-600 py-2 leading-tight">BTC<br><span class="text-[9px] font-medium">(LANCAR)</span></th>
-              <th class="border-r border-slate-300 text-teal-600 py-2 leading-tight">BACKFLOW<br><span class="text-[9px] font-medium">(MEMBAIK)</span></th>
-              <th class="border-r border-slate-300 text-orange-500 py-2 leading-tight">STAY<br><span class="text-[9px] font-medium">(TETAP)</span></th>
-              <th class="text-red-600 py-2 leading-tight">MIGRASI<br><span class="text-[9px] font-medium">(MEMBURUK)</span></th>
-              <th class="border-r border-slate-300 text-slate-500 py-2 leading-tight">RUN OFF<br><span class="text-[9px] font-medium">(LUNAS)</span></th>
+            <th class="text-emerald-600 leading-tight">BTC<br><span class="text-[8px] md:text-[9px] font-medium">(LANCAR)</span></th>
+            <th class="text-teal-600 leading-tight">BACKFLOW<br><span class="text-[8px] md:text-[9px] font-medium">(MEMBAIK)</span></th>
+            <th class="text-orange-500 leading-tight">STAY<br><span class="text-[8px] md:text-[9px] font-medium">(TETAP)</span></th>
+            <th class="text-red-600 leading-tight">MIGRASI<br><span class="text-[8px] md:text-[9px] font-medium">(MEMBURUK)</span></th>
+            <th class="text-slate-500 leading-tight">RUN OFF<br><span class="text-[8px] md:text-[9px] font-medium">(LUNAS)</span></th>
           </tr>
         </thead>
         <tbody id="totalProg"></tbody>
@@ -183,55 +189,61 @@
     <div class="flex flex-col bg-white border-b shrink-0 w-full z-50">
         <div class="flex flex-row items-center justify-between px-3 py-2.5 md:px-4 md:py-3 gap-2 w-full">
             <div class="flex-1 min-w-0">
-              <h3 class="font-bold text-slate-800 flex items-center gap-1.5 text-[12px] md:text-xl leading-none truncate">
-                  <span class="w-1.5 md:w-2 h-4 md:h-6 bg-emerald-600 rounded-full hidden md:block shrink-0"></span> 
+              <h3 class="font-bold text-slate-800 flex items-center gap-1.5 text-[11px] md:text-lg leading-none truncate">
+                  <span class="w-1.5 md:w-2 h-3 md:h-5 bg-emerald-600 rounded-full hidden md:block shrink-0"></span> 
                   <span id="mdlTitleProg" class="truncate">Detail Debitur</span>
               </h3>
-              <p class="text-[9px] md:text-sm text-slate-500 mt-1 md:ml-4 font-mono font-medium leading-none truncate" id="mdlSubTitleProg">...</p>
+              <p class="text-[8px] md:text-xs text-slate-500 mt-1 md:ml-3 font-mono font-medium leading-none truncate" id="mdlSubTitleProg">...</p>
             </div>
             
-            <div class="flex flex-row items-center gap-1.5 md:gap-2 shrink-0">
-                <select id="opt_kankas_prog_modal" class="inp px-1 md:px-2 h-[32px] md:h-[36px] w-[120px] md:w-[180px] text-[10px] md:text-xs font-bold text-slate-700 bg-slate-50 border-slate-200 cursor-pointer" onchange="loadDetailProgPage(1)">
-                    <option value="">SEMUA KANKAS</option>
+            <div class="flex flex-row items-center gap-1 md:gap-2 shrink-0">
+                <select id="opt_kankas_prog_modal" class="inp px-1 md:px-2 h-[28px] md:h-[36px] w-[90px] md:w-[150px] text-[9px] md:text-xs font-bold text-slate-700 bg-slate-50 border-slate-200 cursor-pointer" onchange="loadDetailProgPage(1)">
+                    <option value="">ALL KANKAS</option>
                 </select>
 
-                <button onclick="exportDetailProgExcel()" class="btn-icon bg-indigo-600 hover:bg-indigo-700 text-white px-2.5 md:px-4 h-[32px] md:h-[36px] rounded-lg shadow-sm shrink-0 transition flex items-center gap-1">
-                    <span class="font-bold text-xs uppercase tracking-wider">Export Excel</span>
+                <button onclick="exportDetailProgExcel()" class="btn-icon bg-indigo-600 hover:bg-indigo-700 text-white h-[28px] w-[28px] md:h-[36px] md:w-[36px] rounded-lg shadow-sm shrink-0 transition flex items-center justify-center" title="Export Excel Detail">
+                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
                 </button>
-                <button onclick="closeModalProg()" class="w-[32px] h-[32px] md:w-[36px] md:h-[36px] flex items-center justify-center rounded-lg bg-red-50 hover:bg-red-500 hover:text-white text-red-500 transition font-bold text-xl leading-none shrink-0">&times;</button>
+                <button onclick="closeModalProg()" class="w-[28px] h-[28px] md:w-[36px] md:h-[36px] flex items-center justify-center rounded-lg bg-red-50 hover:bg-red-500 hover:text-white text-red-500 transition font-bold text-lg leading-none shrink-0">&times;</button>
             </div>
         </div>
     </div>
 
     <div class="flex-1 overflow-auto bg-slate-50 relative custom-scrollbar">
       <div id="loadingModalProg" class="hidden absolute inset-0 bg-white/90 z-40 flex flex-col items-center justify-center text-emerald-600 backdrop-blur-sm">
-         <div class="animate-spin h-8 w-8 md:h-10 md:w-10 border-4 border-emerald-200 border-t-emerald-600 rounded-full mb-2"></div>
-         <span class="text-[10px] md:text-sm font-bold uppercase tracking-widest">Memuat Detail...</span>
+         <div class="animate-spin h-6 w-6 md:h-10 md:w-10 border-4 border-emerald-200 border-t-emerald-600 rounded-full mb-2"></div>
+         <span class="text-[9px] md:text-xs font-bold uppercase tracking-widest">Loading...</span>
       </div>
       
       <table class="w-max min-w-full text-left text-slate-700 table-fixed" id="tableDetailProg">
-        <thead class="text-[10px] md:text-xs text-slate-600 uppercase tracking-wider select-none">
+        <thead class="text-[8.5px] md:text-xs text-slate-600 uppercase tracking-wider select-none">
             <tr>
-                <th class="mod-freeze-rek px-2 md:px-3 hidden md:table-cell py-3" style="vertical-align: middle;">REKENING</th>
-                <th class="mod-freeze-nas px-2 md:px-4 py-3" style="vertical-align: middle;">NAMA NASABAH</th>
-                <th class="px-2 md:px-3 text-center w-[120px]" style="vertical-align: middle;">KANKAS</th>
-                <th class="px-2 md:px-3 text-center w-[80px] text-orange-600" style="vertical-align: middle;">TGL JT</th>
-                <th class="px-2 md:px-4 text-right w-[130px] text-blue-800" style="vertical-align: middle;">OS (CURR)</th>
-                <th class="px-2 md:px-4 text-right w-[110px] text-emerald-600" style="vertical-align: middle;">TABUNGAN</th>
-                <th class="px-2 md:px-4 text-right w-[110px] text-red-500" style="vertical-align: middle;">TOT. TUNGGAKAN</th>
-                <th class="px-2 md:px-3 text-center w-[80px]" style="vertical-align: middle;">DPD (M)</th>
-                <th class="px-2 md:px-3 text-center w-[130px] text-emerald-700" style="vertical-align: middle;">STATUS MIGRASI</th>
+                <th class="mod-freeze-rek px-1 md:px-2 hidden md:table-cell py-2">REKENING</th>
+                <th class="mod-freeze-nas px-1 md:px-3 py-2">NAMA NASABAH</th>
+                <th class="px-1 md:px-2 text-center w-[40px]">KOL</th>
+                <th class="px-2 md:px-3 text-left w-[150px]">ALAMAT</th>
+                <th class="px-1 md:px-2 text-center w-[80px]">NO HP</th>
+                <th class="px-1 md:px-2 text-center w-[90px]">KANKAS</th>
+                <th class="px-1 md:px-2 text-center w-[70px] text-orange-600">TGL JT</th>
+                <th class="px-2 md:px-3 text-right w-[110px] text-blue-800">OS (CURR)</th>
+                <th class="px-2 md:px-3 text-right w-[90px] text-emerald-600">TABUNGAN</th>
+                <th class="px-2 md:px-3 text-right w-[90px] text-red-600">TGK POKOK</th>
+                <th class="px-2 md:px-3 text-right w-[90px] text-red-600">TGK BUNGA</th>
+                <th class="px-1 md:px-2 text-center w-[50px] text-red-600">DPD PK</th>
+                <th class="px-1 md:px-2 text-center w-[50px] text-red-600">DPD BG</th>
+                <th class="px-2 md:px-3 text-center w-[60px]">DPD M</th>
+                <th class="px-2 md:px-3 text-center w-[110px] text-emerald-700">MIGRASI</th>
             </tr>
         </thead>
-        <tbody id="bodyModalProg" class="mod-body text-[9.5px] md:text-xs"></tbody>
+        <tbody id="bodyModalProg" class="mod-body text-[8.5px] md:text-xs"></tbody>
       </table>
     </div>
 
-    <div class="px-3 py-2.5 md:px-5 md:py-4 border-t bg-white flex justify-between items-center shrink-0">
-      <span class="text-[9px] md:text-sm font-bold text-slate-600 bg-slate-100 px-2 md:px-3 py-1 rounded-md md:rounded-lg" id="pageInfoProg">0 Data</span>
+    <div class="px-2 py-2 md:px-5 md:py-4 border-t bg-white flex justify-between items-center shrink-0">
+      <span class="text-[8.5px] md:text-xs font-bold text-slate-600 bg-slate-100 px-1.5 md:px-3 py-1 rounded-md" id="pageInfoProg">0 Data</span>
       <div class="flex gap-1 md:gap-2">
-          <button id="btnPrevProg" onclick="changePageProg(-1)" class="px-2.5 md:px-4 py-1.5 md:py-2 bg-white border border-slate-300 rounded-md md:rounded-lg text-[9px] md:text-sm font-bold text-slate-600 hover:bg-slate-50 disabled:opacity-50 shadow-sm">« Prev</button>
-          <button id="btnNextProg" onclick="changePageProg(1)" class="px-2.5 md:px-4 py-1.5 md:py-2 bg-white border border-slate-300 rounded-md md:rounded-lg text-[9px] md:text-sm font-bold text-slate-600 hover:bg-slate-50 disabled:opacity-50 shadow-sm">Next »</button>
+          <button id="btnPrevProg" onclick="changePageProg(-1)" class="px-2 md:px-4 py-1 md:py-2 bg-white border border-slate-300 rounded-md text-[8.5px] md:text-xs font-bold text-slate-600 hover:bg-slate-50 disabled:opacity-50 shadow-sm">« Prev</button>
+          <button id="btnNextProg" onclick="changePageProg(1)" class="px-2 md:px-4 py-1 md:py-2 bg-white border border-slate-300 rounded-md text-[8.5px] md:text-xs font-bold text-slate-600 hover:bg-slate-50 disabled:opacity-50 shadow-sm">Next »</button>
       </div>
     </div>
   </div>
@@ -256,9 +268,6 @@
       document.getElementById('panelFilterProg').classList.toggle('hidden');
   });
 
-  // ==========================================
-  // INISIALISASI
-  // ==========================================
   window.addEventListener('DOMContentLoaded', async () => {
     const today = new Date();
     document.getElementById('harian_date_otp').value = today.toISOString().split('T')[0];
@@ -344,9 +353,6 @@
       triggerAutoRefresh(); 
   });
 
-  // ==========================================
-  // FETCH REKAP DATA
-  // ==========================================
   async function fetchProgKredit() {
       const loading = document.getElementById('loadingProg');
       const cabangVal = document.getElementById('opt_kantor_otp').value;
@@ -389,39 +395,38 @@
       tbodyTotal.innerHTML = '';
       if (!gt) return;
       
+      // URUTAN BARU: BTC, BACKFLOW, STAY, MIGRASI, RUNOFF
       tbodyTotal.innerHTML = `
         <tr class="sticky-total">
             <td class="col-kategori text-center text-slate-800 uppercase tracking-widest text-[11px] leading-tight pt-3">TOTAL</td>
-            <td class="text-right font-black text-blue-800 border-l border-slate-300">
+            <td class="text-right font-black text-blue-800 border-r border-slate-300">
                 <a href="#" onclick="openModalProg('ALL', 'ALL'); return false;" class="hover:underline">${fmt(gt.m1_os)}</a>
-                <div class="text-[10px] text-slate-500 font-semibold">${fmt(gt.m1_noa)} NOA</div>
+                <div class="text-[9px] text-slate-500 font-semibold">${fmt(gt.m1_noa)} NOA</div>
             </td>
             
-
-            
-            <td class="border-l border-slate-300 border-b-2 border-b-emerald-500">
+            <td class="border-r border-slate-300 border-b-2 border-b-emerald-500">
                 <a href="#" onclick="openModalProg('ALL', 'BTC'); return false;" class="text-emerald-600 hover:underline hover:text-emerald-800">${fmt(gt.btc_os)}</a>
-                <div class="text-[10px] text-emerald-600/70 font-semibold">${fmt(gt.btc_noa)} NOA | ${fmt2(gt.btc_pct)}%</div>
+                <div class="text-[9px] text-emerald-600/70 font-semibold">${fmt(gt.btc_noa)} NOA | ${fmt2(gt.btc_pct)}%</div>
             </td>
 
-            <td class="border-l border-slate-300 border-b-2 border-b-teal-400">
+            <td class="border-r border-slate-300 border-b-2 border-b-teal-400">
                 <a href="#" onclick="openModalProg('ALL', 'BACKFLOW'); return false;" class="text-teal-600 hover:underline hover:text-teal-800">${fmt(gt.backflow_os)}</a>
-                <div class="text-[10px] text-teal-600/70 font-semibold">${fmt(gt.backflow_noa)} NOA | ${fmt2(gt.backflow_pct)}%</div>
+                <div class="text-[9px] text-teal-600/70 font-semibold">${fmt(gt.backflow_noa)} NOA | ${fmt2(gt.backflow_pct)}%</div>
             </td>
 
-            <td class="border-l border-slate-300 border-b-2 border-b-orange-400">
+            <td class="border-r border-slate-300 border-b-2 border-b-orange-400">
                 <a href="#" onclick="openModalProg('ALL', 'STAY'); return false;" class="text-orange-500 hover:underline hover:text-orange-700">${fmt(gt.stay_os)}</a>
-                <div class="text-[10px] text-orange-500/70 font-semibold">${fmt(gt.stay_noa)} NOA | ${fmt2(gt.stay_pct)}%</div>
+                <div class="text-[9px] text-orange-500/70 font-semibold">${fmt(gt.stay_noa)} NOA | ${fmt2(gt.stay_pct)}%</div>
             </td>
 
-            <td class="border-l border-slate-300 border-b-2 border-b-red-500">
+            <td class="border-r border-slate-300 border-b-2 border-b-red-500">
                 <a href="#" onclick="openModalProg('ALL', 'MIGRASI'); return false;" class="text-red-600 hover:underline hover:text-red-800">${fmt(gt.migrasi_os)}</a>
-                <div class="text-[10px] text-red-600/70 font-semibold">${fmt(gt.migrasi_noa)} NOA | ${fmt2(gt.migrasi_pct)}%</div>
+                <div class="text-[9px] text-red-600/70 font-semibold">${fmt(gt.migrasi_noa)} NOA | ${fmt2(gt.migrasi_pct)}%</div>
             </td>
 
-            <td class="border-l border-slate-300 border-b-2 border-b-slate-400">
+            <td class="border-b-2 border-b-slate-400">
                 <a href="#" onclick="openModalProg('ALL', 'RUNOFF'); return false;" class="text-slate-600 hover:underline hover:text-slate-800">${fmt(gt.runoff_os)}</a>
-                <div class="text-[10px] text-slate-400 font-semibold">${fmt(gt.runoff_noa)} NOA | ${fmt2(gt.runoff_pct)}%</div>
+                <div class="text-[9px] text-slate-400 font-semibold">${fmt(gt.runoff_noa)} NOA | ${fmt2(gt.runoff_pct)}%</div>
             </td>
         </tr>`;
   }
@@ -433,48 +438,47 @@
       
       let html = '';
       rows.forEach(r => {
-          if(r.m1_os <= 0) return; // Skip yang targetnya 0
+          if(r.m1_os <= 0) return; 
+          
+          // URUTAN BARU: BTC, BACKFLOW, STAY, MIGRASI, RUNOFF
           html += `
-            <tr class="transition border-b h-[50px]">
-                <td class="col-kategori font-bold text-slate-700 text-sm">${r.tgl}</td>
+            <tr class="transition border-b border-slate-200 h-[50px]">
+                <td class="col-kategori font-bold text-slate-700 text-xs">${r.tgl}</td>
                 
-                <td class="text-right font-bold text-blue-700 border-l border-slate-100">
+                <td class="text-right font-bold text-blue-700 border-r border-slate-200">
                     <a href="#" onclick="openModalProg(${r.tgl}, 'ALL'); return false;" class="hover:underline">${fmt(r.m1_os)}</a>
-                    <div class="text-[10px] text-slate-400 font-medium">${fmt(r.m1_noa)} NOA</div>
+                    <div class="text-[9px] text-slate-400 font-medium">${fmt(r.m1_noa)} NOA</div>
                 </td>
 
-                <td class="text-right font-semibold text-emerald-600 border-l border-slate-100 bg-emerald-50/20">
+                <td class="text-right font-semibold text-emerald-600 border-r border-slate-200 bg-emerald-50/20">
                     <a href="#" onclick="openModalProg(${r.tgl}, 'BTC'); return false;" class="hover:underline">${fmt(r.btc_os)}</a>
-                    <div class="text-[9px] text-emerald-600/60 font-medium">${fmt(r.btc_noa)} NOA | ${fmt2(r.btc_pct)}%</div>
+                    <div class="text-[8.5px] text-emerald-600/60 font-medium">${fmt(r.btc_noa)} NOA | ${fmt2(r.btc_pct)}%</div>
                 </td>
 
-                <td class="text-right font-semibold text-teal-600 border-l border-slate-100 bg-teal-50/20">
+                <td class="text-right font-semibold text-teal-600 border-r border-slate-200 bg-teal-50/20">
                     <a href="#" onclick="openModalProg(${r.tgl}, 'BACKFLOW'); return false;" class="hover:underline">${fmt(r.backflow_os)}</a>
-                    <div class="text-[9px] text-teal-600/60 font-medium">${fmt(r.backflow_noa)} NOA | ${fmt2(r.backflow_pct)}%</div>
+                    <div class="text-[8.5px] text-teal-600/60 font-medium">${fmt(r.backflow_noa)} NOA | ${fmt2(r.backflow_pct)}%</div>
                 </td>
 
-                <td class="text-right font-semibold text-orange-500 border-l border-slate-100 bg-orange-50/20">
+                <td class="text-right font-semibold text-orange-500 border-r border-slate-200 bg-orange-50/20">
                     <a href="#" onclick="openModalProg(${r.tgl}, 'STAY'); return false;" class="hover:underline">${fmt(r.stay_os)}</a>
-                    <div class="text-[9px] text-orange-500/60 font-medium">${fmt(r.stay_noa)} NOA | ${fmt2(r.stay_pct)}%</div>
+                    <div class="text-[8.5px] text-orange-500/60 font-medium">${fmt(r.stay_noa)} NOA | ${fmt2(r.stay_pct)}%</div>
                 </td>
 
-                <td class="text-right font-semibold text-red-500 border-l border-slate-100 bg-red-50/20">
+                <td class="text-right font-semibold text-red-500 border-r border-slate-200 bg-red-50/20">
                     <a href="#" onclick="openModalProg(${r.tgl}, 'MIGRASI'); return false;" class="hover:underline">${fmt(r.migrasi_os)}</a>
-                    <div class="text-[9px] text-red-500/60 font-medium">${fmt(r.migrasi_noa)} NOA | ${fmt2(r.migrasi_pct)}%</div>
+                    <div class="text-[8.5px] text-red-500/60 font-medium">${fmt(r.migrasi_noa)} NOA | ${fmt2(r.migrasi_pct)}%</div>
                 </td>
 
-                <td class="text-right font-semibold text-slate-600 border-l border-slate-100 bg-slate-50/50">
+                <td class="text-right font-semibold text-slate-600 bg-slate-50/50">
                     <a href="#" onclick="openModalProg(${r.tgl}, 'RUNOFF'); return false;" class="hover:underline">${fmt(r.runoff_os)}</a>
-                    <div class="text-[9px] text-slate-400 font-medium">${fmt(r.runoff_noa)} NOA | ${fmt2(r.runoff_pct)}%</div>
+                    <div class="text-[8.5px] text-slate-400 font-medium">${fmt(r.runoff_noa)} NOA | ${fmt2(r.runoff_pct)}%</div>
                 </td>
             </tr>`;
       });
       tbody.innerHTML = html;
   }
 
-  // ==========================================
-  // MODAL DETAIL & EXPORT
-  // ==========================================
   async function loadKankasDetailProg(kodeCabang) {
       const optKankas = document.getElementById('opt_kankas_prog_modal');
       optKankas.innerHTML = '<option value="">SEMUA KANKAS</option>';
@@ -488,7 +492,6 @@
           if(j.data) j.data.forEach(x => { h += `<option value="${x.kode_group1}">${x.deskripsi_group1 || x.kode_group1}</option>`; });
           optKankas.innerHTML = h;
           
-          // Auto select if main filter has Kankas selected
           const mainKankas = document.getElementById('opt_sub_otp').value;
           if(mainKankas && document.getElementById('lbl_sub_otp').innerText === "KANKAS") {
               optKankas.value = mainKankas;
@@ -519,8 +522,8 @@
 
       if(tglParam !== 'ALL') currentProgDetailParams.tgl_tagih = tglParam;
 
-      document.getElementById('mdlTitleProg').textContent = `Detail Debitur Status: ${statusParam}`;
-      document.getElementById('mdlSubTitleProg').textContent = `Tanggal JT: ${tglParam === 'ALL' ? 'Semua Tgl' : tglParam} | Bucket: ${typeB.toUpperCase()}`;
+      document.getElementById('mdlTitleProg').textContent = `Status: ${statusParam}`;
+      document.getElementById('mdlSubTitleProg').textContent = `Tgl JT: ${tglParam === 'ALL' ? 'Semua Tgl' : tglParam} | Bucket: ${typeB.toUpperCase()}`;
       document.getElementById('modalDetailProg').classList.remove('hidden');
 
       document.getElementById('opt_kankas_prog_modal').value = "";
@@ -554,7 +557,7 @@
           currentProgTotalPages = meta.total_pages;
 
           if(rows.length === 0) {
-              tbody.innerHTML = `<tr><td colspan="9" class="py-20 text-center text-slate-500 italic">Tidak ada data debitur.</td></tr>`;
+              tbody.innerHTML = `<tr><td colspan="15" class="py-20 text-center text-slate-500 italic">Tidak ada data debitur.</td></tr>`;
               info.innerText = `0 Data`;
           } else {
               let html = '';
@@ -566,34 +569,41 @@
                   else if(r.status_ket.includes('STAY')) badge = 'bg-orange-100 text-orange-600';
                   else if(r.status_ket.includes('MIGRASI')) badge = 'bg-red-100 text-red-600';
 
-                  // Styling Tabungan & Totung
                   let txtTabungan = fmt(r.tabungan);
                   if (r.status_tabungan === 'Aman') txtTabungan = `<span class="text-emerald-600 font-bold">${txtTabungan}</span>`;
                   else if (r.tabungan > 0) txtTabungan = `<span class="text-orange-500 font-medium">${txtTabungan}</span>`;
 
+                  const textAlamat = r.alamat ? (r.alamat.length > 25 ? r.alamat.substring(0, 25) + '...' : r.alamat) : '-';
+
                   html += `
-                    <tr>
-                        <td class="mod-td-rek hidden md:table-cell px-2 md:px-3 font-mono text-slate-500 border-r border-slate-100">${r.no_rekening}</td>
-                        <td class="mod-td-nas px-2 md:px-4 font-bold text-slate-700 truncate border-r border-slate-100">${r.nama_nasabah}</td>
-                        <td class="px-2 md:px-3 text-center font-mono text-slate-600 border-r border-slate-100">${r.kankas || '-'}</td>
-                        <td class="px-2 md:px-3 text-center font-bold text-orange-600 border-r border-slate-100">${r.tgl_jatuh_tempo}</td>
-                        <td class="px-2 md:px-4 text-right font-bold text-blue-800 border-r border-slate-100">${fmt(r.os_curr)}</td>
-                        <td class="px-2 md:px-4 text-right font-medium border-r border-slate-100">${txtTabungan}</td>
-                        <td class="px-2 md:px-4 text-right font-bold text-red-500 border-r border-slate-100">${fmt(r.totung)}</td>
-                        <td class="px-2 md:px-3 text-center font-bold border-r border-slate-100">${r.dpd_curr} Hr</td>
-                        <td class="px-2 md:px-3 text-center font-extrabold border-r border-slate-100"><span class="px-2 py-0.5 rounded-md ${badge}">${r.status_ket}</span></td>
+                    <tr class="border-b border-slate-200">
+                        <td class="mod-td-rek hidden md:table-cell px-1 md:px-2 font-mono text-slate-500 border-r border-slate-200">${r.no_rekening}</td>
+                        <td class="mod-td-nas px-1 md:px-3 font-bold text-slate-700 truncate border-r border-slate-200" title="${r.nama_nasabah}">${r.nama_nasabah}</td>
+                        <td class="px-1 md:px-2 text-center font-bold text-slate-600 border-r border-slate-200">${r.kolektibilitas || '-'}</td>
+                        <td class="px-2 md:px-3 truncate border-r border-slate-200" title="${r.alamat || ''}">${textAlamat}</td>
+                        <td class="px-1 md:px-2 text-center font-mono text-slate-600 border-r border-slate-200">${r.no_hp || '-'}</td>
+                        <td class="px-1 md:px-2 text-center font-mono text-slate-600 border-r border-slate-200">${r.kankas || '-'}</td>
+                        <td class="px-1 md:px-2 text-center font-bold text-orange-600 border-r border-slate-200">${r.tgl_jatuh_tempo}</td>
+                        <td class="px-2 md:px-3 text-right font-bold text-blue-800 border-r border-slate-200">${fmt(r.os_curr)}</td>
+                        <td class="px-2 md:px-3 text-right font-medium border-r border-slate-200">${txtTabungan}</td>
+                        <td class="px-2 md:px-3 text-right font-medium text-red-500 border-r border-slate-200">${fmt(r.tunggakan_pokok)}</td>
+                        <td class="px-2 md:px-3 text-right font-medium text-red-500 border-r border-slate-200">${fmt(r.tunggakan_bunga)}</td>
+                        <td class="px-1 md:px-2 text-center font-bold border-r border-slate-200">${r.dpd_pokok || 0}</td>
+                        <td class="px-1 md:px-2 text-center font-bold border-r border-slate-200">${r.dpd_bunga || 0}</td>
+                        <td class="px-2 md:px-3 text-center font-bold border-r border-slate-200">${r.dpd_curr} Hr</td>
+                        <td class="px-2 md:px-3 text-center font-extrabold"><span class="px-1.5 md:px-2 py-0.5 rounded-md ${badge}">${r.status_ket}</span></td>
                     </tr>`;
               });
               tbody.innerHTML = html;
 
               const start = ((page - 1) * 20) + 1;
               const end = Math.min(page * 20, meta.total_records);
-              info.innerText = `Menampilkan ${start}-${end} dari ${fmt(meta.total_records)} Data`;
+              info.innerText = `${start}-${end} / ${fmt(meta.total_records)}`;
           }
           document.getElementById('btnPrevProg').disabled = page <= 1;
           document.getElementById('btnNextProg').disabled = page >= meta.total_pages;
       } catch(err){ 
-          tbody.innerHTML = `<tr><td colspan="9" class="py-16 text-center text-red-500 font-bold">${err.message}</td></tr>`;
+          tbody.innerHTML = `<tr><td colspan="15" class="py-16 text-center text-red-500 font-bold">${err.message}</td></tr>`;
       } finally { loading.classList.add('hidden'); }
   }
 
@@ -602,12 +612,9 @@
       if (n > 0 && n <= currentProgTotalPages) loadDetailProgPage(n); 
   }
 
-  // ==========================================
-  // EXPORT EXCEL
-  // ==========================================
   async function exportDetailProgExcel() {
-      const btn = event.target.closest('button'); const txt = btn.innerHTML;
-      btn.innerHTML = `<span class="font-bold text-xs uppercase">Loading...</span>`; btn.disabled = true;
+      const btn = event.target.closest('button'); const originalHTML = btn.innerHTML;
+      btn.innerHTML = `<span class="text-[9px] font-bold">...</span>`; btn.disabled = true;
 
       try {
           const kankasVal = document.getElementById('opt_kankas_prog_modal').value;
@@ -622,24 +629,29 @@
 
           let tableHtml = `<table border="1">
             <tr>
-              <th>No Rekening</th><th>Nama Nasabah</th><th>Alamat</th><th>No HP</th>
-              <th>Kankas</th><th>Tgl Realisasi</th><th>Tgl Jatuh Tempo</th>
-              <th>OS (Baki Debet Curr)</th><th>Tabungan</th><th>Tot. Tunggakan</th>
-              <th>DPD (Curr)</th><th>Status Migrasi</th>
+              <th>No Rekening</th><th>Nama Nasabah</th><th>Kolektibilitas</th><th>Alamat</th><th>No HP</th>
+              <th>Kankas</th><th>Nama AO</th><th>Tgl Realisasi</th><th>Tgl Jatuh Tempo</th>
+              <th>OS (Baki Debet Curr)</th><th>Tabungan</th><th>Tunggakan Pokok</th><th>Tunggakan Bunga</th>
+              <th>DPD Pokok</th><th>DPD Bunga</th><th>DPD (Curr)</th><th>Status Migrasi</th>
             </tr>`;
           
           rows.forEach(r => {
               tableHtml += `<tr>
                 <td style="mso-number-format:'\\@';">${r.no_rekening}</td>
                 <td>${r.nama_nasabah}</td>
+                <td>${r.kolektibilitas || ''}</td>
                 <td>${r.alamat || ''}</td>
                 <td style="mso-number-format:'\\@';">${r.no_hp || ''}</td>
                 <td>${r.kankas || ''}</td>
+                <td>${r.nama_ao || ''}</td>
                 <td>${r.tgl_realisasi || ''}</td>
                 <td>${r.tgl_jatuh_tempo || ''}</td>
                 <td>${r.os_curr}</td>
                 <td>${r.tabungan}</td>
-                <td>${r.totung}</td>
+                <td>${r.tunggakan_pokok || 0}</td>
+                <td>${r.tunggakan_bunga || 0}</td>
+                <td>${r.dpd_pokok || 0}</td>
+                <td>${r.dpd_bunga || 0}</td>
                 <td>${r.dpd_curr}</td>
                 <td>${r.status_ket}</td>
               </tr>`;
@@ -653,7 +665,7 @@
           a.download = `Detail_OTP_${currentProgDetailParams.status}${fTgl}.xls`;
           document.body.appendChild(a); a.click(); document.body.removeChild(a);
       } catch(e) { alert("Gagal export: " + e.message); } 
-      finally { btn.innerHTML = txt; btn.disabled = false; }
+      finally { btn.innerHTML = originalHTML; btn.disabled = false; }
   }
 
   function exportProgExcel() {
@@ -661,6 +673,7 @@
       const gt = window.progGtRaw || null;
       if(rows.length === 0 || !gt) return alert("Data Kosong!");
 
+      // URUTAN BARU: BTC, BACKFLOW, STAY, MIGRASI, RUNOFF
       let tableHtml = `<table border="1">
         <tr>
             <th rowspan="2">TGL JATUH TEMPO</th>
@@ -676,7 +689,6 @@
             <th>RUN OFF (OS)</th><th>RUN OFF (NOA)</th>
         </tr>`;
 
-      // Grand Total Row
       tableHtml += `<tr>
         <td><b>TOTAL</b></td>
         <td><b>${gt.m1_os}</b></td><td><b>${gt.m1_noa}</b></td>
@@ -687,7 +699,6 @@
         <td>${gt.runoff_os}</td><td>${gt.runoff_noa}</td>
       </tr>`;
 
-      // Data Rows
       rows.forEach(r => {
           if(r.m1_os <= 0) return;
           tableHtml += `<tr>

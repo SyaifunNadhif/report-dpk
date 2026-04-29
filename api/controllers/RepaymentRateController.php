@@ -844,6 +844,11 @@ class RepaymentRateController {
                  t1.baki_debet as os_m1, 
                  COALESCE(t2.baki_debet, 0) as os_curr, 
                  COALESCE(t2.hari_menunggak, 0) as dpd_curr,
+                 t2.kolektibilitas,
+                 t2.tunggakan_pokok,
+                 t2.tunggakan_bunga,
+                 t2.hari_menunggak_pokok as dpd_pokok,
+                 t2.hari_menunggak_bunga as dpd_bunga,
                  (COALESCE(t2.tunggakan_pokok, 0) + COALESCE(t2.tunggakan_bunga, 0)) as totung";
         
         $sqlData = "SELECT $cols $baseQuery ORDER BY t1.baki_debet DESC LIMIT :lim OFFSET :off";
