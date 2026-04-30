@@ -28,13 +28,13 @@ class ProspekController {
             } 
             // Silakan tambahkan korwil lain di sini nanti kalau sudah tau ID cabangnya
             elseif ($kc_lower === 'korwil solo' || $kc_lower === 'korwil_solo') {
-                return [8, 9, 10]; // Contoh ID cabang Solo
+                return [8, 9, 10, 11, 12, 13, 14]; // Contoh ID cabang Solo
             } 
             elseif ($kc_lower === 'korwil banyumas' || $kc_lower === 'korwil_banyumas') {
-                return [11, 12];   // Contoh ID cabang Banyumas
+                return [15, 16, 17, 18, 19, 20, 21];   // Contoh ID cabang Banyumas
             } 
             elseif ($kc_lower === 'korwil pekalongan' || $kc_lower === 'korwil_pekalongan') {
-                return [13, 14];   // Contoh ID cabang Pekalongan
+                return [22, 23, 24, 25, 26, 27, 28];   // Contoh ID cabang Pekalongan
             }
         }
         return $kc;
@@ -62,11 +62,8 @@ class ProspekController {
 
     /**
      * ENDPOINT 1: REKAP PROSPEK (MATRIX)
-     */
-
-/**
-     * ENDPOINT 1: REKAP PROSPEK (MATRIX)
-     * Menampilkan SEMUA cabang meskipun prospeknya kosong (0)
+     * Menampilkan SEMUA cabang (kosong tetap tampil 0)
+     * Filter: Exclude Pusat (000), Kanwil (100-400), Dummy (999)
      */
     public function getRekapProspek($input = null) {
         $b = is_array($input) ? $input : [];
@@ -100,8 +97,9 @@ class ProspekController {
                 // MODE KONSOLIDASI & KORWIL (Baris = Cabang)
                 // ==========================================
                 
-                // Kondisi Filter untuk membatasi list cabang (misal: Korwil)
-                $cabangWhere = "1=1"; 
+                // 🔥 HILANGKAN 000, 100, 200, 300, 400, 999 DARI TABEL REKAP 🔥
+                $cabangWhere = "c.kode_cabang NOT IN ('000', '100', '200', '300', '400', '999')"; 
+                
                 if (is_array($kc) && !empty($kc)) {
                     $inParams = [];
                     foreach ($kc as $i => $id) {
@@ -112,8 +110,6 @@ class ProspekController {
                     $cabangWhere .= " AND c.id IN (" . implode(',', $inParams) . ")";
                 }
 
-                // Perhatikan: FROM cabangs LEFT JOIN prospects. 
-                // COUNT(p.id) dipakai agar data yg kosong terhitung 0 (bukan 1).
                 $sql = "SELECT 
                             c.kode_cabang as kode,
                             c.nama_cabang as nama_label,
@@ -185,7 +181,7 @@ class ProspekController {
 
             // Hitung Total Keseluruhan (Paling Bawah)
             $total_all = [
-                'kode' => '-', 'nama_label' => 'TOTAL',
+                'kode' => '-', 'nama_label' => 'TOTAL KESELURUHAN',
                 'total_open' => array_sum(array_column($matrix, 'total_open')),
                 'total_follow_up' => array_sum(array_column($matrix, 'total_follow_up')),
                 'total_closing' => array_sum(array_column($matrix, 'total_closing')),

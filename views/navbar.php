@@ -1,447 +1,176 @@
-<nav id="mainNavbar" class="sticky top-0 bg-white/90 backdrop-blur border-b border-slate-200 shadow-sm">
-  <div class="max-w-screen-xl mx-auto px-4">
-    <div class="h-14 flex items-center justify-between">
-      <a href="home" class="flex items-center gap-2">
-        <img src="./img/logodpk.png" class="h-8 w-8 object-contain" alt="Logo">
-        <span class="text-slate-800 text-lg font-semibold">Monbis</span>
+<!-- Wrapper Utama: Full Screen -->
+<div class="flex h-screen bg-slate-50 font-sans overflow-hidden relative">
+
+  <!-- ================= OVERLAY MOBILE SIDEBAR ================= -->
+  <!-- z-[90] di atas tabel, di bawah sidebar -->
+  <div id="sidebarOverlay" class="fixed inset-0 bg-slate-900/50 z-[90] hidden md:hidden"></div>
+
+  <!-- ================= 1. SIDEBAR (Slide Mobile & Hover Desktop) ================= -->
+  <!-- z-[100] Jalan Tengah: Menang telak dari Tabel, tapi tetap di bawah Modal aplikasi (z-1050) -->
+  <aside id="sidebar" class="absolute md:relative z-[100] h-full flex flex-col bg-white border-r border-slate-200 shrink-0 transition-all duration-300 ease-in-out -translate-x-full md:translate-x-0 w-64 md:w-[4.5rem] md:hover:w-64 group">
+    
+    <!-- Bagian Logo (Di Sidebar) -->
+    <div class="h-16 flex items-center px-4 border-b border-slate-200 shrink-0 whitespace-nowrap">
+      <img src="./img/logodpk.png" class="h-8 w-8 object-contain shrink-0" alt="Logo">
+      <span class="text-slate-800 text-xl font-bold tracking-tight opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity duration-300 ml-3">Monbis</span>
+    </div>
+
+    <!-- Navigasi Menu -->
+    <nav class="flex-1 overflow-y-auto overflow-x-hidden py-4 px-2 space-y-1 custom-scrollbar">
+      
+      <!-- Menu Single -->
+      <a href="dashboard" class="flex items-center px-3 py-2.5 text-blue-600 bg-blue-50 rounded-lg font-medium transition-colors whitespace-nowrap">
+        <svg class="w-6 h-6 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 001 1m-6 0h6"></path></svg>
+        <span class="ml-3 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity duration-300">Dashboard</span>
       </a>
 
-      <div class="flex items-center gap-3">
-        <div class="flex flex-col leading-tight text-right select-none nb-userbox">
-          <span id="navUserName" class="text-slate-800 text-sm font-medium">—</span>
-          <span id="navBranch" class="text-slate-500 text-[11px]">—</span>
+      <!-- Parent Pemasaran -->
+      <div class="accordion-group">
+        <button class="accordion-btn w-full flex items-center justify-between px-3 py-2.5 text-slate-700 rounded-lg hover:bg-slate-100 font-medium transition-colors whitespace-nowrap focus:outline-none">
+          <div class="flex items-center shrink-0">
+            <svg class="w-6 h-6 shrink-0 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path></svg>
+            <span class="ml-3 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity duration-300">Pemasaran</span>
+          </div>
+          <svg class="caret w-4 h-4 shrink-0 transition-transform text-slate-400 opacity-100 md:opacity-0 md:group-hover:opacity-100" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+        </button>
+        <div class="accordion-content hidden pl-[3.25rem] pr-2 py-1 space-y-1">
+          <a href="realisasi_kredit" class="block px-2 py-2 text-[11px] truncate text-slate-600 rounded-md hover:text-blue-600 hover:bg-blue-50">Realisasi Kredit</a>
+          <a href="realisasi_promo" class="block px-2 py-2 text-[11px] truncate text-slate-600 rounded-md hover:text-blue-600 hover:bg-blue-50">Realisasi Kredit & Promo</a>
+          <a href="realisasi_ao" class="block px-2 py-2 text-[11px] truncate text-slate-600 rounded-md hover:text-blue-600 hover:bg-blue-50">Realisasi Kredit AO</a>
+          <a href="otp" class="block px-2 py-2 text-[11px] truncate text-slate-600 rounded-md hover:text-blue-600 hover:bg-blue-50">Ontime Payment</a>
+          <a href="rekap_rr" class="block px-2 py-2 text-[11px] truncate text-slate-600 rounded-md hover:text-blue-600 hover:bg-blue-50">Rekap Repayment Rate</a>
+          <a href="migrasi_bucket_sc" class="block px-2 py-2 text-[11px] truncate text-slate-600 rounded-md hover:text-blue-600 hover:bg-blue-50">Migrasi Bucket SC</a>
+          <a href="mob" class="block px-2 py-2 text-[11px] truncate text-slate-600 rounded-md hover:text-blue-600 hover:bg-blue-50">MOB 6 Bulan</a>
+          <a href="pipelane_ao_jt" class="block px-2 py-2 text-[11px] truncate text-slate-600 rounded-md hover:text-blue-600 hover:bg-blue-50">Pipelane AO Kredit</a>
+          <a href="jatuh_tempo" class="block px-2 py-2 text-[11px] truncate text-slate-600 rounded-md hover:text-blue-600 hover:bg-blue-50">Jatuh Tempo & Refinancing</a>
         </div>
-
-        <button id="dropdownProfileButton" data-dropdown="dropdownProfile" aria-haspopup="menu" aria-expanded="false"
-                class="inline-flex items-center justify-center rounded-full ring-1 ring-slate-200 hover:ring-slate-300 transition nb-tap"
-                style="width:2.25rem;height:2.25rem">
-          <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
-            <circle cx="12" cy="8" r="4" fill="none" stroke="currentColor" stroke-width="1.8"></circle>
-            <path d="M4 20a8 8 0 0 1 16 0" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"></path>
-          </svg>
-        </button>
-
-        <button id="hamburger" type="button" aria-label="Toggle menu" aria-expanded="false"
-                class="md:hidden burger-btn nb-tap">
-          <svg class="icon-burger" viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" fill="none" stroke-width="2" aria-hidden="true">
-            <path stroke-linecap="round" d="M4 7h16M4 12h16M4 17h16"/>
-          </svg>
-          <svg class="icon-x" viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" fill="none" stroke-width="2" aria-hidden="true">
-            <path stroke-linecap="round" d="M6 6l12 12M18 6l-12 12"/>
-          </svg>
-        </button>
-      </div>
-    </div>
-
-    <div id="navbar-default" class="nb-container">
-      <ul class="nb-row">
-        <li class="nb-li"><a href="dashboard" class="nb-link nb-tap nb-active">Dashboard</a></li>
-
-        <li class="nb-li">
-          <button data-dropdown="dropdownPemasaran" class="nb-parent nb-tap">
-            <span>Pemasaran</span>
-            <svg class="nb-caret" viewBox="0 0 20 20" fill="currentColor" width="16" height="16">
-              <path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.586l3.71-4.354a.75.75 0 111.14.976l-4.25 5a.75.75 0 01-1.14 0l-4.25-5a.75.75 0 01.02-1.06z" clip-rule="evenodd"/>
-            </svg>
-          </button>
-          <div id="dropdownPemasaran" class="dropdown-panel">
-            <ul class="nb-list">
-              <li><a href="realisasi_kredit" class="nb-item nb-tap">Realisasi Kredit</a></li>
-              <li><a href="realisasi_promo" class="nb-item nb-tap">Realisasi Kredit dan Promo</a></li>
-              <li><a href="realisasi_ao" class="nb-item nb-tap">Realisasi Kredit AO</a></li>
-              <li><a href="otp" class="nb-item nb-tap">Ontime Payment</a></li>
-              <li><a href="rekap_rr" class="nb-item nb-tap">Rekap Repayment Rate</a></li>
-              <li><a href="migrasi_bucket_sc" class="nb-item nb-tap">Migrasi Bucket SC</a></li>
-              <li><a href="mob" class="nb-item nb-tap">MOB 6 Bulan</a></li>
-              <li><a href="pipelane_ao_jt" class="nb-item nb-tap">Pipelane AO Kredit</a></li>
-              <li><a href="jatuh_tempo" class="nb-item nb-tap">Jatuh Tempo and Refinacing</a></li>
-            </ul>
-          </div>
-        </li>
-      
-        <li class="nb-li">
-          <button data-dropdown="dropdownNPL" class="nb-parent nb-tap">
-            <span>NPL</span>
-            <svg class="nb-caret" viewBox="0 0 20 20" fill="currentColor" width="16" height="16">
-              <path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.586l3.71-4.354a.75.75 0 111.14.976l-4.25 5a.75.75 0 01-1.14 0l-4.25-5a.75.75 0 01.02-1.06z" clip-rule="evenodd"/>
-            </svg>
-          </button>
-          <div id="dropdownNPL" class="dropdown-panel">
-            <ul class="nb-list">
-              <li><a href="npl" class="nb-item nb-tap">NPL</a></li>
-              <li><a href="perbandingan_npl" class="nb-item nb-tap">Perbandingan NPL</a></li>
-              <li><a href="recovery_npl" class="nb-item nb-tap">Recovery NPL</a></li>
-              <li><a href="flow_par" class="nb-item nb-tap">Flow Par</a></li>
-              <li><a href="npl_25_besar" class="nb-item nb-tap">25 NPL Besar</a></li>
-              <li><a href="potensi_npl" class="nb-item nb-tap">Potensi NPL</a></li>
-            </ul>
-          </div>
-        </li>
-
-        <li class="nb-li">
-          <button data-dropdown="dropdownPH" class="nb-parent nb-tap">
-            <span>PH</span>
-            <svg class="nb-caret" viewBox="0 0 20 20" fill="currentColor" width="16" height="16">
-              <path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.586l3.71-4.354a.75.75 0 111.14.976l-4.25 5a.75.75 0 01-1.14 0l-4.25-5a.75.75 0 01.02-1.06z" clip-rule="evenodd"/>
-            </svg>
-          </button>
-          <div id="dropdownPH" class="dropdown-panel">
-            <ul class="nb-list">
-              <li><a href="recovery_ph" class="nb-item nb-tap">Recovery PH</a></li>
-              <li><a href="lgd" class="nb-item nb-tap">Rekap Recovery (PH LGD)</a></li>
-            </ul>
-          </div>
-        </li>
-
-        <li class="nb-li">
-          <button data-dropdown="dropdownPenagihan" class="nb-parent nb-tap">
-            <span>Collection</span>
-            <svg class="nb-caret" viewBox="0 0 20 20" fill="currentColor" width="16" height="16">
-              <path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.586l3.71-4.354a.75.75 0 111.14.976l-4.25 5a.75.75 0 01-1.14 0l-4.25-5a.75.75 0 01.02-1.06z" clip-rule="evenodd"/>
-            </svg>
-          </button>
-          <div id="dropdownPenagihan" class="dropdown-panel">
-            <ul class="nb-list">
-              <li><a href="migrasi_kolek" class="nb-item nb-tap">Migrasi Kolek</a></li>
-              <li><a href="actual_kredit" class="nb-item nb-tap">Bucket DPD and Kolek</a></li>
-              <li><a href="migrasi_bucket" class="nb-item nb-tap">Migrasi Bucket</a></li>
-              <li><a href="search_debitur" class="nb-item nb-tap">Seach Debitur Kredit</a></li>
-              <li><a href="otp_bucket_fe" class="nb-item nb-tap">Otp Bucket FE (31 - 90)</a></li>
-            </ul>
-          </div>
-        </li>
-
-        <li class="nb-li" id="menuMonevDev" style="display: none;">
-          <button data-dropdown="dropdownMonev" class="nb-parent nb-tap">
-            <span>Laporan</span>
-            <svg class="nb-caret" viewBox="0 0 20 20" fill="currentColor" width="16" height="16">
-              <path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.586l3.71-4.354a.75.75 0 111.14.976l-4.25 5a.75.75 0 01-1.14 0l-4.25-5a.75.75 0 01.02-1.06z" clip-rule="evenodd"/>
-            </svg>
-          </button>
-          
-          <div id="dropdownMonev" class="dropdown-panel">
-            <ul class="nb-list">
-              <li id="menuLapKeu">
-                <a href="lapkeu_kantor" class="nb-item nb-tap">Laporan Keuangan</a>
-              </li>
-              <li id="menuProgresKredit">
-                <a href="aging_kredit" class="nb-item nb-tap">Rekap Aging Kredit</a>
-              </li>
-              <li id="menuLayananDigital">
-                <a href="layanan_digital" class="nb-item nb-tap">Layanan Digital</a>
-              </li>
-              <li id="menuProspek">
-                <a href="prospek" class="nb-item nb-tap">Prosek</a>
-              </li>
-            </ul>
-          </div>
-        </li>
-
-        <li class="nb-li md:hidden">
-          <button data-dropdown="dropdownProfileMobile" class="nb-parent nb-tap">
-            <span>Profile</span>
-            <svg class="nb-caret" viewBox="0 0 20 20" fill="currentColor" width="16" height="16">
-              <path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.586l3.71-4.354a.75.75 0 111.14.976l-4.25 5a.75.75 0 01-1.14 0l-4.25-5a.75.75 0 01.02-1.06z" clip-rule="evenodd"/>
-            </svg>
-          </button>
-          <div id="dropdownProfileMobile" class="dropdown-panel">
-            <ul class="nb-list">
-              <li><a href="#" id="linkLogoutMobile" class="nb-item nb-tap">Logout</a></li>
-            </ul>
-          </div>
-        </li>
-      </ul>
-
-      <div id="dropdownProfile" class="dropdown-panel dropdown-profile" role="menu" aria-labelledby="dropdownProfileButton">
-        <ul class="py-1 text-sm text-slate-700">
-          <li><a href="#" id="linkLogoutDesk" class="block px-4 py-2 hover:bg-slate-50 nb-tap">Logout</a></li>
-        </ul>
       </div>
 
-    </div>
-  </div>
-  <div class="h-[2px] w-full bg-gradient-to-r from-blue-600 via-sky-500 to-orange-500"></div>
-</nav>
+      <!-- Parent NPL -->
+      <div class="accordion-group">
+        <button class="accordion-btn w-full flex items-center justify-between px-3 py-2.5 text-slate-700 rounded-lg hover:bg-slate-100 font-medium transition-colors whitespace-nowrap focus:outline-none">
+          <div class="flex items-center shrink-0">
+            <svg class="w-6 h-6 shrink-0 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path></svg>
+            <span class="ml-3 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity duration-300">NPL</span>
+          </div>
+          <svg class="caret w-4 h-4 shrink-0 transition-transform text-slate-400 opacity-100 md:opacity-0 md:group-hover:opacity-100" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+        </button>
+        <div class="accordion-content hidden pl-[3.25rem] pr-2 py-1 space-y-1">
+          <a href="npl" class="block px-2 py-2 text-[11px] truncate text-slate-600 rounded-md hover:text-blue-600 hover:bg-blue-50">NPL</a>
+          <a href="perbandingan_npl" class="block px-2 py-2 text-[11px] truncate text-slate-600 rounded-md hover:text-blue-600 hover:bg-blue-50">Perbandingan NPL</a>
+          <a href="recovery_npl" class="block px-2 py-2 text-[11px] truncate text-slate-600 rounded-md hover:text-blue-600 hover:bg-blue-50">Recovery NPL</a>
+          <a href="flow_par" class="block px-2 py-2 text-[11px] truncate text-slate-600 rounded-md hover:text-blue-600 hover:bg-blue-50">Flow Par</a>
+          <a href="npl_25_besar" class="block px-2 py-2 text-[11px] truncate text-slate-600 rounded-md hover:text-blue-600 hover:bg-blue-50">25 NPL Besar</a>
+          <a href="potensi_npl" class="block px-2 py-2 text-[11px] truncate text-slate-600 rounded-md hover:text-blue-600 hover:bg-blue-50">Potensi NPL</a>
+        </div>
+      </div>
 
-<style>
-/* ===== Layering ===== */
-#mainNavbar{ z-index:2200 !important; position:sticky; top:0; overflow-x:clip; overflow-y:visible; isolation:isolate; }
-.nb-container{ position:relative; z-index:2201; display:none; }
-@media (min-width:768px){ .nb-container{ display:block; } }
-.nb-container.open{ display:block; }
+      <!-- Parent PH -->
+      <div class="accordion-group">
+        <button class="accordion-btn w-full flex items-center justify-between px-3 py-2.5 text-slate-700 rounded-lg hover:bg-slate-100 font-medium transition-colors whitespace-nowrap focus:outline-none">
+          <div class="flex items-center shrink-0">
+            <svg class="w-6 h-6 shrink-0 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+            <span class="ml-3 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity duration-300">PH</span>
+          </div>
+          <svg class="caret w-4 h-4 shrink-0 transition-transform text-slate-400 opacity-100 md:opacity-0 md:group-hover:opacity-100" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+        </button>
+        <div class="accordion-content hidden pl-[3.25rem] pr-2 py-1 space-y-1">
+          <a href="recovery_ph" class="block px-2 py-2 text-[11px] truncate text-slate-600 rounded-md hover:text-blue-600 hover:bg-blue-50">Recovery PH</a>
+          <a href="lgd" class="block px-2 py-2 text-[11px] truncate text-slate-600 rounded-md hover:text-blue-600 hover:bg-blue-50">Rekap Recovery (LGD)</a>
+        </div>
+      </div>
 
-/* ===== Desktop: horizontal ===== */
-.nb-row{
-  display:flex; flex-direction:row; align-items:center; gap:.25rem;
-  white-space:nowrap; padding:.4rem 0;
-  overflow-x:auto; -webkit-overflow-scrolling:touch; scrollbar-width:none;
-  overscroll-behavior-x: contain; touch-action: pan-x;
-}
-.nb-row::-webkit-scrollbar{ display:none; }
-.nb-li{ flex:0 0 auto; }
+      <!-- Parent Collection -->
+      <div class="accordion-group">
+        <button class="accordion-btn w-full flex items-center justify-between px-3 py-2.5 text-slate-700 rounded-lg hover:bg-slate-100 font-medium transition-colors whitespace-nowrap focus:outline-none">
+          <div class="flex items-center shrink-0">
+            <svg class="w-6 h-6 shrink-0 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+            <span class="ml-3 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity duration-300">Collection</span>
+          </div>
+          <svg class="caret w-4 h-4 shrink-0 transition-transform text-slate-400 opacity-100 md:opacity-0 md:group-hover:opacity-100" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+        </button>
+        <div class="accordion-content hidden pl-[3.25rem] pr-2 py-1 space-y-1">
+          <a href="migrasi_kolek" class="block px-2 py-2 text-[11px] truncate text-slate-600 rounded-md hover:text-blue-600 hover:bg-blue-50">Migrasi Kolek</a>
+          <a href="actual_kredit" class="block px-2 py-2 text-[11px] truncate text-slate-600 rounded-md hover:text-blue-600 hover:bg-blue-50">Bucket DPD & Kolek</a>
+          <a href="migrasi_bucket" class="block px-2 py-2 text-[11px] truncate text-slate-600 rounded-md hover:text-blue-600 hover:bg-blue-50">Migrasi Bucket</a>
+          <a href="search_debitur" class="block px-2 py-2 text-[11px] truncate text-slate-600 rounded-md hover:text-blue-600 hover:bg-blue-50">Search Debitur Kredit</a>
+          <a href="otp_bucket_fe" class="block px-2 py-2 text-[11px] truncate text-slate-600 rounded-md hover:text-blue-600 hover:bg-blue-50">Otp Bucket FE (31-90)</a>
+        </div>
+      </div>
 
-.nb-link, .nb-parent{
-  display:inline-flex; align-items:center; gap:.25rem; cursor:pointer;
-  padding:.45rem .7rem; border-radius:.5rem; color:#334155; text-decoration:none;
-  -webkit-tap-highlight-color:transparent; touch-action: manipulation;
-}
-.nb-link:hover, .nb-parent:hover{ color:#2563eb; background:#f8fafc; }
-.nb-active{ color:#1d4ed8; font-weight:600; border-bottom:2px solid #2563eb; }
-.nb-caret{ margin-left:.15rem; transition:transform .15s ease; }
-.rot180{ transform:rotate(180deg); }
+      <!-- Parent Laporan (Khusus Dev) -->
+      <div id="menuMonevDev" class="accordion-group" style="display: none;">
+        <button class="accordion-btn w-full flex items-center justify-between px-3 py-2.5 text-slate-700 rounded-lg hover:bg-slate-100 font-medium transition-colors whitespace-nowrap focus:outline-none">
+          <div class="flex items-center shrink-0">
+            <svg class="w-6 h-6 shrink-0 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+            <span class="ml-3 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity duration-300">Laporan</span>
+          </div>
+          <svg class="caret w-4 h-4 shrink-0 transition-transform text-slate-400 opacity-100 md:opacity-0 md:group-hover:opacity-100" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+        </button>
+        <div class="accordion-content hidden pl-[3.25rem] pr-2 py-1 space-y-1">
+          <a href="lapkeu_kantor" class="block px-2 py-2 text-[11px] truncate text-slate-600 rounded-md hover:text-blue-600 hover:bg-blue-50">Laporan Keuangan</a>
+          <a href="aging_kredit" class="block px-2 py-2 text-[11px] truncate text-slate-600 rounded-md hover:text-blue-600 hover:bg-blue-50">Rekap Aging Kredit</a>
+          <a href="layanan_digital" class="block px-2 py-2 text-[11px] truncate text-slate-600 rounded-md hover:text-blue-600 hover:bg-blue-50">Layanan Digital</a>
+          <a href="prospek" class="block px-2 py-2 text-[11px] truncate text-slate-600 rounded-md hover:text-blue-600 hover:bg-blue-50">Pipelane Prospek</a>
+        </div>
+      </div>
+    </nav>
+  </aside>
 
-/* Dropdown (desktop overlay) */
-.dropdown-panel{
-  display:none; position:fixed; z-index:2300; background:#fff;
-  border:1px solid #e2e8f0; border-radius:.75rem;
-  box-shadow:0 12px 28px rgba(15,23,42,.12); padding:.4rem 0;
-  min-width:14rem; max-width:min(92vw, 22rem);
-  max-height: calc(100vh - var(--navH,56px) - 16px); overflow:auto;
-}
-.dropdown-panel.is-open{ display:block; }
-.nb-list{ padding:.25rem 0; font-size:.9rem; color:#334155; list-style:none; margin:0; }
-.nb-item{ display:block; padding:.5rem 1rem; border-radius:.375rem; text-decoration:none; color:#334155; }
-.nb-item:hover{ background:#f8fafc; }
-
-/* Hamburger */
-.burger-btn{ display:inline-flex; align-items:center; justify-content:center; width:2.5rem; height:2.5rem; border:0; background:transparent; border-radius:.5rem; color:#334155; }
-.burger-btn:active{ background:#f1f5f9; }
-.burger-btn .icon-x{ display:none; }
-.burger-btn.is-open .icon-burger{ display:none; }
-.burger-btn.is-open .icon-x{ display:block; }
-@media (min-width:768px){ #hamburger{ display:none !important; } }
-
-/* ==== MOBILE (<=767px) ==== */
-@media (max-width:767px){
-  /* sembunyikan user box di mobile TANPA bergantung sm:flex */
-  .nb-userbox{ display:none !important; }
-
-  #dropdownProfileButton{ display:none !important; } /* icon profil hanya desktop */
-
-  .nb-row{
-    flex-direction:column; align-items:stretch; gap:.35rem;
-    padding:.6rem; border:1px solid #e2e8f0; border-radius:.75rem;
-    background:#f8fafc; white-space:normal; overflow:visible;
-  }
-  .nb-li{ width:100%; }
-  .nb-link, .nb-parent{ width:100%; justify-content:flex-start; border-radius:.6rem; padding:.55rem .8rem; font-size:14px; }
-  .nb-link:hover, .nb-parent:hover{ background:#eef2ff; color:#1d4ed8; }
-  .nb-active{ color:#fff; background:#2563eb; border-bottom:0; }
-  .nb-caret{ margin-left:auto; }
-
-  .dropdown-panel{ position:static !important; display:none; margin:.25rem 0 0 .5rem; border:1px solid #e2e8f0; border-radius:.5rem; box-shadow:none; max-width:100%; min-width:0; }
-  .dropdown-panel.is-open{ display:block; }
-
-  /* Popover profil desktop tidak dipakai di mobile */
-  .dropdown-profile{ display:none !important; }
-}
-</style>
-
-<script>
-/* ===== NAVBAR JS ===== */
-(function(){
-  const navbar    = document.getElementById('mainNavbar');
-  const container = document.getElementById('navbar-default');
-  const hamburger = document.getElementById('hamburger');
-  const profileBtn= document.getElementById('dropdownProfileButton'); // desktop only
-  const profilePan= document.getElementById('dropdownProfile');       // desktop only
-
-  const allBtns   = Array.from(document.querySelectorAll('[data-dropdown]'));
-  const menuBtns  = allBtns.filter(b => b !== profileBtn);
-  const panels    = Array.from(document.querySelectorAll('.dropdown-panel'));
-  const isMobile  = () => window.innerWidth < 768;
-  const CLAMP = 10, DRAG_TOL = 8;
-
-  function setNavH(){ document.documentElement.style.setProperty('--navH', (navbar?.offsetHeight || 56)+'px'); }
-  window.addEventListener('load', setNavH); window.addEventListener('resize', setNavH);
-
-  function setMenuOpen(open){
-    if (isMobile()){
-      container.classList.toggle('open', open);
-      hamburger.classList.toggle('is-open', open);
-      hamburger.setAttribute('aria-expanded', open ? 'true' : 'false');
-      if (!open) closeAll();
-    } else {
-      container.classList.add('open');
-      hamburger.classList.remove('is-open');
-      hamburger.setAttribute('aria-expanded','false');
-    }
-  }
-  setMenuOpen(!isMobile());
-
-  hamburger?.addEventListener('click', (e)=>{
-    if (!isMobile()) return;
-    e.preventDefault(); e.stopPropagation();
-    setMenuOpen(!container.classList.contains('open'));
-  });
-
-  function closeAll(exceptId){
-    panels.forEach(p=>{
-      if(!exceptId || p.id !== exceptId){
-        p.classList.remove('is-open');
-        p.style.left=''; p.style.top=''; p.style.minWidth='';
-        const b = document.querySelector(`[data-dropdown="${p.id}"]`);
-        b?.setAttribute('aria-expanded','false');
-        b?.querySelector('.nb-caret')?.classList.remove('rot180');
-      }
-    });
-  }
-  function placePanel(btn, panel){
-    const btnRect = btn.getBoundingClientRect();
-    const navRect = navbar?.getBoundingClientRect();
-    const gap = 6, top = (navRect?.bottom || 56) + gap;
-
-    panel.style.visibility='hidden'; panel.style.display='block';
-    const w = Math.max(224, Math.min(panel.offsetWidth || 224, Math.min(352, window.innerWidth - CLAMP*2)));
-    panel.style.display=''; panel.style.visibility='';
-
-    let left = btnRect.right - w;
-    left = Math.max(CLAMP, Math.min(left, window.innerWidth - w - CLAMP));
-
-    panel.style.left = left+'px';
-    panel.style.top  = top +'px';
-    panel.style.minWidth = w+'px';
-  }
-
-  function bindMenu(btn){
-    const id = btn.getAttribute('data-dropdown');
-    const panel = document.getElementById(id);
-    if(!panel) return;
-
-    let sx=0, sy=0, moved=false;
-    const onDown = (e)=>{ sx=e.clientX ?? (e.touches?.[0]?.clientX||0); sy=e.clientY ?? (e.touches?.[0]?.clientY||0); moved=false; e.stopPropagation(); };
-    const onMove = (e)=>{ const x=e.clientX ?? (e.touches?.[0]?.clientX||0), y=e.clientY ?? (e.touches?.[0]?.clientY||0); if(Math.hypot(x-sx,y-sy)>DRAG_TOL) moved=true; };
-    const onUp   = (e)=>{
-      e.preventDefault(); e.stopPropagation(); if(moved) return;
-      const open = panel.classList.contains('is-open');
-      if (open){
-        panel.classList.remove('is-open'); btn.setAttribute('aria-expanded','false'); btn.querySelector('.nb-caret')?.classList.remove('rot180');
-      } else {
-        closeAll(id);
-        if (isMobile()){ panel.classList.add('is-open'); }
-        else { placePanel(btn, panel); panel.classList.add('is-open'); }
-        btn.setAttribute('aria-expanded','true'); btn.querySelector('.nb-caret')?.classList.add('rot180');
-      }
-    };
-
-    btn.addEventListener('pointerdown', onDown, {passive:true});
-    btn.addEventListener('pointermove', onMove, {passive:true});
-    btn.addEventListener('pointerup',   onUp,   {passive:false});
-    panel.addEventListener('pointerdown', e=>e.stopPropagation(), {passive:true});
-    panel.addEventListener('click', e=>e.stopPropagation());
-  }
-  menuBtns.forEach(bindMenu);
-
-  if (profileBtn && profilePan){
-    let sx=0, sy=0, moved=false;
-    const openProfile = ()=>{ closeAll('dropdownProfile'); placePanel(profileBtn, profilePan); profilePan.classList.add('is-open'); profileBtn.setAttribute('aria-expanded','true'); };
-    const closeProfile= ()=>{ profilePan.classList.remove('is-open'); profilePan.style.left=''; profilePan.style.top=''; profilePan.style.minWidth=''; profileBtn.setAttribute('aria-expanded','false'); };
-    const onDown = (e)=>{ sx=e.clientX ?? (e.touches?.[0]?.clientX||0); sy=e.clientY ?? (e.touches?.[0]?.clientY||0); moved=false; e.stopPropagation(); };
-    const onMove = (e)=>{ const x=e.clientX ?? (e.touches?.[0]?.clientX||0), y=e.clientY ?? (e.touches?.[0]?.clientY||0); if(Math.hypot(x-sx,y-sy)>DRAG_TOL) moved=true; };
-    const onUp   = (e)=>{ e.preventDefault(); e.stopPropagation(); if(moved) return; if(profilePan.classList.contains('is-open')) closeProfile(); else openProfile(); };
-
-    profileBtn.addEventListener('pointerdown', onDown, {passive:true});
-    profileBtn.addEventListener('pointermove', onMove, {passive:true});
-    profileBtn.addEventListener('pointerup',   onUp,   {passive:false});
-    profilePan.addEventListener('pointerdown', e=>e.stopPropagation(), {passive:true});
-    profilePan.addEventListener('click', e=>e.stopPropagation());
-    window.addEventListener('resize', ()=>{ if(profilePan.classList.contains('is-open')) placePanel(profileBtn, profilePan); });
-  }
-
-  document.addEventListener('pointerdown', (e)=>{
-    const isBtn = e.target.closest?.('[data-dropdown]');
-    const isPanel = e.target.closest?.('.dropdown-panel');
-    const isHam = e.target.closest?.('#hamburger');
-    if(!isBtn && !isPanel && !isHam) closeAll();
-  }, {passive:true});
-
-  window.addEventListener('load', ()=>{
-    const src = document.getElementById('accHandle');
-    const dst = document.getElementById('accHandleMobile');
-    if (src && dst) dst.textContent = src.textContent || '—';
-  });
-})();
-</script>
-
-<script>
-(() => {
-  const TOKEN_KEY='dpk_token', USER_KEY='dpk_user';
-  
-  function parseJwt(t){ 
-    try{
-      const p=String(t).split('.'); 
-      if(p.length<2) return null;
-      const b64=p[1].replace(/-/g,'+').replace(/_/g,'/'); 
-      const json=decodeURIComponent(atob(b64).split('').map(c=>'%'+('00'+c.charCodeAt(0).toString(16)).slice(-2)).join('')); 
-      return JSON.parse(json);
-    } catch { return null; } 
-  }
-  
-  function getUser(){
-    try { 
-      if(window.__USER) return window.__USER; 
-      const raw=localStorage.getItem(USER_KEY); 
-      if(raw) return JSON.parse(raw);
-    } catch {}
+  <!-- ================= KONTEN KANAN ================= -->
+  <div class="flex-1 flex flex-col min-w-0 h-full overflow-hidden">
     
-    const tok=(localStorage.getItem(TOKEN_KEY)||'').trim(); 
-    if(!tok) return null;
-    
-    const p=parseJwt(tok)||{}; 
-    return { 
-      full_name:p.full_name||p.name||p.nama||null, 
-      branch_name:p.branch_name||p.branch||p.cabang||null,
-      employee_id:p.employee_id||p.emp_id||p.nik||null, 
-      id:p.sub||p.user_id||null, 
-      kode:p.kode||p.branch_code||null,
-      account_handle:p.handle||p.username||p.email||null,
-      role: p.role || null
-    };
-  }
-  
-  function paint(u){
-    if(!u) return false;
-    const name=document.getElementById('navUserName'), 
-          br=document.getElementById('navBranch'), 
-          nav=document.getElementById('mainNavbar'), 
-          acc=document.getElementById('accHandle'),
-          menuMonevDev=document.getElementById('menuMonevDev'); // 🔥 Target parent utamanya
-          
-    let ok=false;
-    
-    if(name){ name.textContent=u.full_name||'-'; ok=true; }
-    if(br){ br.textContent=u.branch_name||'-'; ok=true; }
-    if(nav){ 
-      nav.dataset.userId=u.id??''; 
-      nav.dataset.employeeId=u.employee_id??''; 
-      nav.dataset.kode=u.kode??''; 
-      ok=true; 
-    }
-    if(acc){ acc.textContent=(u.account_handle||u.username||u.email||u.employee_id||u.kode||'-'); ok=true; }
-    
-    // 🔥 LOGIKA SAKTI MENAMPILKAN KESELURUHAN MENU LAPORAN & KOMITMEN:
-    if(menuMonevDev) {
-      // Cek apakah user adalah dev atau Super User
-      const isDev = (u.role === 'dev');
+    <!-- HEADER ATAS KONTEN -->
+    <!-- z-[80] biar Navbar Header aman nutupin konten, tapi di bawah Overlay & Sidebar -->
+    <header class="h-16 bg-white border-b border-slate-200 flex items-center px-4 sm:px-6 z-[80] shadow-sm shrink-0">
       
-      if(isDev) {
-        menuMonevDev.style.setProperty('display', 'block', 'important'); 
-      } else {
-        menuMonevDev.style.setProperty('display', 'none', 'important'); 
-      }
-      ok=true;
-    }
-    
-    return ok;
-  }
-  
-  const user=getUser(); 
-  if(!paint(user)){
-    let n=0; 
-    const t=setInterval(()=>{ if(paint(user)||++n>40) clearInterval(t); },100);
-    document.addEventListener('DOMContentLoaded', ()=>paint(user), {once:true});
-    const mo=new MutationObserver(()=>{ if(paint(user)) mo.disconnect(); });
-    mo.observe(document.documentElement,{childList:true,subtree:true});
-  }
-})();
-</script>
+      <!-- Tombol Hamburger Mobile -->
+      <button id="btnToggleSidebar" class="md:hidden text-slate-500 hover:text-slate-800 focus:outline-none mr-3">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"></path></svg>
+      </button>
+
+      <!-- Logo Monbis Mobile -->
+      <div class="flex items-center md:hidden">
+        <img src="./img/logodpk.png" class="h-8 w-8 object-contain mr-2" alt="Logo">
+        <span class="text-slate-800 text-lg font-bold tracking-tight">Monbis</span>
+      </div>
+
+      <div class="flex-1"></div>
+      
+      <!-- Area Lonceng & Profile -->
+      <div class="flex items-center gap-4 sm:gap-6 ml-auto">
+        <button class="relative text-slate-500 hover:text-slate-800 transition-colors">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path></svg>
+          <span class="absolute top-0 right-0 block h-2.5 w-2.5 rounded-full ring-2 ring-white bg-red-500"></span>
+        </button>
+        
+        <div class="h-8 border-l border-slate-200"></div>
+        
+        <div class="relative flex items-center gap-3">
+          <div class="hidden sm:flex flex-col leading-tight text-right select-none">
+            <span id="navUserName" class="text-slate-800 text-sm font-semibold truncate max-w-[120px]">—</span>
+            <span id="navBranch" class="text-slate-500 text-[11px] truncate max-w-[120px]">—</span>
+          </div>
+          
+          <button id="btnProfileMenu" class="w-9 h-9 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center ring-2 ring-white border border-slate-200 shadow-sm hover:ring-blue-200 transition-all focus:outline-none">
+             <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"></path></svg>
+          </button>
+
+          <!-- Dropdown Profile di set ke z-[90] biar gak kalah sama header tabel -->
+          <div id="dropdownProfileMenu" class="hidden absolute right-0 top-[2.75rem] mt-2 w-40 bg-white border border-slate-100 rounded-lg shadow-lg py-1 z-[90]">
+            <a href="#" class="block px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 hover:text-blue-600 font-medium">My Profile</a>
+            <div class="border-t border-slate-100 my-1"></div>
+            <a href="#" id="linkLogoutDesk" onclick="logoutSSO(event)" class="block px-4 py-2 text-sm text-red-600 hover:bg-red-50 font-medium">Logout</a>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- BUKA AREA KONTEN UTAMA -->
+    <main class="flex-1 overflow-y-auto overflow-x-hidden py-4 px-0 sm:px-6 bg-slate-50">
+      <style>
+        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        .custom-scrollbar:hover::-webkit-scrollbar-thumb { background: #94a3b8; }
+      </style>

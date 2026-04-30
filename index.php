@@ -25,7 +25,7 @@ $url = trim($url, '/');
 // =========================
 // JANGAN LEWATKAN API KE ROUTER HALAMAN
 // =========================
-if (strpos($url, 'api/')) {
+if (strpos($url, 'api/') === 0) {
     $apiPath = __DIR__ . '/' . $url . '.php';
 
     if (is_file($apiPath)) {
@@ -41,14 +41,35 @@ if (strpos($url, 'api/')) {
 }
 
 // =========================
+// CEK STATUS LOGIN (VIA COOKIE SSO)
+// =========================
+// Sekarang kita cek pakai Cookie sso_token, bukan $_SESSION lagi
+$isLoggedIn = isset($_COOKIE['sso_token']) && !empty($_COOKIE['sso_token']);
+
+// =========================
 // ROUTING DEFAULT
 // =========================
 if ($url === '') {
-    $url = !empty($_SESSION['user_id']) ? 'dashboard' : 'login';
+    $url = $isLoggedIn ? 'dashboard' : 'login';
 }
 
 // page / param
 [$page, $param] = array_pad(explode('/', $url, 2), 2, null);
+
+// =========================
+// PROTEKSI HALAMAN (AUTH GUARD)
+// =========================
+// 1. Kalau belum login tapi maksa buka halaman selain login, lempar ke login!
+if (!$isLoggedIn && $page !== 'login') {
+    header("Location: " . BASE_APP . "/login");
+    exit;
+}
+
+// 2. Kalau SUDAH login tapi malah buka halaman login, paksa masuk ke dashboard!
+if ($isLoggedIn && $page === 'login') {
+    header("Location: " . BASE_APP . "/dashboard");
+    exit;
+}
 
 $baseDir = __DIR__;
 

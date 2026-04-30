@@ -4,9 +4,17 @@
   <style>
     /* Keyframes untuk pergerakan meteor */
     @keyframes meteor {
-      0% { transform: rotate(215deg) translateX(0); opacity: 1; }
-      70% { opacity: 1; }
-      100% { transform: rotate(215deg) translateX(-500px); opacity: 0; }
+      0% {
+        transform: rotate(215deg) translateX(0);
+        opacity: 1;
+      }
+      70% {
+        opacity: 1;
+      }
+      100% {
+        transform: rotate(215deg) translateX(-500px);
+        opacity: 0;
+      }
     }
 
     /* Style dasar meteor */
@@ -35,7 +43,9 @@
   </style>
 
   <div class="hidden lg:flex lg:w-1/2 relative bg-blue-900 text-white flex-col justify-center items-center overflow-hidden">
+    
     <div class="absolute inset-0 z-0" style="background-image: url('https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&q=80'); background-size: cover; background-position: center;"></div>
+    
     <div class="absolute inset-0 bg-gradient-to-br from-gray-900/80 via-blue-900/80 to-black/80 z-0"></div>
 
     <span class="meteor-effect w-[100px]" style="top: -10%; left: 20%; animation-duration: 4s; animation-delay: 0s;"></span>
@@ -54,12 +64,14 @@
       </div>
       <h2 class="text-4xl font-bold mb-4 tracking-tight text-white drop-shadow-lg">MONBIS</h2>
       <p class="text-blue-100 text-lg drop-shadow-md">MONITORING BISNIS BKK JATENG (PERSERODA)</p>
-      <p class="text-blue-200 text-sm mt-2 opacity-80">Secure Portal</p>
+      <p class="text-blue-200 text-sm mt-2 opacity-80">Secure Portal<</p>
     </div>
   </div>
 
   <div class="w-full lg:w-1/2 flex items-center justify-center p-8 bg-gray-50 text-gray-900 relative">
+    
     <div class="w-full max-w-md bg-white p-8 rounded-2xl shadow-lg border border-gray-100">
+      
       <div class="mb-8">
         <h1 class="text-3xl font-extrabold text-gray-900 mb-2">Login Pegawai</h1>
         <p class="text-gray-500 text-sm">Masukkan ID Pegawai dan Password Anda.</p>
@@ -74,6 +86,7 @@
       </div>
 
       <form id="formLogin" class="space-y-5">
+        
         <div>
           <label class="block text-sm font-bold text-gray-700 mb-1">Employee ID</label>
           <input type="text" id="employee_id" 
@@ -106,6 +119,7 @@
           <svg class="flex-shrink-0 inline w-5 h-5 mr-3" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path></svg>
           <span id="errMsg">Info error disini</span>
         </div>
+
       </form>
     </div>
   </div>
@@ -121,34 +135,11 @@
     return '';
   }
   const BASE_APP = window.BASE_APP || location.origin + getBasePath();
-  
-  // 1. DETEKSI ENVIRONMENT (Lokal vs Production) 
-  const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-  
-  // Kalau lokal, nembak ke rest_api_sso di lokal. Kalau prod, nembak ke server web.
-  const API_SSO_BASE = isLocal ? 'http://localhost/rest_api_sso' : 'https://apisso.bkkjateng.co.id';
-  
-  const API_LOGIN = `${API_SSO_BASE}/api/auth/login`;
-  const API_WHOAMI = `${API_SSO_BASE}/api/auth/whoami`;
-
-  // 2. FUNGSI SET COOKIE UNTUK SSO YANG LEBIH AMAN DI LOCALHOST
-  function setSSOCookie(name, value, days) {
-      let expires = "";
-      if (days) {
-          const date = new Date();
-          date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
-          expires = "; expires=" + date.toUTCString();
-      }
-      // Khusus localhost tidak usah pakai 'domain=' agar cookie tidak ditolak browser
-      const domainStr = isLocal ? "" : "domain=.bkkjateng.co.id;";
-      document.cookie = name + "=" + (value || "")  + expires + "; path=/; " + domainStr + " SameSite=Lax"; 
-  }
+  const API_LOGIN = '/api/auth/login/';
+  const API_WHOAMI = '/api/auth/whoami';
 
   // Utils
-  const saveToken = (t) => {
-      localStorage.setItem('dpk_token', t); 
-      setSSOCookie('sso_token', t, 1);      
-  };
+  const saveToken = (t) => localStorage.setItem('dpk_token', t);
   const saveUser = (u) => localStorage.setItem('dpk_user', JSON.stringify(u));
   
   // Toggle Password
@@ -173,72 +164,34 @@
     spin.classList.remove('hidden');
     btnText.textContent = 'Memeriksa...';
 
+    // Ambil Values (Hanya Emp ID dan Password)
     const empId = document.getElementById('employee_id').value.trim();
     const pass  = document.getElementById('password').value;
 
     try {
-        // Tembak API Login (pastikan body pakai id_peg sesuai format sistem/swagger)
         const res = await fetch(API_LOGIN, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ 
-                id_peg: empId, 
-                password: pass,
-                app: "monbis" 
-            })
+            body: JSON.stringify({ employee_id: empId, password: pass })
         });
-        
-        if (!res.ok) throw new Error(`HTTP Error: ${res.status} - Gagal koneksi ke server.`);
-        
         const json = await res.json();
 
         if (json?.status !== 200 || !json?.data?.token) {
-            throw new Error(json?.message || 'ID Pegawai atau Password salah.');
+            throw new Error(json?.message || 'Employee ID atau Password salah.');
         }
 
-        // Simpan token ke LocalStorage & Cookie SSO
         saveToken(json.data.token);
         
         try {
-            // Tembak API Whoami pakai Bearer token
-            const r2 = await fetch(API_WHOAMI, { 
-                headers: { 'Authorization': `Bearer ${json.data.token}` }
-            });
-            
-            if (r2.ok) {
-                const j2 = await r2.json();
-                
-                if(j2?.data) {
-                    let userData = j2.data;
-                    
-                    // 3. LOGIK PENAMBAHAN ROLE 'DEV'
-                    // Cek apakah posisi atau unit kerja ada kata 'Divisi Operasional'
-                    if (userData.job_position === "Divisi Operasional" || userData.unit_kerja === "Divisi Operasional") {
-                        userData.role = "dev";
-                    } else {
-                        userData.role = "user"; // Role default untuk staf lainnya
-                    }
-                    
-                    saveUser(userData);
-                }
-            } else {
-                 console.error("Gagal get profile, HTTP Status:", r2.status);
-            }
-        } catch (err) {
-            console.error("Error mengambil data user (whoami):", err);
-        }
+            const r2 = await fetch(API_WHOAMI, { headers: { 'Authorization': json.data.token }});
+            const j2 = await r2.json();
+            if(j2?.data) saveUser(j2.data);
+        } catch {}
 
-        // Redirect ke Dashboard setelah sukses
         location.href = `${BASE_APP}/dashboard`;
 
     } catch (error) {
-        console.error("Login Error:", error);
-        
-        // Tampilkan error
-        errMsg.textContent = error.message.includes("Failed to fetch") 
-            ? "Gagal terhubung ke server SSO. Pastikan API berjalan." 
-            : error.message;
-
+        errMsg.textContent = error.message;
         errBox.classList.remove('hidden');
         btn.disabled = false;
         spin.classList.add('hidden');
